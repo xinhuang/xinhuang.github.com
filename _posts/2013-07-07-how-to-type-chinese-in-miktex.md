@@ -18,7 +18,7 @@ Install Asian language support
 
 2. Select _Package_ tab
 
-3. Select _arphic, cjk, cjk-fonts, yi4latex_
+3. In _MiKTeX Packages_, under _Language Support_, check _arphic, cjk, cjk-fonts, yi4latex_.
 
 4. Hit OK/Apply, wait for download to complete.
 
