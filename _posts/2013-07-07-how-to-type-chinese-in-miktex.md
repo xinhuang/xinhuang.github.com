@@ -1,13 +1,13 @@
 ---
 layout: post
-title: "How to type Chinese in MikTex"
+title: "How to type Chinese in MiKTex"
 description: ""
 category: 
 tags: [LaTeX, HowTo]
 ---
 {% include JB/setup %}
 
-After install MikTeX on Windows, and play around with some examples, you will 
+After install MiKTeX on Windows, and play around with some examples, you will 
 recognize that the Chinese is not showing up. To fix this problem, you will 
 need:
 
