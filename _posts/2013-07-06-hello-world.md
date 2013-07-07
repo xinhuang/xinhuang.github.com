@@ -29,12 +29,12 @@ error strikes you:
 To temprorily fix this error, just modify the Jekyll source. 
 
 Open `gems\1.9.1\gems\jekyll-1.0.3\lib\jekyll\convertible.rb`, and change the 
-_read_yaml_ function:
+`read_yaml` function:
 
     def read_yaml(base, name)
       begin
         self.content = File.read(File.join(base, name),
-                                :encoding = 'utf-8'            # <------Add this
+                                :encoding => 'utf-8'            # <------Add this
                                 )
 
 This should fix the problem.

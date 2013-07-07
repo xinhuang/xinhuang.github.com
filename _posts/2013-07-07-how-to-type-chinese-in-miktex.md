@@ -27,9 +27,9 @@ Enable new font
 
 1. Start _Command Prompt_ as administrator
 
-2. Run command _initexmf -u_
+2. Run command `initexmf -u`
 
-3. Run command _initexmf --edit-config-file updmap_, then type in following 
+3. Run command `initexmf --edit-config-file updmap`, then type in following 
 commands in poped up editor. (Don't forget to save.)
 
 		Map cwmu.map
@@ -38,7 +38,7 @@ commands in poped up editor. (Don't forget to save.)
 		Map cwhbu.map
 		Map cwyu.map
 
-4. Run command _initexmf --mkmaps_
+4. Run command `initexmf --mkmaps`
 
 Choose font in document
 ---
