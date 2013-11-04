@@ -27,3 +27,9 @@ There could be more enhancement:
 1. Not only monitor \*.py files, but all files. Configuration files can also have an impact on test result.
 
 2. Ignore version control files, because these folders are always filled by tones of files.
+
+---
+
+Update:
+
+There is a python lib [watchdog](https://github.com/gorakhargosh/watchdog) that can be used to monitor file changes. Try it!
