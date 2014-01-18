@@ -71,12 +71,14 @@ Watching the macro _TEST\_F_, it does a bit more than our basic version:
           GTEST_TEST_CLASS_NAME_(test_case_name, test_name));\
     };\
     
-Above part defines the test class inherites from test fixture.
+Above code defines the test class inherites from test fixture.
+
+First, create the global variable:
     
     ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)\
       ::test_info_ =\
       
-Creates the global variable.
+Then, initialize the global variable:
       
         ::testing::internal::MakeAndRegisterTestInfo(\
             #test_case_name, #test_name, NULL, NULL, \
@@ -86,11 +88,13 @@ Creates the global variable.
             new ::testing::internal::TestFactoryImpl<\
                 GTEST_TEST_CLASS_NAME_(test_case_name, test_name)>);\
                 
-Makes a value and set to the global variable. Registration is performed inside `::testing::internal::MakeAndRegisterTestInfo`.
+Registration is performed inside `::testing::internal::MakeAndRegisterTestInfo`.
+    
+At last, is the _TestBody_ stub, which connects real test code:
                 
     void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
-    
-Last part is the _TestBody_ stub connecting real test code for execution.
+
+#### Inside RegisterTestInfo
 
 Let's take a closer look at what happened inside `MakeAndRegisterTestInfo`:
 
@@ -111,7 +115,7 @@ Then, what is `fixture_class_id`? If we are using a different model from googlet
 By searching the code, we can easily find out the type id is used to tell a test going to run whether is the first one under a fixture. If it is, then the `tear_down_tc` of previous fixture and `set_up_tc` of the fixture should be called.  
 So if you don't care about it, ignore it.
 
-## Code to register our own test
+## Register our test
 
 After all the work, it is clear that all the macro makes googletest "user interface". If we want to connect our unit test DSL with googletest, register the test via `MakeAndRegisterTestInfo`.
 
