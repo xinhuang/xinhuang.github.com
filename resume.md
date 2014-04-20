@@ -32,11 +32,11 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 **Since 2013/1, Maxwell Environment Team**  
  
-*  Introduced Pester as PowerShell unit test framework, helped colleages learn TDD in PowerShell via coding dojos    
-*  Developed CI system for everyday rolling & clean build, improved system stability & performance by refactoring build process 
-*  Improved scalability by separating "build cloud" & "kit cloud"    
-*  Developed scripts and utilized Chef to deploy new system automatically  
-*  Migrated code base from VS2008 to VS2012    
+*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding dojo to helped colleages learn TDD & PowerShell  
+*  Deeply involved in CI system re-architecture and implementation, achieved a distributed "Cloud-based" CI build system  
+*  Deployed CI system, including incremental/private/feature/clean build with unit/integration test running for each build
+*  Migrated code base from VS2008 to VS2012 _(C++/C# LOC >= 2M)_
+*  Hosted various coding dojos inside company, presented in internal workshops and events
  
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**  
  
@@ -64,8 +64,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 ### ***Open Source Projects***
  
-*  2013 - qcp: A quick-check framework for C++11, based on GoogleTest  
-    [https://github.com/xinhuang/qcp](https://github.com/xinhuang/qcp)
+*  2013 - LifeGame: A demo in SLB C++ workshop on verterization. Conway's Game of Life implemented in various ways: raw loop, OpenMP, Intel IPP, Intel TBB, GLSL Shader  
+    [https://github.com/xinhuang/HelloCinder/tree/master/LifeGame](https://github.com/xinhuang/HelloCinder/tree/master/LifeGame)
 *  2013 - NAntFind: A declarative style dependency management plugin for NAnt, inspired by CMake  
     [https://github.com/xinhuang/NAntFind](https://github.com/xinhuang/NAntFind)
 *  2011 - mUI: A C++ prototype UI framework adopting WinForm convention    
