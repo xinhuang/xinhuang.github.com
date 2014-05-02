@@ -19,8 +19,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 ### ***Technical Overview***
  
-* Work with C++ for more than 3 years, read books e.g. Inside C++ Object Model, reversed C++ generated binary, studying the C++11 standard
-* Programming languages: C#(able to read MSIL), Scala, x86 ASM, Lua, Ruby
+* Work with C++ for more than 3 years, read books e.g. Inside C++ Object Model, reversed C++ generated binary
+* Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL), Scala, x86 ASM, Lua, Ruby
 * Experience with parallel programming
 * Finished Scala & reactive programming on Coursera
 * Familiar with TDD, OOAD; enjoy organizing/attending coding dojos
