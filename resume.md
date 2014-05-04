@@ -1,6 +1,6 @@
 ---
 layout: page
-title: "Resume / CV"
+title: "Resume"
 description: ""
 date: 2014-01-14 00:00:00
 ---
@@ -41,7 +41,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**  
  
 *  Investigated logging with Event Tracing for Windows, for runtime tuning and better system performance with dynamic logging option  
-*  Built baseline with distributed compilation software to reduce compilation time   
+*  Accelerated build performance with distributed compilation software  
 *  Developed software usage log analysis tool, to automatically collect & analyze usage data, and generate Excel report    
 *  Helped team as Scrum Master; hosted coding Dojos every week to improve TDD, OOAD skills, and to learn other programming languages  
  
