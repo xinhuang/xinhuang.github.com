@@ -19,7 +19,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 ### ***Technical Overview***
  
-* Work with C++ for more than 3 years, read books e.g. Inside C++ Object Model, reversed C++ generated binary
+* Work with C++ for more than 3 years, reversed C++ generated binary
 * Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL), Scala, x86 ASM, Lua, Ruby
 * Experience with parallel programming
 * Finished Scala & reactive programming on Coursera
@@ -32,18 +32,18 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 **Since 2013/1, Maxwell Environment Team**  
  
-*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding dojo to helped colleages learn TDD & PowerShell  
-*  Deeply involved in CI system re-architecture and implementation, achieved a distributed "Cloud-based" CI build system  
+*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding dojo to help colleagues learn TDD & PowerShell  
+*  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system, to improve resource utilization & reduce deployment
 *  Deployed CI system, including incremental/private/feature/clean build with unit/integration test running for each build
 *  Migrated code base from VS2008 to VS2012 _(C++/C# LOC >= 2M)_
-*  Hosted various coding dojos inside company, presented in internal workshops and events
+*  Hosted various coding Dojos inside company, presented in internal workshops and events
  
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**  
  
-*  Replaced logging with Event Tracing for Windows, for runtime tuning and better system performance when verbose logging option is on  
-*  Built baseline with distributed compilation software (ECloud, IncrediBuild) to accelerate compilation    
+*  Investigated logging with Event Tracing for Windows, for runtime tuning and better system performance with dynamic logging option  
+*  Built baseline with distributed compilation software to reduce compilation time   
 *  Developed software usage log analysis tool, to automatically collect & analyze usage data, and generate Excel report    
-*  Helped team as Scrum Master; hosted coding dojos every week to improve TDD, OOAD skills, and to learn other programming languages    
+*  Helped team as Scrum Master; hosted coding Dojos every week to improve TDD, OOAD skills, and to learn other programming languages  
  
 **2011/8 - 2012/3, Maxwell DataPrep Team**  
  
@@ -56,10 +56,10 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 *  Implemented C# delegate style event system, supporting asynchronized method invocation  
 *  Individually investigated & fixed a Heisenbug bogged down release for weeks  
-*  Improved font rending performance by creating new bitmap font  
-*  Generalized item operation UI logic by creating Lua script template  
+*  Improved font rending performance   
+*  Created Lua script template for generic item operation  
 *  Developed game robot for pressure test, extensible via Lua  
-*  Feature development of item, family, ladder, PVP system  
+*  Feature development of item, family, ladder and PVP system  
  
  
 ### ***Open Source Projects***
