@@ -15,7 +15,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 * Continuous learner
 * Enthusiastic programmer
-* Coding dojo organizer
+* Coding Dojo organizer
  
 ### ***Technical Overview***
  
@@ -23,7 +23,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 * Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL), Scala, x86 ASM, Lua, Ruby
 * Experience with parallel programming
 * Finished Scala & reactive programming on Coursera
-* Familiar with TDD, OOAD; enjoy organizing/attending coding dojos
+* Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
 * Familiar with CI tools like Jenkins, NAnt, etc
  
 ### ***Work Experience***
@@ -32,7 +32,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 **Since 2013/1, Maxwell Environment Team**  
  
-*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding dojo to help colleagues learn TDD & PowerShell  
+*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell  
 *  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system, to improve resource utilization & reduce deployment
 *  Deployed CI system, including incremental/private/feature/clean build with unit/integration test running for each build
 *  Migrated code base from VS2008 to VS2012 _(C++/C# LOC >= 2M)_
@@ -74,7 +74,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 ### ***Publications and Presentations***
  
 *  Co-organizer of Global Day of CodeRetreat Beijing 2013 
-*  Coding dojo project for state/strategy pattern  
+*  Coding Dojo project for state/strategy pattern, used in internal sessions  
   [https://github.com/xinhuang/StatePattern](https://github.com/xinhuang/StatePattern)
  
 ### ***Education***
