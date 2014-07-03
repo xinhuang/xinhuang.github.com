@@ -10,8 +10,8 @@ date: 2014-01-14 00:00:00
  
 Email:            [patz.hwang@gmail.com]  
 Mobile:           (+86)186-0040-6436  
-GitHub:           https://github.com/xinhuang    
-StackOverflow:    http://stackoverflow.com/users/2190129/xin-huang    
+GitHub:           [https://github.com/xinhuang]
+StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]    
  
 * Continuous learner
 * Enthusiastic programmer
