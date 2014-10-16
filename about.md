@@ -20,8 +20,7 @@ Currently I'm looking for a software engineer job in a small and fast team.
 Here is my [resume]|[pdf version]|[LinkedIn]|[GitHub].
 
 [resume]:/resume.html
-[pdf version]:http://xinhuang.github.io/resume.pdf
+[pdf version]:/resume.pdf
 [LinkedIn]:http://www.linkedin.com/in/xinhuang123
 [GitHub]:https://github.com/xinhuang
 
----

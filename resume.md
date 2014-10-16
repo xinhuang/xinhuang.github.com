@@ -90,5 +90,3 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 [github.ico]:                                         https://github.com/favicon.ico
 [stackoverflow.ico]:                                  http://cdn.sstatic.net/stackoverflow/img/favicon.ico
 
----
-
