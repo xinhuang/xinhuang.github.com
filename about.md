@@ -19,7 +19,7 @@ I can speak in many programming languages. I'm fluent in PowerShell, but hate it
 Currently I'm looking for a software engineer job in a small and fast team.
 Here is my [resume]|[pdf version]|[LinkedIn]|[GitHub].
 
-[resume]:http://xinhuang.github.io/resume.html
+[resume]:/resume.html
 [pdf version]:http://xinhuang.github.io/resume.pdf
 [LinkedIn]:http://www.linkedin.com/in/xinhuang123
 [GitHub]:https://github.com/xinhuang

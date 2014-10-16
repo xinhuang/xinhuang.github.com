@@ -1,7 +1,6 @@
 ---
 layout: page
 title: "Resume"
-description: ""
 date: 2014-01-14 00:00:00
 ---
 {% include JB/setup %}
@@ -10,6 +9,7 @@ date: 2014-01-14 00:00:00
  
 Email:            [patz.hwang@gmail.com]  
 Mobile:           (+86)186-0040-6436  
+Homepage:         [http://xinhuang.github.io]
 GitHub:           [https://github.com/xinhuang]     
 StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]     
  
@@ -84,8 +84,11 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 [patz.hwang@gmail.com]:                               mailto:patz.hwang@gmail.com
 [https://github.com/xinhuang]:                        https://github.com/xinhuang
 [http://stackoverflow.com/users/2190129/xin-huang]:   http://stackoverflow.com/users/2190129/xin-huang
- 
+[http://xinhuang.github.io]:                          http://xinhuang.github.io
+
 [gmail.ico]:                                          https://mail.google.com/favicon.ico
 [github.ico]:                                         https://github.com/favicon.ico
 [stackoverflow.ico]:                                  http://cdn.sstatic.net/stackoverflow/img/favicon.ico
+
+---
 
