@@ -12,7 +12,9 @@ Maybe you are tired of the syntax [googletest] has chosen, so you deside to inve
 Then the option left would be extending an existing one, and [googletest] is a good candidate.
 
 ## Behind the curtain
+
 ### A basic version
+
 First of all, before extending googletest, we need to know what's behind the curtain.  
 A typical unit test would be:
 

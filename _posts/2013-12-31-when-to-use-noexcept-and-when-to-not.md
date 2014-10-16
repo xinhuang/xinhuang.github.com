@@ -34,7 +34,7 @@ Let's see an interesting example.
 
 ## noexcept and std::vector
 
-As you might have known, a `vector` has its capacity. If it's full when `push_back`, it will allocate a bigger memory, copy(or move if C++ 11) all existing elements to the new trunk, then add the new element to the back.
+As you might have known, a `vector` has its capacity. If it's full when `push_back`, it will allocate a bigger memory, copy (or move if C++ 11) all existing elements to the new trunk, then add the new element to the back.
 
 ![Use copy constructor to expand a vector]
 
