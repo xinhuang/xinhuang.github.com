@@ -2,7 +2,7 @@
 layout: post
 title: "A Gotcha From auto"
 description: ""
-category:
+category: C++
 tags: [C++, gotcha]
 ---
 {% include JB/setup %}

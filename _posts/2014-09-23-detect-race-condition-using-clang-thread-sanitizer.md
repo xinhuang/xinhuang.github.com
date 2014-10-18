@@ -2,7 +2,7 @@
 layout: post
 title: "Detect Race Condition Using Clang Thread Sanitizer"
 description: ""
-category: 
+category: C++
 tags: [HowTo, Clang]
 ---
 {% include JB/setup %}

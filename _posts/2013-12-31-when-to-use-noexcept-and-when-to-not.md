@@ -2,7 +2,7 @@
 layout: post
 title: "When to use `noexcept` and when to not"
 description: ""
-category: 
+category: C++
 tags: [C++11, C++]
 ---
 {% include JB/setup %}
