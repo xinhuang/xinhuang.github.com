@@ -9,7 +9,7 @@ group: navigation
 
 # About Me
 
-Hi! My name is Xin Huang. Welcome to my blog. 
+Hi, there! My name is Xin Huang. Welcome to my blog. 
 
 I'm a software engineer, and a C++ fan. 
 Starting to contribute to clang in my spare time.
