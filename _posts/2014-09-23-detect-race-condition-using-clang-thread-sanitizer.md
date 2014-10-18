@@ -200,6 +200,8 @@ The [ThreadSanitizer] is a very powerful tool to help detect race condition. The
 
 2nd program example comes from GoingNative 2013 [The Care and Feeding of C++'s Dragons](https://urldefense.proofpoint.com/v1/url?u=http://channel9.msdn.com/Events/GoingNative/2013/The-Care-and-Feeding-of-C-s-Dragons&k=Bmn%2BpBF6%2FxX%2F6xeXViRpFg%3D%3D%0A&r=XKHKqvEQZPfF56uL%2BOZCgw%3D%3D%0A&m=3U5%2BNCJxni%2FCWwoCYzx0v5Pk0RDV8dSjM7rlg2QbtHg%3D%0A&s=ff921eae48afb6b89d67803853eb508c06e9726ab41c5c8c8d4cbaf731429a6e)
 
+_This article is for Sep. 2014 newsletter of SWDEV Sig Schlumberger._
+
 [ThreadSanitizer]: https://urldefense.proofpoint.com/v1/url?u=https://code.google.com/p/thread-sanitizer/&k=Bmn%2BpBF6%2FxX%2F6xeXViRpFg%3D%3D%0A&r=XKHKqvEQZPfF56uL%2BOZCgw%3D%3D%0A&m=3U5%2BNCJxni%2FCWwoCYzx0v5Pk0RDV8dSjM7rlg2QbtHg%3D%0A&s=0dc51daf68f724ca5ebe3a77b42dcce4bcb1742018cf258627b113c92d3aa113
 
 [ThreadSanitizer manual]: https://code.google.com/p/thread-sanitizer/wiki/CppManual
