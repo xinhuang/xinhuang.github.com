@@ -8,10 +8,10 @@ date: 2014-01-14 00:00:00
 ### ***Xin Huang***
  
 Email:            [patz.hwang@gmail.com]  
-Mobile:           (+86)186-0040-6436  
-Homepage:         [http://xinhuang.github.io]
-GitHub:           [https://github.com/xinhuang]     
-StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]     
+Mobile:           (+86) 186-0040-6436  
+Homepage:         [http://xinhuang.github.io]  
+GitHub:           [https://github.com/xinhuang]  
+StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]  
  
 * Continuous learner
 * Enthusiastic programmer
@@ -79,6 +79,9 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
  
 ### ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
+
+_Last update at Oct. 19, 2014. Latest resume can be found
+[here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
  
  
 [patz.hwang@gmail.com]:                               mailto:patz.hwang@gmail.com
