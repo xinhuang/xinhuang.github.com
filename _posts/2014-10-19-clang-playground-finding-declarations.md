@@ -10,7 +10,8 @@ tags : [c++, howto]
 Clang is a very good C/C++ compiler, and it provides great extensible APIs for
 us to take advantage of it's syntax parsing, AST construction, semantics
 analysis, optimization, assembly generation and JIT compilation. Here let's have
-some fun playing with Clang and see what can we make out of it.
+some fun playing with Clang and build a Clang tool to get all the declarations in
+a given file.
 
 ## Building clang
 
@@ -18,18 +19,14 @@ To build clang is very simple:
 
 1. Get the source code from svn or git repository:
 
-```bash
-git clone http://llvm.org/git/llvm.git src
-git clone http://llvm.org/git/clang.git src/tools/clang
-```
+        git clone http://llvm.org/git/llvm.git src
+        git clone http://llvm.org/git/clang.git src/tools/clang
 
-2. Configure and build:
+2. Configure and build using _make_:
 
-```bash
-mkdir debug && cd debug
-../configure           # add --enable-optimized --disable-assertions for release build
-make
-```
+        mkdir debug && cd debug
+        ../configure           # add --enable-optimized --disable-assertions for release build
+        make
 
 Building LLVM and Clang will take quite some time... You can also use
 `make install` to install your built version to the system. (Don't install
@@ -38,7 +35,7 @@ the debug version, it would be very very slow.)
 ## LibTooling
 
 LibTooling is the C++ interface Clang provided. It is very useful when you want
-to have full control over AST (like static analysis), or to implement a
+to have full control over AST (e.g. static analysis), or to implement a
 refactoring tool. There are other interfaces like LibClang and Clang Plugins as
 well. For detailed information you can refer to [Clang Tooling document].
 
@@ -94,10 +91,6 @@ abstract syntax tree (AST). Let's create our own [FrontendAction]:
 
 #include <memory>
 
-namespace clang {
-class ASTConsumer;
-}
-
 class DeclFindingAction : public clang::ASTFrontendAction {
 public:
   std::unique_ptr<clang::ASTConsumer>
@@ -128,11 +121,11 @@ file:
 ## AST Consumer
 
 The [ASTConsumer] will read the ASTs. It provides many interfaces to be overriden
-when certain type of AST node has been pased, or after all the translation unit
+when certain type of AST node has been parsed, or after all the translation unit
 has been parsed.
 
 We will override [ASTConsumer::HandleTranslationUnit] to read the AST after we have
-all the information needed about the file.
+all the information needed of the file.
 
 ```
 #pragma once
@@ -247,7 +240,8 @@ include $(CLANG_LEVEL)/Makefile
 Edit _Makefile_ in _${llvm_src}/tools/clang/tools/_, add _clang-playground_ to
 _OPTIONAL\_PARALLEL\_DIRS_ so Clang makefile can find our project.
 
-Now you should be able to build our project along with Clang.
+Now you should be able to build our project along with Clang. The built out binary should
+be located in _debug/Debug+Asserts/bin/_.
 
 ## Run The Program
 
@@ -272,13 +266,16 @@ Running our _find-decl_ with following arguments:
 ./find-decl test.cpp --
 ```
 
+_Any argument after `--` will be passed to Clang. You can use that to specify arguments
+like include path `-I/path/to/my/include` or macro definition `-DMY_MACRO`._
+
 The output will be:
 
-> Found MyClass at /home/patz/workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1  
-> Found MyClass::foo at /home/patz/workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3  
-> Found MyClass::bar at /home/patz/workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3  
-> Found foobar at /home/patz/workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1  
-> Found a at /home/patz/workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  
+> Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1  
+> Found MyClass::foo at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3  
+> Found MyClass::bar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3  
+> Found foobar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1  
+> Found a at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  
 
 But when there is a `#include <vector>` in the source file, our _find-decl_ will
 print out all the definitions even in stdlib. That's because these included files
@@ -301,6 +298,10 @@ This is the improved logic. We find out the file ID of each declaration belongs 
 compare it with the _main file ID_. If they are equal, that means it's defined in
 our source file.
 
+## Conclusion
+
+This is how a Clang tool is made using LibTooling C++ API. Hope you enjoy working
+through LibTooling with the example.
 
 _All the source code can be found here: [clang-playground]._
 
@@ -323,3 +324,4 @@ _All the source code can be found here: [clang-playground]._
 [ASTConsumer::HandleTranslationUnit]:http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html#a2bea2db1d0e8af16c60ee7847f0d46ff
 [SourceManager]:http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html
 [LLVM Coding Standard]:http://llvm.org/docs/CodingStandards.html
+[SourceLocation]:http://clang.llvm.org/doxygen/classclang_1_1SourceLocation.html
