@@ -1,4 +1,11 @@
-# Clang Playground: Finding Declarations
+---
+title: "Clang Tutorial: Finding Declarations"
+layout: post
+category : Clang
+tagline: "traverse AST using RecursiveASTVisitor"
+tags : [c++, howto]
+---
+{% include JB/setup %}
 
 Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to 
 take advantage of it's syntax parsing, AST construction, semantics analysis, optimization, 
@@ -284,6 +291,7 @@ This is the improved logic. We find out the file ID of each declaration belongs 
 compare it with the _main file ID_. If they are equal, that means it's defined in
 our source file.
 
+_All the source code can be found here: [clang-playground]._
 
 
 [LLVM three-phase structure]:/latfig1.gif
@@ -303,4 +311,5 @@ our source file.
 [SourceManager]:http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html
 [LLVM Coding Standard]:http://llvm.org/docs/CodingStandards.html
 [SourceLocation]:http://clang.llvm.org/doxygen/classclang_1_1SourceLocation.html
+[clang-playground]:https://github.com/xinhuang/clang-playground.git
 
