@@ -1,4 +1,13 @@
-# Clang Playground: The AST Matcher
+---
+title: "Clang Tutorial: The AST Matcher"
+layout: post
+category : Clang
+tagline: "using AST matcher to find pass-by-value std::vector arguments"
+tags : [c++, howto]
+---
+{% include JB/setup %}
+
+# Clang Tutorial: The AST Matcher
 
 In [previous post] we have made a simple Clang tool that will print all the declarations
 in a given source file. Now Let's try to make another tool to detect when a _std::vector_
