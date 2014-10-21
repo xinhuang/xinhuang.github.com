@@ -1,45 +1,67 @@
----
-title: "Clang Playground: Finding Declarations"
-layout: post
-category : Clang
-tagline: "traverse AST using RecursiveASTVisitor"
-tags : [c++, howto]
----
-{% include JB/setup %}
+# Clang Playground: Finding Declarations
 
-Clang is a very good C/C++ compiler, and it provides great extensible APIs for
-us to take advantage of it's syntax parsing, AST construction, semantics
-analysis, optimization, assembly generation and JIT compilation. Here let's have
-some fun playing with Clang and build a Clang tool to get all the declarations in
-a given file.
+Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to 
+take advantage of it's syntax parsing, AST construction, semantics analysis, optimization, 
+assembly generation and JIT compilation. Here let's have some fun playing with Clang and 
+build a Clang tool to list all the declarations in a given file.
+
+## The "Hello World" Program
+
+Let's try to use Clang to write a "Hello World" program: Find all the declarations in a given
+source file. 
+
+Given source file below:
+
+```
+class MyClass {
+  int foo;
+public:
+  void bar() {}
+};
+
+MyClass foobar() {
+  MyClass a;
+  return a;
+}
+```
+
+Run our program to find all declarations:
+
+> ./find-decl test.cpp --
+> Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1  
+> Found MyClass::foo at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3  
+> Found MyClass::bar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3  
+> Found foobar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1  
+> Found a at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  
+
+*Note: Any argument after `--` will be passed to Clang. You can use that to specify arguments like include path `-I/path/to/my/include` or macro definition `-DMY_MACRO`.*
+
+Let's write the program together.
 
 ## Building clang
 
-To build clang is very simple:
+First build clang:
 
-1. Get the source code from svn or git repository:
+1. Get the source code from svn or git repository:  
 
         git clone http://llvm.org/git/llvm.git src
         git clone http://llvm.org/git/clang.git src/tools/clang
 
-2. Configure and build using _make_:
+2. Configure and build using _make_:  
 
         mkdir debug && cd debug
         ../configure           # add --enable-optimized --disable-assertions for release build
-        make
+        make                   # this would take quite some time
 
-Building LLVM and Clang will take quite some time... You can also use
-`make install` to install your built version to the system. (Don't install
-the debug version, it would be very very slow.)
+You can also use `make install` to install your built version to the system.
 
 ## LibTooling
 
-LibTooling is the C++ interface Clang provided. It is very useful when you want
-to have full control over AST (e.g. static analysis), or to implement a
-refactoring tool. There are other interfaces like LibClang and Clang Plugins as
-well. For detailed information you can refer to [Clang Tooling document].
+LibTooling is the C++ interface Clang provided. It is very useful when you want to have full control 
+over AST (e.g. static analysis), or to implement a refactoring tool. There are other interfaces like 
+LibClang and Clang Plugins as well. For detailed information you can refer to [Clang Tooling document].
 
-For today's task - finding all declarations, using LibTooling is the easiest way.
+For our "Hello World" program - finding all declarations, using LibTooling is the easiest way.
 
 ## The Entry of Everything
 
@@ -110,17 +132,15 @@ ASTConsumer - _DeclFinder_.
 
 In Clang, there are two basic types of AST classes: [Decl] and [Stmt], which
 have many subclasses that covers all the AST nodes we will meet in a source
-file:
+file. For example:
 
-* FriendDecl
 * FunctionDecl
 * TypeDecl
-* CompoundStmt
 * CallExpr
 
 ## AST Consumer
 
-The [ASTConsumer] will read the ASTs. It provides many interfaces to be overriden
+The [ASTConsumer] will read AST. It provides many interfaces to be overridden
 when certain type of AST node has been parsed, or after all the translation unit
 has been parsed.
 
@@ -195,9 +215,7 @@ _RecursiveASTVisitor::VisitNamedDecl_ method to find all the named
 declaration, print its qualified name and definition location.
 
 Above source code introduced the [SourceManager] class. As its name suggested,
-it manages all the source files. We can use _Decl::getLocStart_, _Decl::getLocEnd_
-and _Decl::getLocation_ to get the location of a declaration, then translate that
-[SourceLocation] instance to human readable content via [SourceManager].
+it manages all the source files. We first get the location of a declaration, then translate it into human readable content.
 
 The _llvm::outs()_ is similiar to the _std::cout_, but it's suggested to use
 _llvm::outs()_ instead of _std::cout_ according to the [LLVM Coding Standard].
@@ -243,43 +261,11 @@ _OPTIONAL\_PARALLEL\_DIRS_ so Clang makefile can find our project.
 Now you should be able to build our project along with Clang. The built out binary should
 be located in _debug/Debug+Asserts/bin/_.
 
-## Run The Program
+## The Glitch
 
-First let's create a test source file:
-
-```
-class MyClass {
-  int foo;
-public:
-  void bar() {}
-};
-
-MyClass foobar() {
-  MyClass a;
-  return a;
-}
-```
-
-Running our _find-decl_ with following arguments:
-
-```
-./find-decl test.cpp --
-```
-
-_Any argument after `--` will be passed to Clang. You can use that to specify arguments
-like include path `-I/path/to/my/include` or macro definition `-DMY_MACRO`._
-
-The output will be:
-
-> Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1  
-> Found MyClass::foo at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3  
-> Found MyClass::bar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3  
-> Found foobar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1  
-> Found a at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  
-
-But when there is a `#include <vector>` in the source file, our _find-decl_ will
-print out all the definitions even in stdlib. That's because these included files
-are parsed and consumed as a whole with our souce file. To fix this, we need to
+Wait! When there is a `#include <vector>` in the source file, our _find-decl_ will
+print out all the declarations in that included file, because these included files
+are parsed and consumed as a whole with our source file. To fix this, we need to
 check if the declarations are defined in our source file:
 
 ```
@@ -298,22 +284,14 @@ This is the improved logic. We find out the file ID of each declaration belongs 
 compare it with the _main file ID_. If they are equal, that means it's defined in
 our source file.
 
-## Conclusion
-
-This is how a Clang tool is made using LibTooling C++ API. Hope you enjoy working
-through LibTooling with the example.
-
-_All the source code can be found here: [clang-playground]._
 
 
-
-[LLVM three-phase structure]:/assets/posts/clang-playground-finding-declarations/llvm-three-phase-structure.gif
+[LLVM three-phase structure]:/latfig1.gif
 [Clang Tooling document]:http://clang.llvm.org/docs/Tooling.html
 [FrontendAction]:http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html
 [ASTConsumer]:http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html
 [Decl]:http://clang.llvm.org/doxygen/classclang_1_1Decl.html
 [RecursiveASTVisitor]:http://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html
-[clang-playground]:https://github.com/xinhuang/clang-playground.git
 [ClangTool]:http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1ClangTool.html
 [CommonOptionsParser]:http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1CommonOptionsParser.html
 [OptionCategory]:http://llvm.org/docs/doxygen/html/classllvm_1_1cl_1_1OptionCategory.html
@@ -325,3 +303,4 @@ _All the source code can be found here: [clang-playground]._
 [SourceManager]:http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html
 [LLVM Coding Standard]:http://llvm.org/docs/CodingStandards.html
 [SourceLocation]:http://clang.llvm.org/doxygen/classclang_1_1SourceLocation.html
+
