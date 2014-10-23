@@ -38,6 +38,8 @@ every function, but that could be a tedious and repetative work. Clang provides
 a very handy utility to help us find an AST node that match our specification:
 the [AST matcher].
 
+_Here we told Clang parser to use C++ 11 syntax by passing `-std=c++11` after `--`._
+
 ## The AST Matcher
 
 ## Match Function
