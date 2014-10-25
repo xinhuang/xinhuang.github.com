@@ -291,7 +291,7 @@ This is the improved logic. We find out the file ID of each declaration belongs 
 compare it with the _main file ID_. If they are equal, that means it's defined in
 our source file.
 
-_All the source code can be found here: [clang-playground]._
+_All the source code can be found at [clang-playground]._
 
 
 [LLVM three-phase structure]:/latfig1.gif
