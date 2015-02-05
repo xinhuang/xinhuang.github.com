@@ -1,5 +1,5 @@
 ---
-title: "Observer Pattern Is Broken"
+title: "A Broken Observer Pattern"
 layout: post
 category : Multi-Threading,
 tagline: "Revisit Design Pattern In A Concurrent View"
