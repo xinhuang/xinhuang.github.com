@@ -1,5 +1,5 @@
 ---
-title: "Observer Pattern Considered Harmful In Multi-Threading Environment"
+title: "Observer Pattern Is Broken"
 layout: post
 category : Multi-Threading,
 tagline: "Revisit Design Pattern In A Concurrent View"
