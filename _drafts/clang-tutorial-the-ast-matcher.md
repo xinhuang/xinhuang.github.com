@@ -39,7 +39,7 @@ _Here we told Clang parser to use C++ 11 syntax by passing `-std=c++11` after `-
 
 If you still remember the _Decl_ and _Stmt_, these are the AST nodes that we will come
 across when processing a source file. With different _Decl_, _Stmt_ and their derived
-classes like _NamedDecl_ and _CallExpr_, we can obtain lots of information like 
+classes like _NamedDecl_ and _CallExpr_, we can obtain lots of information like
 variable type, name, definition information, etc.
 
 To examine all the function declarations with any parameter of type _std::vector_,
@@ -58,34 +58,23 @@ To use the AST matchers, all we need to do is to call a bunch of matcher creatio
 function, chain them together to compose the matcher we need, and/or bind the target
 node with a name so we can extract it later.
 
-Here is a very simple example:
-
-```
-```
-
-This matcher would 
-
-## Match Function
-
-To match a function, use the following:
+To match a function declaration:
 
 ```
 DeclarationMatcher Matcher = functionDecl();
 ```
 
-## Match Parameter
+Then let's match its parameter:
 
 ```
 DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));
 ```
 
 To matcher a parameter, we can use _hasParameter(N, ParamMatcher)_, which will match
-the N'th of parameter with given parameter matcher. Here we will need to match any
-parameter that of type _std::vector_, so we will use _hasAnyParameter_.
+ the N'th of parameter with given parameter matcher. Here we will need to match any
+ parameter that of type _std::vector_, so we will use _hasAnyParameter_.
 
-## Match Pass-By-Value std::vector
-
-Next let's match the parameter type:
+Next match the parameter type:
 
 ```
 DeclarationMatcher Matcher = functionDecl(
@@ -93,6 +82,9 @@ DeclarationMatcher Matcher = functionDecl(
 ```
 
 ## Put It All Together
+
+When the AST matcher find the right node,
+`clang::ast_matchers::MatchFinder::MatchCallback` is used to provide
 
 ## To Dump The AST Nodes
 
@@ -103,4 +95,3 @@ _All the source code in this post can be found at [clang-playground]._
 
 [AST Matcher Reference]:http://clang.llvm.org/docs/LibASTMatchersReference.html
 [clang-playground]:https://github.com/xinhuang/clang-playground.git
-
