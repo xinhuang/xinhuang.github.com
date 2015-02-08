@@ -7,12 +7,12 @@ tags : [c++, howto]
 ---
 {% include JB/setup %}
 
-In [previous post] we have made a simple Clang tool that will print all the
-declarations in a given source file. Now Let's try to make another tool to
+In [previous post] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the
+declarations in a given source file. Now Let's play with Clang AST matchers and make another tool to
 detect when a _std::vector_ is passed by value - which usually causes a
 performance hit.
 
-## The Pass-By-Value std::vector Finding Program
+## The Pass-by-Value std::vector Finding Program
 
 The example.cpp:
 
@@ -27,7 +27,7 @@ void foobar(const vector<int>& cis);
 void fooboo(vector<int>& cis);
 ```
 
-Given above source file, let's feed it to our _find-vec_ program:
+Let's feed it to our _find-vec_ program:
 
 > $ ./find-vec example.cpp -- -std=c++11  
 > example.cpp:5:6  
@@ -54,7 +54,7 @@ extract its attributes.
 
 ## The AST Matcher
 
-To use the AST matchers, all we need to do is to call a bunch of matcher creation
+To use the AST matchers, we need to do is to call a bunch of matcher creation
 function, chain them together to compose the matcher we need, and/or bind the target
 node with a name so we can extract it later.
 
@@ -81,17 +81,37 @@ DeclarationMatcher Matcher = functionDecl(
   hasAnyParameter(hasType(recordDecl(matchesName("std::vector"))));
 ```
 
-## Put It All Together
+## The MatchCallback
 
-When the AST matcher find the right node,
-`clang::ast_matchers::MatchFinder::MatchCallback` is used to provide
+When the AST matcher find the right node, the corresponding
+`clang::ast_matchers::MatchFinder::MatchCallback` will be invoked with matched result. By providing a `MatchCallback`, we can print the function declarations/definitions that accept any parameter of type `std::vector` that is passed by value.
 
-## To Dump The AST Nodes
+```
+class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
+public:
+  virtual void
+  run(const clang::ast_matchers::MatchFinder::MatchResult &Result) final {
+    llvm::outs() << ".";
+    if (const auto *F =
+            Result.Nodes.getDeclAs<clang::FunctionDecl>(FunctionID)) {
+      const auto& SM = *Result.SourceManager;
+      const auto& Loc = F->getLocation();
+      llvm::outs() << SM.getFilename(Loc) << ":"
+                   << SM.getSpellingLineNumber(Loc) << ":"
+                   << SM.getSpellingColumnNumber(Loc) << "\n";
+    }
+  }
+};
+```
 
-For a complete document of AST matchers, you can refer to the [AST Matcher Reference].
-<<TODO: Return Type and Parameter explaination>>
+## References
+
+Clang also provides a simple document of AST matchers: [Matching the Clang AST].
+For a complete reference of AST matchers, you can find it in [AST Matcher Reference].
 
 _All the source code in this post can be found at [clang-playground]._
 
+[previous post]: http://xinhuang.github.io/clang/2014/10/19/clang-tutorial-finding-declarations
 [AST Matcher Reference]:http://clang.llvm.org/docs/LibASTMatchersReference.html
 [clang-playground]:https://github.com/xinhuang/clang-playground.git
+[Matching the Clang AST]: http://clang.llvm.org/docs/LibASTMatchers.html
