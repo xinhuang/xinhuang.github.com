@@ -10,22 +10,22 @@ tags : [harmful, design pattern]
 ## TL;DR
 
 For Observer Pattern, when automatic de-registering is needed if observer goes
- out of life span, there are 2 options:  
+ out of life span, there are two options:  
 1. De-register in destructor  
 2. Use `std::weak_ptr` in `Observable`  
 
-If de-register observer in destructor, then inheritance will cause race
- condition because observer base class is destructed later than concrete observer
- class. If event is triggered after the invocation of derived destructor but
+When de-registering observer in destructor, inheritance will cause race
+ condition because the `AbstractObserver` class is destructed after `ConcreeObserver`
+ class. If event is triggered after the invocation of concrete destructor but
  before the observer has the chance to remove itself from observable, the
- observer will be in a partial destructed state.
+ observer will be in a partial state.
 
-This misbehavior cannot be fixed when concrete class is inherited from
+This misbehavior cannot be fixed as long as concrete class is inherited from
  `AbstractObserver` class, because `AbstractObserver` is always constructed
  first, and destructed last.
 
 To avoid such problem, either use a combination of `std::shared_ptr` and
- `std::weak_ptr`, or don't re-create the wheels, use [Boost.Signal] instead.
+ `std::weak_ptr`, or use [Boost.Signal] instead of recreating the wheel.
 
 ## The [GoF Observer Pattern]
 
@@ -45,9 +45,9 @@ public:
 };
 ```
 
-## What If Observers Runs Out of Life Span
+## What If An Observer Runs Out of Life Span
 
-When an observer is running out of life span, it has to remove it from the observers list. But sometimes the observers are managed using "reference counting", or explicit removing observer before each destruction is too much work, having an automatic un-registered observer is very convenient.
+When an observer runs out of life span, it has to remove it from the observers list. But sometimes observers are managed using "reference counting", or explicit removing observer before each destruction is of too much work and duplication code, having an automatic un-registered observer is very convenient.
 
 Here comes our new `AbstractObservable`/`AbstractObserver`:
 
@@ -86,7 +86,7 @@ private:
 ## What Will Happen in Multi-Threading Environment?
 
 The race condition happens when the
- observer list gets updated. Simple problem! Just need a lock:
+ observer list gets updated. Simple problem! Only need a lock:
 
 ```C++
 void AbstractObservable::remove(AbstractObserver* observer) {
@@ -95,10 +95,9 @@ void AbstractObservable::remove(AbstractObserver* observer) {
 }
 ```
 
-But take a second thought on the runtime behavior, is the program really thread
- safe now?
+But take a second thought on the runtime behavior, is this program really thread-safe?
 
-Below is a normal destruction order of an observer:
+Here is a normal destruction order of an observer:
 
 1. ConcreteObserver::~ConcreteObserver()  
 2. AbstractObserver::~AbstractObserver()  
@@ -111,20 +110,19 @@ What if during the destruction of an observer, an event is fired? With the follo
 4. _AbstractObserver::~AbstractObserver_ (Probably won't happen)  
 
 During the 3rd invocation to `ConcreteObserver::onNotify()`, the `ConcreteObserver` has
- been partially destructed. And this is when race condition happens.
+ been partially destructed. And this is where race condition happens.
 
 ## Is There A Better Way?
 
-To avoid such problem, there are several ways:
+To avoid this problem, there are several ways:
 
-1. Explicit remove observer in destructor. But this is error prone, and
+1. Explicit remove observer in destructor. Tthis could be error prone, and
 doesn't avoid the problem if you have inheritance in the future.
 
 2. Explicit un-register observer before its destructor gets called. This requires
-an customized deleter to call un-register function.
+an customized deleter to call un-register function if you use `std::shared_ptr`, or being careful if observers's life span are managed manually.
 
-3. Use the combination of `std::shared_ptr` and `std::weak_ptr`. This way is
-much better and the race condition can be avoid completely. Remember to inherit
+3. Use the combination of `std::shared_ptr` and `std::weak_ptr`. In this way the race condition can be avoid completely. Remember to inherit
 from `std::enable_shared_from_this` for your concrete observer class.
 
 4. Don't re-create the wheels, use [Boost.Signal] instead.
