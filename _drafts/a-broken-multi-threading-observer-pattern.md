@@ -15,7 +15,7 @@ In the implementation of Observer Pattern, if the observer is going to de-regist
 1. De-register in destructor
 2. Use `std::weak_ptr` in `Observable`
 
-For option 1, if de-registering is done in the destructor from the base observer class, race condition will occur, because the destructor of `AbstractObserver` is called after `ConcreteObserver`. If an event is triggered between the invocation of concrete destructor and abstract destructor, the observer will be in a partial state.
+For option 1, there will be race condition if de-registering happens in the destructor of the base observer class, because the destructor of AbstractObserver is called after ConcreteObserver. If an event is triggered between the invocation of concrete destructor and abstract destructor, the observer will be in a partial state.
 
 This misbehavior cannot be fixed as long as concrete class is inherited from
  `AbstractObserver` class, because `AbstractObserver` is always constructed
