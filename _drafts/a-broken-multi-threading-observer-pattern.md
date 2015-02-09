@@ -7,25 +7,22 @@ tags : [harmful, design pattern]
 ---
 {% include JB/setup %}
 
-## TL;DR
+## TL; DR
 
-For Observer Pattern, when automatic de-registering is needed if observer goes
- out of life span, there are two options:  
-1. De-register in destructor  
-2. Use `std::weak_ptr` in `Observable`  
+In the implementation of Observer Pattern, if the observer is going to de-register itself during
+ destruction, usually there are two ways:
 
-When de-registering observer in destructor, inheritance will cause race
- condition because the `AbstractObserver` class is destructed after `ConcreeObserver`
- class. If event is triggered after the invocation of concrete destructor but
- before the observer has the chance to remove itself from observable, the
- observer will be in a partial state.
+1. De-register in destructor
+2. Use `std::weak_ptr` in `Observable`
+
+For option 1, if de-registering is done in the destructor from the base observer class, race condition will occur, because the destructor of `AbstractObserver` is called after `ConcreteObserver`. If an event is triggered between the invocation of concrete destructor and abstract destructor, the observer will be in a partial state.
 
 This misbehavior cannot be fixed as long as concrete class is inherited from
  `AbstractObserver` class, because `AbstractObserver` is always constructed
  first, and destructed last.
 
 To avoid such problem, either use a combination of `std::shared_ptr` and
- `std::weak_ptr`, or use [Boost.Signal] instead of recreating the wheel.
+ `std::weak_ptr`, or use [Boost.Signals] instead of recreating the wheel.
 
 ## The [GoF Observer Pattern]
 
@@ -47,9 +44,9 @@ public:
 
 ## What If An Observer Runs Out of Life Span
 
-When an observer runs out of life span, it has to remove it from the observers list. But sometimes observers are managed using "reference counting", or explicit removing observer before each destruction is of too much work and duplication code, having an automatic un-registered observer is very convenient.
+When an observer runs out of life span, it has to remove it from the observers list. But sometimes observers are managed using "reference counting", or explicit removing observer before each destruction is of too much work and duplication code, it is very convenient to have an automatic un-registered observer.
 
-Here comes our new `AbstractObservable`/`AbstractObserver`:
+Here is our new `AbstractObservable`/`AbstractObserver`:
 
 ```C++
 class AbstractObservable : public IObservable {
@@ -83,7 +80,7 @@ private:
 };
 ```
 
-## What Will Happen in Multi-Threading Environment?
+## What Will Happen In A Multi-Threading Environment?
 
 The race condition happens when the
  observer list gets updated. Simple problem! Only need a lock:
@@ -99,42 +96,38 @@ But take a second thought on the runtime behavior, is this program really thread
 
 Here is a normal destruction order of an observer:
 
-1. ConcreteObserver::~ConcreteObserver()  
-2. AbstractObserver::~AbstractObserver()  
+1. ConcreteObserver::~ConcreteObserver()
+2. AbstractObserver::~AbstractObserver()
 
-What if during the destruction of an observer, an event is fired? With the following invocation sequence:
+What if during the destruction of an observer, an event is fired? Let's see the following invocation sequence:
 
-1. ConcreteObserver::~ConcreteObserver()  
-2. ConcreteObservable::notify()  
-3. _ConcreteObserver::onNotify()_  
-4. _AbstractObserver::~AbstractObserver_ (Probably won't happen)  
+1. ConcreteObserver::~ConcreteObserver()
+2. ConcreteObservable::notify()
+3. _ConcreteObserver::onNotify()_
+4. _AbstractObserver::~AbstractObserver_
 
-During the 3rd invocation to `ConcreteObserver::onNotify()`, the `ConcreteObserver` has
- been partially destructed. And this is where race condition happens.
+During the 3rd invocation of `ConcreteObserver::onNotify()`, the `ConcreteObserver` is partially destructed. This is where the _race condition_ happens.
 
 ## Is There A Better Way?
 
 To avoid this problem, there are several ways:
 
-1. Explicit remove observer in destructor. Tthis could be error prone, and
-doesn't avoid the problem if you have inheritance in the future.
-
-2. Explicit un-register observer before its destructor gets called. This requires
-an customized deleter to call un-register function if you use `std::shared_ptr`, or being careful if observers's life span are managed manually.
-
-3. Use the combination of `std::shared_ptr` and `std::weak_ptr`. In this way the race condition can be avoid completely. Remember to inherit
+1. Explicit remove observer in destructor. This could be error prone, and
+the problem will still occur because you can always inherit from `ConcreteObserver`.
+2. Explicit un-registering observer before its destructor gets called. This requires
+an customized deleter to call un-register function if you use `std::shared_ptr`, or being careful if observer's life span are managed manually. (With a lot of repeated code to remove observers.)
+3. Use a combination of `std::shared_ptr` and `std::weak_ptr`. In this way the race condition can be avoid completely. Remember to inherit
 from `std::enable_shared_from_this` for your concrete observer class.
-
-4. Don't re-create the wheels, use [Boost.Signal] instead.
+4. Don't re-create the wheels, use [Boost.Signals] instead.
 [Boost.Signals: When can disconnections occur?]
 
 ## But What Is The Real Problem?
 
 Inheritance isn't always harmless as it might seems, with the great benefit of
  code re-usability. In a multi-threading environment, inheritance can easily
- break the constraints but give the user an illusion original constraints are
- naturally "_inherited_". Code and feature can be inherited, but concurrent
- constraints cannot be inherited.
+ break the constraints but give the user an illusion that original constraints are
+ naturally "inherited". **Code and functions can be inherited, but not the same for
+ concurrent constraints.**
 
 [GoF Observer Pattern]: http://en.wikipedia.org/wiki/Observer_pattern
 [Boost.Signals: When can disconnections occur?]: http://www.boost.org/doc/libs/1_39_0/doc/html/signals/tutorial.html#id3343704
