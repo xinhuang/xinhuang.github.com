@@ -1,9 +1,9 @@
 ---
-title: "A Broken Multi-Threading Observer Pattern"
+title: "A Broken Implementation of Multi-Threading Observer Pattern"
 layout: post
 category : Multi-Threading,
 tagline: "Revisit Design Pattern In A Concurrent View"
-tags : [harmful, design pattern]
+tags : [design pattern]
 ---
 {% include JB/setup %}
 
@@ -12,7 +12,7 @@ tags : [harmful, design pattern]
 In the implementation of Observer Pattern, if the observer is going to de-register itself during
  destruction, usually there are two ways:
 
-1. De-register in destructor
+1. De-register in `Observer` destructor
 2. Use `std::weak_ptr` in `Observable`
 
 For option 1, there will be race condition if de-registering happens in the destructor of the base observer class, because the destructor of AbstractObserver is called after ConcreteObserver. If an event is triggered between the invocation of concrete destructor and abstract destructor, the observer will be in a partial state.
