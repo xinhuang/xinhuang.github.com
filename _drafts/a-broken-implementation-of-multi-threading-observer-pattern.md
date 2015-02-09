@@ -9,7 +9,7 @@ tags : [design pattern]
 
 ## TL; DR
 
-In the implementation of Observer Pattern, if the observer is going to de-register itself during
+For the implementation of Observer Pattern, if the observer is going to de-register itself during
  destruction, usually there are two ways:
 
 1. De-register in `Observer` destructor
