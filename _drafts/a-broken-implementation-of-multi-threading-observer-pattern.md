@@ -1,5 +1,5 @@
 ---
-title: "A Broken Implementation of Multi-Threading Observer Pattern"
+title: "How A Multi-Threaded Implementation of The Observer Pattern Can Fail"
 layout: post
 category : Multi-Threading,
 tagline: "Revisit Design Pattern In A Concurrent View"
@@ -26,7 +26,7 @@ This misbehavior cannot be fixed as long as the concrete class inherits from
  first, and destroyed last.
 
 To avoid such a problem, either use a combination of `std::shared_ptr` and
- `std::weak_ptr`, or use [Boost.Signals] instead of reinventing the wheel.
+ `std::weak_ptr`, or use [Boost.Signals2] instead of reinventing the wheel.
 
 ## The [GoF Observer Pattern]
 
@@ -57,7 +57,7 @@ Before an observer is destroyed, it has to be removed from the observers list.
 Here is our new `AbstractObservable`/`AbstractObserver` with automatic
  un-registration in destructor:
 
-```C++
+```
 class AbstractObservable : public IObservable {
 public:
 	virtual ~AbstractObservable() {}
@@ -94,7 +94,7 @@ private:
 In a multi-threaded environment a race condition can happen when the
  observer list is updated. Simple problem! Only need a lock:
 
-```C++
+```
 // same for add and notify
 void AbstractObservable::remove(AbstractObserver* observer) {
 	std::lock_guard lock(mutex);
@@ -114,13 +114,15 @@ What if during the destruction of an observer, an event is fired?
 
 1. ConcreteObserver::~ConcreteObserver()
 2. ConcreteObservable::notify()
-3. _ConcreteObserver::onNotify()_
-4. _AbstractObserver::~AbstractObserver_
+3. ConcreteObserver::onNotify()
+4. AbstractObserver::~AbstractObserver()
 
-At the time of `ConcreteObserver::onNotify()` call, the `ConcreteObserver` is
- partially destroyed. This is where the _race condition_ happens.
-
-TODO: Need to refer back to your introduction of the lock and spell out why the lock would not work.
+Previously to ensure the exclusive call to `add`, `remove` and `notify` function
+ of `AbstractObservable`, we use a lock. But the destructor of `ConcreteObserver`
+ and `notify` function of `AbstractObservable` are not exclusive. Hence when
+ an event is triggered while the destructor `ConcreteObserver` is executing, the
+ `onNotify` of the `ConcreteObserver` will be called on a (partially) destroyed
+ object. This is why the race condition can happen.
 
 ## Is there a better way?
 
@@ -128,72 +130,70 @@ To avoid this problem, there are several alternatives:
 
 1. Explicit observer removal in the destructor. This could be error prone, and
  the problem can still occur because you can always inherit from `ConcreteObserver`.
+
 2. Explicit un-registration observer before its destructor is called. This requires
  a customized deleter to call un-register function if you use `std::shared_ptr`,
  or having to be careful if the observer's life span is managed manually - with a
  lot of repeated code to remove observers to boot.
 
-For example:
+    For example:
 
-```
-// manually un-register observer from observable
-{
-  ConcreteObserver scopedObserver;
-  observable.add(scopedObserver);
-  // ...
-  observable.remove(scopedObserver);
-}
+        // manually un-register observer from observable
+        {
+          ConcreteObserver scopedObserver;
+          observable.add(scopedObserver);
+          // ...
+          observable.remove(scopedObserver);
+        }
 
-// manually un-register observer from observable using std::shared_ptr
-std::shared_ptr<Observer> observer(new ConcreteObserver(), Observer* o) {
-  observable.remove(o);
-});
-```
+        // manually un-register observer from observable using std::shared_ptr
+        std::shared_ptr<Observer> observer(new ConcreteObserver(), Observer* o) {
+          observable.remove(o);
+        });
 
 3. Use a combination of `std::shared_ptr` and `std::weak_ptr`. In this way the
- race condition can be avoided completely. Remember to inherit from
- `std::enable_shared_from_this` for your concrete observer class.
+ race condition can be avoided completely.
 
-For example:
+    For example:
 
-```
-class IObserver : std::enable_shared_from_this<IObserver> {
-public:
-  virtual ~IObserver() {}
-  virtual void onNotify() = 0;
-};
+        class IObserver {
+        public:
+          virtual ~IObserver() {}
+          virtual void onNotify() = 0;
+        };
 
-class Observable {
-  std::set<std::weak_ptr<IObserver>> observers;
+        class Observable {
+          std::mutex mutex;
+          std::vector<std::weak_ptr<IObserver>> observers;
 
-public:
-  virtual ~Observable() {}
-  void add(const std::shared_ptr<IObserver>& o) {
-    observers.insert(o);
-  }
-  void remove(const std::shared_ptr<IObserver>& o) {
-    /* here we do nothing, invalid observers will be removed in notify */
-  }
-  void notify() {
-    std::lock_guard lock(mutex);
-    for (auto& o : observers) {
-      if (auto& p = o.lock())
-        p->notify();
-    }
-    purge_invalid_observer();
-  }
+        public:
+          virtual ~Observable() {}
+          void add(const std::shared_ptr<IObserver>& o) {
+            std::lock_guard<std::mutex> lock(mutex);
+            observers.emplace_back(o);
+          }
+          void remove(const std::shared_ptr<IObserver>& o) {
+            /* here we do nothing, invalid observers will be removed in notify */
+          }
+          void notify() {
+            std::lock_guard<std::mutex> lock(mutex);
+            for (auto& o : observers) {
+              if (auto p = o.lock())
+                p->onNotify();
+            }
+            purge_invalid_observer();
+          }
 
-private:
-  void purge_invalid_observer() {
-    auto last_valid = std::remove_if(std::begin(observers),
-                                     std::end(observers),
-                                     [](const std::weak_ptr<IObserver>& o) {
-                                       return o.expired();
-                                     });
-    std::erase(last_valid, std::end(observers));
-  }
-}
-```
+        private:
+          void purge_invalid_observer() {
+            auto last_valid = std::remove_if(std::begin(observers),
+                                             std::end(observers),
+                                             [](const std::weak_ptr<IObserver>& o) {
+                                               return o.expired();
+                                             });
+            observers.erase(last_valid, std::end(observers));
+          }
+        };
 
 4. Don't reinvent the wheel, use [Boost.Signals2] instead.
 
@@ -211,6 +211,4 @@ The moral of this tale is that inheritance isn't always as harmless as it might
  _Many thanks to David Wales who helped review this post._
 
 [GoF Observer Pattern]: http://en.wikipedia.org/wiki/Observer_pattern
-[Boost.Signals: When can disconnections occur?]: http://www.boost.org/doc/libs/1_39_0/doc/html/signals/tutorial.html#id3343704
-[Boost.Signals]:http://www.boost.org/doc/libs/1_57_0/doc/html/signals.html
 [Boost.Signals2]:http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html
