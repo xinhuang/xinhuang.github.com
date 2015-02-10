@@ -17,7 +17,7 @@ In an implementation of the Observer Pattern, usually there are two ways for an
 
 For option 1, there will be a race condition if de-registering happens in the
  destructor of the base observer class, because the destructor of
- AbstractObserver is called after ConcreteObserver. If an event is triggered
+ `AbstractObserver` is called after `ConcreteObserver`. If an event is triggered
  between the invocation of concrete destructor and abstract destructor, the
  observer will be in a partial state.
 
@@ -102,20 +102,24 @@ void AbstractObservable::remove(AbstractObserver* observer) {
 }
 ```
 
-But think again about the runtime behavior, is it really thread-safe?
+But think again about the runtime behavior. Is it really thread-safe?
 
 Here is the normal destruction order of an observer:
 
-1. ConcreteObserver::~ConcreteObserver()
-2. AbstractObserver::~AbstractObserver()
+1. `ConcreteObserver::~ConcreteObserver()`
+
+2. `AbstractObserver::~AbstractObserver()`
 
 What if during the destruction of an observer, an event is fired?
  Now the following invocation sequence can occur:
 
-1. ConcreteObserver::~ConcreteObserver()
-2. ConcreteObservable::notify()
-3. ConcreteObserver::onNotify()
-4. AbstractObserver::~AbstractObserver()
+1. `ConcreteObserver::~ConcreteObserver()`
+
+2. `ConcreteObservable::notify()`
+
+3. `ConcreteObserver::onNotify()`
+
+4. `AbstractObserver::~AbstractObserver()`
 
 Previously to ensure the exclusive call to `add`, `remove` and `notify` function
  of `AbstractObservable`, we use a lock. But the destructor of `ConcreteObserver`
@@ -128,8 +132,9 @@ Previously to ensure the exclusive call to `add`, `remove` and `notify` function
 
 To avoid this problem, there are several alternatives:
 
-1. Explicit observer removal in the destructor. This could be error prone, and
- the problem can still occur because you can always inherit from `ConcreteObserver`.
+1. Explicit observer removal in the most derived destructor. This could be error
+ prone, and the problem can still occur because you can always inherit from
+ `ConcreteObserver`.
 
 2. Explicit un-registration observer before its destructor is called. This requires
  a customized deleter to call un-register function if you use `std::shared_ptr`,
@@ -144,12 +149,13 @@ To avoid this problem, there are several alternatives:
           observable.add(scopedObserver);
           // ...
           observable.remove(scopedObserver);
-        }
+        } // scopredObserver is destroyed here
 
         // manually un-register observer from observable using std::shared_ptr
         std::shared_ptr<Observer> observer(new ConcreteObserver(), Observer* o) {
           observable.remove(o);
         });
+        observable.add(observer);
 
 3. Use a combination of `std::shared_ptr` and `std::weak_ptr`. In this way the
  race condition can be avoided completely.
@@ -164,7 +170,8 @@ To avoid this problem, there are several alternatives:
 
         class Observable {
           std::mutex mutex;
-          std::vector<std::weak_ptr<IObserver>> observers;
+          // of course the std::vector can be replace by a concurrent container
+          std::vector<std::weak_ptr<IObserver>> observers;  
 
         public:
           virtual ~Observable() {}
@@ -196,6 +203,7 @@ To avoid this problem, there are several alternatives:
         };
 
 4. Don't reinvent the wheel, use [Boost.Signals2] instead.
+ ["It can be used safely in a multi-threaded environment."]
 
 ## So what is the real problem?
 
@@ -212,3 +220,4 @@ The moral of this tale is that inheritance isn't always as harmless as it might
 
 [GoF Observer Pattern]: http://en.wikipedia.org/wiki/Observer_pattern
 [Boost.Signals2]:http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html
+["It can be used safely in a multi-threaded environment."]:http://www.boost.org/doc/libs/1_57_0/doc/html/signals2/thread-safety.html#idp430084640
