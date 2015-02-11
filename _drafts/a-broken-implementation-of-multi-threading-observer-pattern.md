@@ -193,11 +193,11 @@ To avoid this problem, there are several alternatives:
 
         private:
           void purge_invalid_observer() {
-            auto last_valid = std::remove_if(std::begin(observers),
-                                             std::end(observers),
-                                             [](const std::weak_ptr<IObserver>& o) {
-                                               return o.expired();
-                                             });
+            auto first_invalid = std::remove_if(std::begin(observers),
+                                                std::end(observers),
+                                                [](const std::weak_ptr<IObserver>& o) {
+                                                  return o.expired();
+                                                });
             observers.erase(last_valid, std::end(observers));
           }
         };
