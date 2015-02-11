@@ -1,6 +1,9 @@
 <h1 class="entry-title">
- {% if post.title %}
+  {% if post.title %}
     <a href="{{ root_url }}{{ post.url }}">{{ post.title }}</a>
+    {% if post.tagline %}
+      <br/><small>{{ post.tagline }}</small>
+    {% endif %}
   {% endif %}
 </h1>
 <div class="row">

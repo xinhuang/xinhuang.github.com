@@ -1,7 +1,7 @@
 ---
 layout: page
-title: Explore The Possibilities
-tagline: and the impossibilities
+title: Life is short,
+tagline: 
 ---
 {% include JB/setup %}
 
@@ -22,4 +22,3 @@ tagline: and the impossibilities
 </ul>
 
 [more...](/archive.html)
-
