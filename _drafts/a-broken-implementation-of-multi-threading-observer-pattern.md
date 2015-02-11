@@ -10,7 +10,7 @@ tags : [design pattern]
 ## Overview
 
 In an implementation of the Observer Pattern, usually there are two ways for an
- observer to de-register itself during:
+ observer to de-register itself during destruction:
 
 1. De-register in `Observer` destructor
 2. Use `std::weak_ptr` in `Observable`
@@ -97,7 +97,7 @@ In a multi-threaded environment a race condition can happen when the
 ```
 // same for add and notify
 void AbstractObservable::remove(AbstractObserver* observer) {
-	std::lock_guard lock(mutex);
+	std::lock_guard<std::mutex> lock(mutex);
 	observers.erase(observer);
 }
 ```
@@ -121,9 +121,9 @@ What if during the destruction of an observer, an event is fired?
 
 4. `AbstractObserver::~AbstractObserver()`
 
-Previously to ensure the exclusive call to `add`, `remove` and `notify` function
+Previously, to ensure the exclusive call to `add`, `remove` and `notify` functions
  of `AbstractObservable`, we use a lock. But the destructor of `ConcreteObserver`
- and `notify` function of `AbstractObservable` are not exclusive. Hence when
+ and `notify` functions of `AbstractObservable` are not exclusive. Hence when
  an event is triggered while the destructor `ConcreteObserver` is executing, the
  `onNotify` of the `ConcreteObserver` will be called on a (partially) destroyed
  object. This is why the race condition can happen.
@@ -152,9 +152,10 @@ To avoid this problem, there are several alternatives:
         } // scopredObserver is destroyed here
 
         // manually un-register observer from observable using std::shared_ptr
-        std::shared_ptr<Observer> observer(new ConcreteObserver(), Observer* o) {
-          observable.remove(o);
-        });
+        std::shared_ptr<Observer> observer(new ConcreteObserver(),
+                                           [&](Observer* o) {
+                                             observable.remove(o);
+                                           });
         observable.add(observer);
 
 3. Use a combination of `std::shared_ptr` and `std::weak_ptr`. In this way the
@@ -188,11 +189,11 @@ To avoid this problem, there are several alternatives:
               if (auto p = o.lock())
                 p->onNotify();
             }
-            purge_invalid_observer();
+            remove_invalid_observer();
           }
 
         private:
-          void purge_invalid_observer() {
+          void remove_invalid_observer() {
             auto first_invalid = std::remove_if(std::begin(observers),
                                                 std::end(observers),
                                                 [](const std::weak_ptr<IObserver>& o) {
