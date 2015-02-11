@@ -49,9 +49,8 @@ public:
 ## What happens when an observer is going to be destroyed?
 
 Before an observer is destroyed, it has to be removed from the observers list.
- Sometimes observers are managed using "reference counting". Alternatively,
- explicit removal of the observer before each destruction is of too much work
- and duplication code, it is therefore convenient to automate observer
+ Explicit removal of the observer before each destruction is too much work
+ and duplicate code, it is convenient, therefore, to automate observer
  un-registration.
 
 Here is our new `AbstractObservable`/`AbstractObserver` with automatic
@@ -110,7 +109,7 @@ Here is the normal destruction order of an observer:
 
 2. `AbstractObserver::~AbstractObserver()`
 
-What if during the destruction of an observer, an event is fired?
+What if, during the destruction of an observer, an event is fired?
  Now the following invocation sequence can occur:
 
 1. `ConcreteObserver::~ConcreteObserver()`
@@ -132,18 +131,18 @@ Previously, to ensure the exclusive call to `add`, `remove` and `notify` functio
 
 To avoid this problem, there are several alternatives:
 
-1. Explicit observer removal in the most derived destructor. This could be error
+1. Explicitly remove observer in the most derived destructor. This could be error
  prone, and the problem can still occur because you can always inherit from
  `ConcreteObserver`.
 
-2. Explicit un-registration observer before its destructor is called. This requires
- a customized deleter to call un-register function if you use `std::shared_ptr`,
+2. Explicitly un-registe observer before its destructor is called. This requires
+ a customized deleter to call an unregister function if you use `std::shared_ptr`,
  or having to be careful if the observer's life span is managed manually - with a
  lot of repeated code to remove observers to boot.
 
     For example:
 
-        // manually un-register observer from observable
+        // manually unregister observer from observable
         {
           ConcreteObserver scopedObserver;
           observable.add(scopedObserver);
@@ -151,7 +150,7 @@ To avoid this problem, there are several alternatives:
           observable.remove(scopedObserver);
         } // scopredObserver is destroyed here
 
-        // manually un-register observer from observable using std::shared_ptr
+        // manually unregister observer from observable using std::shared_ptr
         std::shared_ptr<Observer> observer(new ConcreteObserver(),
                                            [&](Observer* o) {
                                              observable.remove(o);
@@ -209,7 +208,7 @@ To avoid this problem, there are several alternatives:
 ## So what is the real problem?
 
 The moral of this tale is that inheritance isn't always as harmless as it might
- seems, notwithstanding the great benefit of code re-usability. In a
+ seem, notwithstanding the great benefit of code re-usability. In a
  multi-threaded environment, inheritance can easily break the constraints while
  giving the user an illusion that the original constraints are naturally
  "inherited". **Code and functions can be inherited, but the situation is not
