@@ -9,10 +9,10 @@ tags : [TBB, multithreading]
 
 # Overview
 
-TBB flow graph provides a kind of flow-oriented programming style. For problems
+TBB flow graph provides a way to do flow-based programming. For problems
 which can be described as a dependency graph, it provides a clear interface to
-describe the problem, with good performance and scalability on a multi-core
-machine.
+describe the problem, with good performance and scalability across multiple CPU
+cores.
 
 A typical TBB flow graph code looks like below:
 
@@ -49,23 +49,24 @@ _Example taken from [tbb::join_node documentation]._
 
 # Dynamic Graph
 
-The example above is quite simple, only take a fixed computation flow graph.
+The example above is quite simple, only take a predefined computation flow graph.
 However in reality, the flow graph usually is dynamically created somewhere,
 especially when trying to adopt TBB for a legacy system, and we will need
-to create the TBB flow graph at runtime:
+to create the flow graph at runtime:
 
 ```
-using fnode = tbb::flow::function_node<Param, Param>;
+using fnode = tbb::flow::function_node<msg_t, msg_t>;
 
-void computeFlowGraph(const std::vector<Node*>& nodes, const Param& computationParam) {
+void computeFlowGraph(const std::vector<Node*>& nodes, const msg_t& computationParam) {
   std::vector<fnode*> fnodes;
   std::unordered_map<Node*, fnode*> nfmap;
 
   tbb::flow::graph g;
 
   for (auto n : nodes) {
+    // not capturing *n directly to avoid copy
     auto f = new fnode(g, n->getConcurrentCount(),
-                       [=](const Param& p) { return (*n)(p); } ));
+                       [=](const msg_t& p) { return (*n)(p); } ));
     fnodes.push_back(f);
     nfmap[n] = f;
   }
@@ -104,34 +105,37 @@ message first.
 There is a `join_node` looks interesting, but after a closer look, it's still
 not the expected one: the message type is of a fixed empty class `continue_msg`. There is no way to pass any extra information through the `join_node`.
 
-Also all other node type cannot satisfy this requirement. How to solve this problem?
+Also all other node type cannot meet this requirement. How to solve this problem?
 
 # The Pipeline
 
 In TBB there is another pattern called [Pipeline]. It simulates a assembly line
 which contains several processing stage. Only after one stage finishes its work, next
-stage can start.
+stage can start. Different stages can run at same time.
 
-One constraint of `tbb::parallel_pipeline` is it only supports linear pipeline.
-[TBB document: Non-Linear Pipelines] This may seem to reduce the parallelism, however
+One constraint of `tbb::parallel_pipeline` is that TBB doesn't support
+[non-linear pipelines]. This may seem to reduce the parallelism, however
 it only affects the latency since all of the stages can always be processed in
 parallel.
 
-To construct a non-linear pipeline, we will have to sort the graph. Besides,
-what if we want to decide the content of message passed to
-child node after we have seen all messages passed from parents. Pipeline
-cannot meet our needs this time.
+Because of this, the graph should be sorted before it can be expressed in
+a linear pipeline.
+
+But there is one limitation: If before the message can be passed to a child node,
+we need to collect all messages coming from parents. Pipeline cannot deal with this
+situation.
 
 # The Merge Node
 
 To solve the "1 task per N messages" problem, all messages from parents need to be
-merged into one, and passed onto next function_node. The general idea is simple:
+merged into one, then passed onto the child `function_node`.
+The general idea is like this:
 
 > `join_node<tuple<msg_t...>>` => `function_node<msg_t, msg_t>`
 
-From the interface we can tell what `join_node` does is only put all the input
-from its parents into a `tuple` and passed to downstream. If we chain the
-`join_node` with a `function_node`, there should be little cost.
+From the interface we can tell `join_node` is lightweight and what it does is
+only put all the input from its parents into a `tuple` and passed to downstream.
+ If we chain the `join_node` with a `function_node`, there should be little cost.
 
 But here comes another problem: How to store these nodes of different type.
 The `join_node` which joins different number of nodes are of different type.
@@ -244,6 +248,7 @@ However, usually these many parents would indicate a bottle neck in the graph,
 and probably a poor graph design.
 
 [tbb::join_node documentation]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm
-[TBB document: Non-Linear Pipelines]:https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm
+[non-linear pipelines]:https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm
 [merge_node sources]:http://google.com
 [Pipeline]:https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm
+[criticizing on TBB's flow-based programming]:https://groups.google.com/forum/#!topic/flow-based-programming/JkInzGvySAg
