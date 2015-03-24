@@ -49,8 +49,8 @@ _Example taken from [tbb::join_node documentation]._
 
 # Dynamic Graph
 
-The example above is quite simple, only take a predefined computation flow graph.
-However in reality, the flow graph usually is dynamically created somewhere,
+The example above is quite simple, which only takes a predefined computation flow graph.
+However in reality, the original graph usually is dynamically created somewhere,
 especially when trying to adopt TBB for a legacy system, and we will need
 to create the flow graph at runtime:
 
@@ -64,7 +64,7 @@ void computeFlowGraph(const std::vector<Node*>& nodes, const msg_t& computationP
   tbb::flow::graph g;
 
   for (auto n : nodes) {
-    // not capturing *n directly to avoid copy
+    // not capturing *n directly to avoid copying
     auto f = new fnode(g, n->getConcurrentCount(),
                        [=](const msg_t& p) { return (*n)(p); } ));
     fnodes.push_back(f);
@@ -99,19 +99,20 @@ Everything in TBB is nice and handy, except the `function_node` might not be
 the one you want: You are expecting a node will spawn only one task after
 receiving one message from each parents, not spawn one task per message
 received from any parent.
-Because the node needs to wait all its parents to finish processing their
+The node needs to wait all its parents to finish processing their
 message first.
 
 There is a `join_node` looks interesting, but after a closer look, it's still
-not the expected one: the message type is of a fixed empty class `continue_msg`. There is no way to pass any extra information through the `join_node`.
+not the expected one: the message type is of a fixed empty class `continue_msg`.
+There is no way to pass any extra information through the `join_node`.
 
 Also all other node type cannot meet this requirement. How to solve this problem?
 
-# The Pipeline
+# Pipeline
 
-In TBB there is another pattern called [Pipeline]. It simulates a assembly line
-which contains several processing stage. Only after one stage finishes its work, next
-stage can start. Different stages can run at same time.
+TBB provides another pattern called [Pipeline]. It simulates an assembly line
+which contains several processing stages. Only after one stage finishes its work,
+can the next stage start. Different stages can be running at same time.
 
 One constraint of `tbb::parallel_pipeline` is that TBB doesn't support
 [non-linear pipelines]. This may seem to reduce the parallelism, however
@@ -121,37 +122,40 @@ parallel.
 Because of this, the graph should be sorted before it can be expressed in
 a linear pipeline.
 
-But there is one limitation: If before the message can be passed to a child node,
+However there is one limitation: If before the message can be passed to a child node,
 we need to collect all messages coming from parents. Pipeline cannot deal with this
 situation.
 
-# The Merge Node
+# Merge Node
 
 To solve the "1 task per N messages" problem, all messages from parents need to be
 merged into one, then passed onto the child `function_node`.
 The general idea is like this:
 
-> `join_node<tuple<msg_t...>>` => `function_node<msg_t, msg_t>`
+> `join_node<tuple<msg_t...>>`   =>   `function_node<msg_t, msg_t>`
 
 From the interface we can tell `join_node` is lightweight and what it does is
 only put all the input from its parents into a `tuple` and passed to downstream.
  If we chain the `join_node` with a `function_node`, there should be little cost.
 
-But here comes another problem: How to store these nodes of different type.
-The `join_node` which joins different number of nodes are of different type.
+But here comes another problem: How to store these nodes of different types.
+The `join_node`s which join different number of nodes are of different types.
 The entire graph is created dynamically, and all nodes need to be kept alive
 before computation finishes. Take below topology for example:
 
 ```
 // TODO: use a picture
 A--B
- \  \
-  ---C---
-   \  \  \
-    ------D
+    \
+G----C---
+         \
+E---------D
+         /
+F--------
 ```  
 
 Suppose we have a `merge_node` will merge all the parent inputs. These nodes above will be:
+(Nodes E & F omitted)
 
 ```
 auto *A = new function_node<msg_t, msg_t>(...);
@@ -236,12 +240,13 @@ merge_node<msg_t, merge_t>::~merge_node() {
 }
 ```
 
-Of course you can use macros to remove the many duplications here. For a full implementation, please refer to [merge_node sources].
+Of course you can use macros to remove the many duplications here.
+For a full implementation, please refer to [merge_node sources].
 
 # Known Limitations
 
 Because TBB doesn't support `join_node` with more than 10 parents, `merge_node`
-doesn't either. But you can always workaround this by creating an intermediate
+doesn't either. But you can always have a workaround by creating an intermediate
 node that merge 0~9 nodes and merge its output with the rest 10~N nodes.
 
 However, usually these many parents would indicate a bottle neck in the graph,
