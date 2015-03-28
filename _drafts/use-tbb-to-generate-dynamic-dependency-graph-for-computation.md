@@ -9,12 +9,12 @@ tags : [TBB, multithreading]
 
 # Overview
 
-TBB flow graph provides a way to do flow-based programming. For problems
-which can be described as a dependency graph, it provides a clear interface to
+TBB's flow graph provides a way to do flow-based programming. For problems
+which can be described as a dependency graph, a flow graph provides a clear interface to
 describe the problem, with good performance and scalability across multiple CPU
 cores.
 
-A typical TBB flow graph code looks like below:
+Typical TBB flow graph code looks like below:
 
 ```
 using namespace tbb::flow;
@@ -49,9 +49,9 @@ _Example taken from [tbb::join_node documentation]._
 
 # Dynamic Graph
 
-The example above is quite simple, which only takes a predefined computation flow graph.
+The example above is quite simple, using a predefined computation flow graph.
 However in reality, the original graph usually is dynamically created somewhere,
-especially when trying to adopt TBB for a legacy system, and we will need
+especially when trying to adapt TBB to a legacy system, and we will need
 to create the flow graph at runtime:
 
 ```
@@ -93,53 +93,53 @@ Because the topology is not known until we create the graph, the TBB flow graph
 nodes can only be placed on the heap so they will remain valid till the end of
 the computation.
 
-# 1 Task Per 1 Message VS. 1 Task Per N Messages
+# Message Aggregation
 
-Everything in TBB is nice and handy, except the `function_node` might not be
-the one you want: You are expecting a node will spawn only one task after
+Everything in TBB is find and dandy, except the `function_node` might not be
+the one you expect: You are expecting a node to spawn only one task after
 receiving one message from each parents, not spawn one task per message
 received from any parent.
-The node needs to wait all its parents to finish processing their
+The node needs to wait for all its parents to finish processing their
 message first.
 
-There is a `join_node` looks interesting, but after a closer look, it's still
-not the expected one: the message type is of a fixed empty class `continue_msg`.
-There is no way to pass any extra information through the `join_node`.
+There is a `join_node` looks to be an interesting candidate to solve this,
+but on inspection it's still not the expected one: the message type is of a
+fixed empty class `continue_msg`, and there is no way to pass any extra
+information through the `join_node`.
 
-Also all other node type cannot meet this requirement. How to solve this problem?
+We see that actually no node type can pass extra information while waiting for
+all its parents at the same time. How to resolve this problem?
 
 # Pipeline
 
-TBB provides another pattern called [Pipeline]. It simulates an assembly line
-which contains several processing stages. Only after one stage finishes its work,
-can the next stage start. Different stages can be running at same time.
+TBB provides another pattern called [pipeline]. It simulates an assembly line
+which contains several processing stages. Only after a stage finishes its work,
+can the next stage start. Each stage can process independent input concurrently.
 
 One constraint of `tbb::parallel_pipeline` is that TBB doesn't support
 [non-linear pipelines]. This may seem to reduce the parallelism, however
 it only affects the latency since all of the stages can always be processed in
 parallel.
 
-Because of this, the graph should be sorted before it can be expressed in
-a linear pipeline.
+To express a complex pipeline as a linear one, sort the stages.
 
-However there is one limitation: If before the message can be passed to a child node,
-we need to collect all messages coming from parents. Pipeline cannot deal with this
-situation.
+However there is still a limitation of pipeline: Before a message can be passed
+to a child node, we need to aggregate all messages from its parents. Pipeline
+cannot deal with this situation.
 
 # Merge Node
 
-To solve the "1 task per N messages" problem, all messages from parents need to be
+To solve the "1 task per N messages" problem, all parents' messages shoudl to be
 merged into one, then passed onto the child `function_node`.
 The general idea is like this:
 
 > `join_node<tuple<msg_t...>>`   =>   `function_node<msg_t, msg_t>`
 
-From the interface we can tell `join_node` is lightweight and what it does is
-only put all the input from its parents into a `tuple` and passed to downstream.
- If we chain the `join_node` with a `function_node`, there should be little cost.
+From the interface we can tell `join_node` is lightweight that only gathers the
+input from its parents into a `tuple` then passes the tuple to downstream.
+If we chain the `join_node` with a `function_node`, there should be little cost.
 
 But here comes another problem: How to store these nodes of different types.
-The `join_node`s which join different number of nodes are of different types.
 The entire graph is created dynamically, and all nodes need to be kept alive
 before computation finishes. Take below topology for example:
 
@@ -154,7 +154,28 @@ E---------D
 F--------
 ```  
 
-Suppose we have a `merge_node` will merge all the parent inputs. These nodes above will be:
+```
+auto *afnode = new function_node<msg_t, msg_t>(...);
+auto *bfnode = new function_node<msg_t, msg_t>(...);
+auto *cjnode = new join_node<tuple<msg_t, msg_t>>(...);
+auto *cfnode = new function_node<msg_t, msg_t>(...);
+make_edge(*cjnode, cfnode);
+auto *djnode = new new join_node<tuple<msg_t, msg_t, msg_t>>(...);
+auto *dfnode = new function_node<msg_t, msg_t>(...);
+make_edge(*djnode, dfnode);
+```
+
+As we can see from above code, `join_node`s which join different number of nodes
+are of different types. We cannot put them into a `std::vector<join_node<...>*>`
+to keep them alive until the end of computation.
+
+Imagine the graph can be rather complicated where a node can have at most 10
+parents! Either there will be many node vectors corresponding to each node
+type, or we have to find another way to erase the type of each node and
+restore the type information later for making edges and destruction.
+
+Suppose there is a `merge_node` which will wrap a `join_node` and connect it to
+a `function_node`. These nodes above will be:
 (Nodes E & F omitted)
 
 ```
@@ -166,17 +187,12 @@ auto *D = new merge_node(new join_node<tuple<msg_t, msg_t, msg_t>>(...),
                          new function_node<msg_t, msg_t>(...));
 ```
 
-Imagine the graph can be rather complicated where a node can have at most 10
-parents! Either there will be many node vectors corresponding to each node
-type, or we have to find another way to erase the type of each node and
-restore the type information later for making edges and destruction.
-
 # Erase/Restore Type Information
 
 In above example, the type of a node is related to how many parents it has.
 If you remember the old C trick: every pointer can be converted to a `void*`,
 and convert back to a proper type. Using this trick, we can keep the pointer
-to the join_node as a `void*`. Only convert it to correct type when we need
+to the `join_node` as a `void*`. Only convert it to the correct type when needed
 (i.e. making edge and inside destructor) by doing a runtime dispatch based on
 how many parents a node has.
 
@@ -249,7 +265,7 @@ Because TBB doesn't support `join_node` with more than 10 parents, `merge_node`
 doesn't either. But you can always have a workaround by creating an intermediate
 node that merge 0~9 nodes and merge its output with the rest 10~N nodes.
 
-However, usually these many parents would indicate a bottle neck in the graph,
+However, usually this number of parents would indicates a bottle neck in the graph,
 and probably a poor graph design.
 
 [tbb::join_node documentation]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm
