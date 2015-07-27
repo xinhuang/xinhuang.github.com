@@ -269,7 +269,7 @@ same with a few tweaks.
 [tbb::flow::join_node documentation]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm
 [tbb::flow::multifunction_node]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/multifunc_node_cls.htm
 [non-linear pipelines]:https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm
-[merge_node sources]:http://google.com
+[merge_node sources]:https://gist.github.com/xinhuang/16e03ec6d560df5ca03c
 [Pipeline]:https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm
 [criticizing on TBB's flow-based programming]:https://groups.google.com/forum/#!topic/flow-based-programming/JkInzGvySAg
-[dependency-graph-example]:/assets/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png
+[dependency-graph-example]:/assets/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png
