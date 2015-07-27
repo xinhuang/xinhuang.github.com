@@ -24,8 +24,10 @@
         <a class="btn next disabled">Next &rarr;</a>
       {% endif %}
     </div>
+    {% if site.JB.comments.provider and page.comments != false %}
     <hr>
     {% include JB/comments %}
+    {% endif %}
   </div>
 
   <div class="span4">
