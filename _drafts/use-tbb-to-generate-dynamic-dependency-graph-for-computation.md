@@ -45,7 +45,7 @@ int main() {
    return 0;
 }
 ```
-_Example taken from [tbb::join_node documentation]._
+_Example taken from [tbb::flow::join_node documentation]._
 
 # Dynamic Graph
 
@@ -136,23 +136,14 @@ The general idea is like this:
 > `join_node<tuple<msg_t...>>`   =>   `function_node<msg_t, msg_t>`
 
 From the interface we can tell `join_node` is lightweight that only gathers the
-input from its parents into a `tuple` then passes the tuple to downstream.
+input from its parents into a `tuple` then passes the tuple to its children.
 If we chain the `join_node` with a `function_node`, there should be little cost.
 
 But here comes another problem: How to store these nodes of different types.
 The entire graph is created dynamically, and all nodes need to be kept alive
 before computation finishes. Take below topology for example:
 
-```
-// TODO: use a picture
-A--B
-    \
-G----C---
-         \
-E---------D
-         /
-F--------
-```  
+![dependency-graph-example]  
 
 ```
 auto *afnode = new function_node<msg_t, msg_t>(...);
@@ -268,8 +259,17 @@ node that merge 0~9 nodes and merge its output with the rest 10~N nodes.
 However, usually this number of parents would indicates a bottle neck in the graph,
 and probably a poor graph design.
 
-[tbb::join_node documentation]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm
+# Further Improvements
+
+Sometimes your function node will not always pass a message to the child nodes.
+Then you probably want to use the [tbb::flow::multifunction_node] so whether pass
+a message to child nodes can be controlled. The implementation is pretty much the
+same with a few tweaks.
+
+[tbb::flow::join_node documentation]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm
+[tbb::flow::multifunction_node]:https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/multifunc_node_cls.htm
 [non-linear pipelines]:https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm
 [merge_node sources]:http://google.com
 [Pipeline]:https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm
 [criticizing on TBB's flow-based programming]:https://groups.google.com/forum/#!topic/flow-based-programming/JkInzGvySAg
+[dependency-graph-example]:/assets/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png
