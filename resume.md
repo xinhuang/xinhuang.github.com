@@ -19,8 +19,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 ## ***Technical Overview***
 
-* Work with C++ for more than 4 years, reversed C++ generated binary
-* Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished MOOC courses); x86 ASM, Lua, Ruby (long time ago)
+* Worked with C++ for more than 4 years, able to reverse C++ generated binary
+* Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished Coursera courses); x86 ASM, Lua, Ruby (long time ago)
 * Experienced with parallel programming
 * Finished Scala & reactive programming on Coursera
 * Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
@@ -34,13 +34,14 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 I improved computation performance.  
 
+* Replaced computation engine by re-writing using tbb::flow::graph, reduced lines of code by 90%
 * Profiled data computation engine and investigated performance bottleneck  
 * Maintenance and troubleshooting existing parallel engine  
 * Optimized geophysical algorithms by using SSE2, performance improved by 20%
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
 
-I made system ran faster.  
+I made system run faster.  
 
 *  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell
 *  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system, to improve resource utilization & reduce deployment  
@@ -71,10 +72,10 @@ I made system ran faster.
 
 ## ***Open Source Projects***
 
+*  2015 - OpenVML: Open-sourced version of Vector Math Library, focused on high performance. Collaboration project.  
+    [https://github.com/xianyi/OpenVML](https://github.com/xianyi/OpenVML)
 *  2013 - LifeGame: A demo in SLB C++ workshop on verterization. Conway's Game of Life implemented in various ways: raw loop, OpenMP, Intel IPP, Intel TBB, GLSL Shader  
     [https://github.com/xinhuang/HelloCinder/tree/master/LifeGame](https://github.com/xinhuang/HelloCinder/tree/master/LifeGame)
-*  2011 - mUI: A C++ prototype UI framework adopting WinForm convention
-    [https://github.com/xinhuang/mUI](https://github.com/xinhuang/mUI)
 
 ## ***Publications and Presentations***
 
@@ -85,7 +86,7 @@ I made system ran faster.
 ## ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Jan. 3, 2015. Latest resume can be found
+_Last update at Aug. 25, 2015. Latest resume can be found
 [here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
 
 
