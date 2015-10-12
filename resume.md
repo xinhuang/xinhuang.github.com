@@ -7,21 +7,17 @@ date: 2014-01-14 00:00:00
 
 ## ***Xin Huang***
 
-Email:            [patz.hwang@gmail.com]  
+Email:            [xinhuang.abc@gmail.com]  
 Mobile:           (+86) 186-0040-6436  
 Homepage:         [http://xinhuang.github.io]  
 GitHub:           [https://github.com/xinhuang]  
 StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]  
 
-* Continuous learner
-* Enthusiastic programmer
-* Coding Dojo organizer
-
 ## ***Technical Overview***
 
 * Worked with C++ for more than 4 years, able to reverse C++ generated binary
-* Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished Coursera courses); x86 ASM, Lua, Ruby (long time ago)
-* Experienced with parallel programming
+* Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished Coursera courses); Python (sometimes); x86 ASM, Lua, Ruby (long time ago)
+* Experienced in parallel programming, created computation engine by using Intel's TBB
 * Finished Scala & reactive programming on Coursera
 * Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
 * Familiar with Continous Integration tools like Jenkins, NAnt, etc
@@ -32,30 +28,32 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 **Since 2014/12, Maxwell DataCore Team**  
 
-I improved computation performance.  
+I made computation faster.  
 
-* Replaced computation engine by re-writing using tbb::flow::graph, reduced lines of code by 90%
-* Profiled data computation engine and investigated performance bottleneck  
-* Maintenance and troubleshooting existing parallel engine  
-* Optimized geophysical algorithms by using SSE2, performance improved by 20%
+* Individually replaced computation engine by re-writing using Intel's tbb::flow::graph, reduced lines of code by 90%, achieving same performance and correctness  
+* Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%  
+* Profiled computation engine and investigated performance bottleneck  
+* Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
+
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
 
 I made system run faster.  
 
+*  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system
 *  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell
-*  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system, to improve resource utilization & reduce deployment  
 *  Deployed Continous Integration system, including incremental/private/feature/clean build with unit/integration test running for each build
-*  Hosted various coding Dojos inside company, presented in internal workshops and events
+*  Hosted various coding Dojos inside company, presented in internal workshops and events  
 
-*2012/4 - 2012/12, Maxwell Platform & Performance Team*
+<br>
+**2012/4 - 2012/12, Maxwell Platform & Performance Team**
 
-*  Investigated logging using Event Tracing for Windows, for runtime tuning and better system performance
-*  Accelerated build performance with distributed compilation software  
+*  Investigated logging using Event Tracing for Windows, to collect runtime information and better logging performance
+*  Accelerated build performance with distributed compilation softwares  
 *  Developed software usage log analysis tool, to automatically collect & analyze usage data, and generate Excel report
 *  Helped team as Scrum Master; hosted coding Dojos every week to improve TDD, OOAD skills, and to learn other programming languages  
 
-*2011/8 - 2012/3, Maxwell DataPrep Team*
+**2011/8 - 2012/3, Maxwell DataPrep Team**
 
 *  Developed & maintained Maxwell framework data processing component  
 *  Developed Re-Compute Robot, to do both parallel & sequential computation base on same data set, for data validation & performance benchmark  
@@ -63,11 +61,11 @@ I made system run faster.
 
 ### **CYOU .Inc, [cyou.com](http://www.cyou.com), Game Developer, 2010 - 2011**
 
-*  Feature development of item, family, ladder and PVP system  
-*  Improved font rending performance
-*  Implemented C# delegate style event system, supporting asynchronized method invocation  
-*  Created Lua script template for generic item operation  
-*  Developed game robot for pressure test, extensible via Lua  
+*  Feature development of item, family, ladder and PVP system
+*  Improved font rending performance  
+*  Implemented C# delegate style event system, supporting asynchronized method invocation
+*  Created Lua script template for generic item operation
+*  Developed game robot for pressure test, extensible via Lua
 
 
 ## ***Open Source Projects***
@@ -86,11 +84,11 @@ I made system run faster.
 ## ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Aug. 25, 2015. Latest resume can be found
+_Last update at Oct. 12, 2015. Latest resume can be found
 [here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
 
 
-[patz.hwang@gmail.com]:                               mailto:patz.hwang@gmail.com
+[xinhuang.abc@gmail.com]:                             mailto:xinhuang.abc@gmail.com
 [https://github.com/xinhuang]:                        https://github.com/xinhuang
 [http://stackoverflow.com/users/2190129/xin-huang]:   http://stackoverflow.com/users/2190129/xin-huang
 [http://xinhuang.github.io]:                          http://xinhuang.github.io
