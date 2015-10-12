@@ -20,7 +20,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 * Experienced in parallel programming, created computation engine by using Intel's TBB
 * Finished Scala & reactive programming on Coursera
 * Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
-* Familiar with Continous Integration tools like Jenkins, NAnt, etc
+* Familiar with build/CI tools like CMake, git, Jenkins, NAnt, etc
 
 ## ***Work Experience***
 
