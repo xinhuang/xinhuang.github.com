@@ -34,6 +34,7 @@ I made computation faster.
 * Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%  
 * Profiled computation engine and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
+* Mentored interns from Tsinghua HPC lab on how to improve computation running speed  
 
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
