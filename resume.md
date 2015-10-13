@@ -18,9 +18,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 * Worked with C++ for more than 4 years, able to reverse C++ generated binary
 * Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished Coursera courses); Python (sometimes); x86 ASM, Lua, Ruby (long time ago)
 * Experienced in parallel programming, created computation engine by using Intel's TBB
-* Finished Scala & reactive programming on Coursera
 * Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
-* Familiar with build/CI tools like CMake, git, Jenkins, NAnt, etc
+* Finished Scala & reactive programming on Coursera
 
 ## ***Work Experience***
 
@@ -30,8 +29,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 I made computation faster.  
 
-* Individually replaced computation engine by re-writing using Intel's tbb::flow::graph, reduced lines of code by 90%, achieving same performance and correctness  
-* Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%  
+* **Individually replaced computation engine by re-writing using Intel's tbb::flow::graph, reduced lines of code by 90%, achieving same performance and correctness**  
+* **Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%**  
 * Profiled computation engine and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on how to improve computation running speed  
@@ -41,17 +40,14 @@ I made computation faster.
 
 I made system run faster.  
 
-*  Involved in CI system re-architecture and implementation, aiming a distributed "Cloud-based" CI build system
+*  Involved in CI system re-architecture and re-implementation, aiming a distributed "Cloud-based" CI build system. Coded >50% of the system
 *  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell
-*  Deployed Continous Integration system, including incremental/private/feature/clean build with unit/integration test running for each build
 *  Hosted various coding Dojos inside company, presented in internal workshops and events  
 
-<br>
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**
 
 *  Investigated logging using Event Tracing for Windows, to collect runtime information and better logging performance
 *  Accelerated build performance with distributed compilation softwares  
-*  Developed software usage log analysis tool, to automatically collect & analyze usage data, and generate Excel report
 *  Helped team as Scrum Master; hosted coding Dojos every week to improve TDD, OOAD skills, and to learn other programming languages  
 
 **2011/8 - 2012/3, Maxwell DataPrep Team**
@@ -93,7 +89,3 @@ _Last update at Oct. 12, 2015. Latest resume can be found
 [https://github.com/xinhuang]:                        https://github.com/xinhuang
 [http://stackoverflow.com/users/2190129/xin-huang]:   http://stackoverflow.com/users/2190129/xin-huang
 [http://xinhuang.github.io]:                          http://xinhuang.github.io
-
-[gmail.ico]:                                          https://mail.google.com/favicon.ico
-[github.ico]:                                         https://github.com/favicon.ico
-[stackoverflow.ico]:                                  http://cdn.sstatic.net/stackoverflow/img/favicon.ico
