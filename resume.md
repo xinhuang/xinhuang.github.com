@@ -31,7 +31,7 @@ I made computation faster.
 
 * **Individually replaced computation engine by re-writing using Intel's tbb::flow::graph, reduced lines of code by 90%, achieving same performance and correctness**  
 * **Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%**  
-* Profiled computation engine and investigated performance bottleneck  
+* Profiled computation engine using Intel vTune and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on how to improve computation running speed  
 
@@ -40,15 +40,17 @@ I made computation faster.
 
 I made system run faster.  
 
-*  Involved in CI system re-architecture and re-implementation, aiming a distributed "Cloud-based" CI build system. Coded >50% of the system
-*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell
+*  Designed and implemented continuous integration system, aiming for distributed and cloud-based  
+*  Introduced Pester as PowerShell unit test framework, hosted reading club & coding Dojos to help colleagues learn TDD & PowerShell  
 *  Hosted various coding Dojos inside company, presented in internal workshops and events  
+
 
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**
 
 *  Investigated logging using Event Tracing for Windows, to collect runtime information and better logging performance
 *  Accelerated build performance with distributed compilation softwares  
 *  Helped team as Scrum Master; hosted coding Dojos every week to improve TDD, OOAD skills, and to learn other programming languages  
+
 
 **2011/8 - 2012/3, Maxwell DataPrep Team**
 
