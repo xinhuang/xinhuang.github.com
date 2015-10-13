@@ -13,17 +13,21 @@ Homepage:         [http://xinhuang.github.io]
 GitHub:           [https://github.com/xinhuang]  
 StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]  
 
+
 ## ***Technical Overview***
 
-* Worked with C++ for more than 4 years, able to reverse C++ generated binary
+* Worked with C++ for more than 5 years, able to reverse C++ generated binary
 * Programming languages: C# (familiar w/ WinForm .NET, able to read MSIL); Scala (finished Coursera courses); Python (sometimes); x86 ASM, Lua, Ruby (long time ago)
 * Experienced in parallel programming, created computation engine by using Intel's TBB
 * Familiar with TDD, OOAD; enjoy organizing/attending coding Dojos
 * Finished Scala & reactive programming on Coursera
 
+
 ## ***Work Experience***
 
+
 ### **BGC, Schlumberger, [slb.com](http://www.slb.com), Software Engineer, Since 2011**
+
 
 **Since 2014/12, Maxwell DataCore Team**  
 
@@ -74,16 +78,18 @@ I made system run faster.
 *  2013 - LifeGame: A demo in SLB C++ workshop on verterization. Conway's Game of Life implemented in various ways: raw loop, OpenMP, Intel IPP, Intel TBB, GLSL Shader  
     [https://github.com/xinhuang/HelloCinder/tree/master/LifeGame](https://github.com/xinhuang/HelloCinder/tree/master/LifeGame)
 
+
 ## ***Publications and Presentations***
 
 *  Co-organizer of Global Day of CodeRetreat Beijing 2013
 *  Coding Dojo project for state/strategy pattern, used in internal sessions  
   [https://github.com/xinhuang/StatePattern](https://github.com/xinhuang/StatePattern)
 
+
 ## ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Oct. 12, 2015. Latest resume can be found
+_Last update at Oct. 13, 2015. Latest resume can be found
 [here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
 
 
