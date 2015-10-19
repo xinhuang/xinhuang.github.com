@@ -38,6 +38,7 @@ I made computation faster.
 * Profiled computation engine using Intel vTune and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on how to improve computation speed  
+* Refactored legacy code and added tests (total lines of code > 20M)  
 
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
@@ -89,7 +90,7 @@ I made system run faster.
 ## ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Oct. 13, 2015. Latest resume can be found
+_Last update at Oct. 20, 2015. Latest resume can be found
 [here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
 
 
