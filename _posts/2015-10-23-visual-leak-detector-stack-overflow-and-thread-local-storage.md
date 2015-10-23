@@ -117,8 +117,9 @@ slot >= 64, why this stack overflow has never been observed before?
 
 This question has puzzled me for quite some time: the expansion is already done
 in `TlsAlloc`, why memory allocation is still needed? Until I notice that the expansion
-is only applied to a **Thread** Environment Block, which means for newly created
-thread, it will expand its own TLS at the first-time usage.
+is only applied to a **Thread** Environment Block, which means for new
+thread, it will only expand its _own_ TLS at the first-time usage. All other threads'
+expansion TLS remain intact.
 
 That's when the expansion requires memory allocation: VLD gets a TLS slot index >= 64
 and captures the first memory allocation in a new thread.
@@ -132,9 +133,9 @@ To increase TLS slot number, simply calling `TlsAlloc` in a loop will do the tri
 
 Another thing required to reproduce this issue is make sure VLD gets a TLS slot >= 64.
 To achieve this, first increase TLS slot number, then load enable VLD. After VLD is
-turned on, allocate memory in a new thread:
+turned on, allocate memory in a new thread.
 
-_Minimum reproduce_
+_Minimum reproduce code sample_
 
 ```
 #include <windows.h>
