@@ -158,7 +158,7 @@ int main(int argc, wchar_t *argv[]) {
 
 ## References
 
-Thanks Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] shed lights
+Thanks Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] shed light
 when I am wondering why this issue happens when TLS expansion is checked inside each API.
 
 I submit an bug for VLD for [this issue].
