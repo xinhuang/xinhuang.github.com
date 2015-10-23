@@ -17,7 +17,7 @@ calling Window API `RtlAllocateHeap`. Because Visual Leak Detector (VLD) hooked
 
 TLS expansion will be done only for current thread. When a new thread
 tries to access TLS, it will trigger an expansion. If the allocation for expansion is
-redirected to VLD, and VLD accesses TLS, there will be a infinite loop.
+redirected to VLD, and VLD accesses TLS, program enters infinite loop.
 
 ---
 
@@ -25,9 +25,10 @@ redirected to VLD, and VLD accesses TLS, there will be a infinite loop.
 
 Today I meet a crash with call stack like below. It appears to be somehow VLD
 enters an infinite loop when calling `Visual LeakDetector::getTls`. What's more interesting is that
-VLD has been enabled in our product for a long time, but this crash is repeatable.
+however this crash is repeatable, VLD has been enabled in our product for long.
 
 The call stack looks like this:
+
 ```
 ...
 6dc9 0759f314 09ddbfcc 00000042 0a16b870 09defbd0 KERNELBASE!TlsSetValue+0x4f
@@ -106,6 +107,7 @@ if (slot >= 0x40) {
     }
   }  else { // ERROR if (dwTlsIndex >= 0x440) }
 } // if (dwTlsIndex >= 0x40)
+
 ```
 
 From the disassembled code we can found that the expansion occurs when passed in
