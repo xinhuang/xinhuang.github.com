@@ -15,9 +15,9 @@ to 1024 more slots. These expansion slots are created on demand when TLS APIs
 calling Window API `RtlAllocateHeap`. Because Visual Leak Detector (VLD) hooked
 `RtlAllocatedHeap` to trace memory allocation, the expansion will be redirect to VLD first.
 
-TLS expansion will be done only for current thread. So when a newly created thread
-tries to access TLS, it will trigger an expansion. And if the expansion is triggered
-by VLD when it tries to trace allocation, there will be a infinite loop.
+TLS expansion will be done only for current thread. When a new thread
+tries to access TLS, it will trigger an expansion. If the allocation for expansion is
+redirected to VLD, and VLD accesses TLS, there will be a infinite loop.
 
 ---
 
