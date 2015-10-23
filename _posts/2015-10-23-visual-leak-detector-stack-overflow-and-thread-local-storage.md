@@ -154,6 +154,7 @@ int main(int argc, wchar_t *argv[]) {
   std::thread([]() {std::make_shared<int>(); }).join();
   return 0;
 }
+```
 
 ## References
 
@@ -161,8 +162,6 @@ Thanks Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] she
 when I am wondering why this issue happens when TLS expansion is checked inside each API.
 
 I submit an bug for VLD for [this issue].
-
-```
 
 [TLS on MSDN]: https://msdn.microsoft.com/en-us/library/ms686749.aspx
 [Thread Local Storage, part 2: Explicit TLS]: http://www.nynaeve.net/?p=181
