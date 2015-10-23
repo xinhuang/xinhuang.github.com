@@ -259,6 +259,8 @@ node that merge 0~9 nodes and merge its output with the rest 10~N nodes.
 However, usually this number of parents would indicates a bottle neck in the graph,
 and probably a poor graph design.
 
+*This code has been found with several bugs due to carelessness. So be careful and use it as a POC only.*
+
 # Further Improvements
 
 Sometimes your function node will not always pass a message to the child nodes.
