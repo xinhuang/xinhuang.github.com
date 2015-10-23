@@ -46,12 +46,14 @@ The call stack looks like this:
 6dee 0759fe38 00000000 7612d854 0546b610 00000000 ntdll!_RtlUserThreadStart+0x1b
 ```
 
-When a thread starts and it tries to allocate memory, VLD kicks in to trace memory
+When a thread starts and tries to allocate memory, VLD kicks in to trace memory
 allocation. Inside VLD it record internal state in a TLS slot. When VLD tries to
-initialize the TLS slot, Windows API TlsSetValue tries to allocate more memory,
-and in return goes back to VLD memory tracing. Thus the loop closes.
+initialize the TLS slot, somehow Windows API TlsSetValue feels like to allocate memory,
+and in return goes back to VLD memory tracing. Thus the loop closes. This is
+what we can conclude from above call stack.
 
-But why `TlsSetValue` will allocate memory? Take a look at the assembly code: (uninteresting details are omited)
+But why `TlsSetValue` will allocate memory? Take a look at the assembly code:  
+(uninteresting details are omited)
 
 ```
 KERNELBASE!TlsSetValue:
@@ -65,7 +67,7 @@ KERNELBASE!TlsSetValue:
 75c44591 83ff40          cmp     edi,40h
 75c44594 7260            jb      KERNELBASE!TlsSetValue+0x76 (75c445f6)  Branch
 
-if (slot >= 0x40) {
+// if (dwTlsIndex >= 0x40) {
 
   KERNELBASE!TlsSetValue+0x16:
   75c44596 83ef40          sub     edi,40h
@@ -79,32 +81,31 @@ if (slot >= 0x40) {
     75c445a7 85c0            test    eax,eax
     75c445a9 753c            jne     KERNELBASE!TlsSetValue+0x67 (75c445e7)  Branch
 
-      KERNELBASE!TlsSetValue+0x2b:
-      75c445ab e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
-      75c445b0 8b402c          mov     eax,dword ptr [eax+2Ch]
-      75c445b3 648b0d18000000  mov     ecx,dword ptr fs:[18h]
-      75c445ba 6800100000      push    1000h
-      75c445bf 83c808          or      eax,8
-      75c445c2 50              push    eax
-      75c445c3 8b4130          mov     eax,dword ptr [ecx+30h]
-      75c445c6 ff7018          push    dword ptr [eax+18h]
-      75c445c9 ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
-      75c445cf 85c0            test    eax,eax
-      75c445d1 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
-      ...
-      KERNELBASE!TlsSetValue+0x61:
-      75c445e1 8986940f0000    mov     dword ptr [esi+0F94h],eax
+    KERNELBASE!TlsSetValue+0x2b:
+    75c445ab e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
+    75c445b0 8b402c          mov     eax,dword ptr [eax+2Ch]
+    75c445b3 648b0d18000000  mov     ecx,dword ptr fs:[18h]
+    75c445ba 6800100000      push    1000h
+    75c445bf 83c808          or      eax,8
+    75c445c2 50              push    eax
+    75c445c3 8b4130          mov     eax,dword ptr [ecx+30h]
+    75c445c6 ff7018          push    dword ptr [eax+18h]
+    75c445c9 ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
+    75c445cf 85c0            test    eax,eax
+    75c445d1 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
+    ...
+    KERNELBASE!TlsSetValue+0x61:
+    75c445e1 8986940f0000    mov     dword ptr [esi+0F94h],eax
 
-      // if (pTeb->TlsExpansionSlots == NULL)
-      //   pTeb->TlsExpansionSlots = RtlAllocateHeap(...)
+    // if (pTeb->TlsExpansionSlots == NULL)
+    //   pTeb->TlsExpansionSlots = RtlAllocateHeap(...)
 
-      KERNELBASE!TlsSetValue+0x67:
-      75c445e7 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
-      75c445ea 890cb8          mov     dword ptr [eax+edi*4],ecx
-      75c445ed eb11            jmp     KERNELBASE!TlsSetValue+0x80 (75c44600)  Branch
+    KERNELBASE!TlsSetValue+0x67:
+    75c445e7 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
+    75c445ea 890cb8          mov     dword ptr [eax+edi*4],ecx
+    75c445ed eb11            jmp     KERNELBASE!TlsSetValue+0x80 (75c44600)  Branch
 
-      // Set value to TLS slot
-    }
+    // Set value to TLS slot
   }  else { // ERROR if (dwTlsIndex >= 0x440) }
 } // if (dwTlsIndex >= 0x40)
 
