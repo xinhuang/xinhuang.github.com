@@ -25,7 +25,7 @@ redirected to VLD, and VLD accesses TLS, program enters infinite loop.
 
 Today I meet a crash with call stack like below. It appears to be somehow VLD
 enters an infinite loop when calling `Visual LeakDetector::getTls`. What's more interesting is that
-however this crash is repeatable, VLD has been enabled in our product for long.
+despite that this crash is repeatable, VLD has been enabled in our product for long.
 
 The call stack looks like this:
 
