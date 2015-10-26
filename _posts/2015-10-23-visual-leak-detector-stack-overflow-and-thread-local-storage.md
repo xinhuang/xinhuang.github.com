@@ -9,23 +9,23 @@ tags: [Windows, Debug]
 
 ## Abstract
 
-On Windows, by default Thread Local Storage (TLS) has 64 slots. Later it is expanded
+On Windows, by default Thread Local Storage (TLS) has 0x40 slots. Later it is expanded
 by 0x400 more slots. These expansion slots are created on demand when TLS APIs
-`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current threads. And the expansion is achieved by
+`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current thread. And the expansion is achieved by
 calling Windows API `RtlAllocateHeap`. When TLS APIs are invoked the first time with
-slot number >= 0x40 in a thread which doesn't expand before, TLS expansion will be triggered.
+slot number >= 0x40 in a thread which hasn't expand before, TLS expansion will be triggered.
 
 Visual Leak Detector (VLD) is a memory allocation tracing library, assisting troubleshooting
 memory leak issues by hooking memory allocation APIs, including `RtlAllocateHeap`.
 
 When a memory allocation happens, VLD will store the information in its TLS slot to
-avoid contention and reduce performance impact. When VLD gets assigned TLS slot >= 0x40
-and the memory allocation happens in a thread that doesn't expand TLS, the access to TLS slot
-of VLD will trigger TLS expansion.
+avoid contention and reduce performance impact. When VLD is assigned with a TLS slot >= 0x40
+and a memory allocation happens in a thread that hasn't expand TLS, the access to TLS slot
+from VLD will trigger another TLS expansion.
 
 However, the expansion will call `RtlAllocateHeap` to allocate memory and the record of
-this memory allocation will be saved into TLS slot by VLD, which will trigger another
-TLS expansion... By this way, The program will enter infinite recursion.
+this memory allocation will be saved into TLS slot by VLD, which will again trigger another
+TLS expansion... In this way, The program will enter infinite recursion.
 
 ---
 
