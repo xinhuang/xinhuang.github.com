@@ -9,31 +9,33 @@ tags: [Windows, Debug]
 
 ## Abstract
 
-On Windows, Thread Local Storage (TLS) by default has 64 slots. Later it is expand
+On Windows, by default Thread Local Storage (TLS) has 64 slots. Later it is expanded
 by 0x400 more slots. These expansion slots are created on demand when TLS APIs
-`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current threads. And the expansion is done by
-calling Window API `RtlAllocateHeap`. When TLS APIs are invoked the first time with
+`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current threads. And the expansion is achieved by
+calling Windows API `RtlAllocateHeap`. When TLS APIs are invoked the first time with
 slot number >= 0x40 in a thread which doesn't expand before, TLS expansion will be triggered.
 
 Visual Leak Detector (VLD) is a memory allocation tracing library, assisting troubleshooting
-memory leak issues by hook memory allocation APIs, including `RtlAllocateHeap`.
+memory leak issues by hooking memory allocation APIs, including `RtlAllocateHeap`.
 
-When memory allocation happens, VLD will store memory allocation information in TLS slot to
-avoid lock contention and reduce performance impact. When VLD gets assigned TLS slot >= 0x40
+When a memory allocation happens, VLD will store the information in its TLS slot to
+avoid contention and reduce performance impact. When VLD gets assigned TLS slot >= 0x40
 and the memory allocation happens in a thread that doesn't expand TLS, the access to TLS slot
 of VLD will trigger TLS expansion.
 
 However, the expansion will call `RtlAllocateHeap` to allocate memory and the record of
-this memory allocation will be saved to TLS slot by VLD, which will trigger another
-TLS expansion... The program will enter infinite loop.
+this memory allocation will be saved into TLS slot by VLD, which will trigger another
+TLS expansion... By this way, The program will enter infinite recursion.
 
 ---
 
 ## Analysis
 
-Today I meet a crash with call stack like below. It appears to be somehow VLD
-enters an infinite loop when calling `Visual LeakDetector::getTls`. What's more interesting is that
-despite that this crash is repeatable, VLD has been enabled in our product for long.
+Today I meet a crash because of infinite recursion with call stacks switching between KernelBase.dll and VLD.dll.
+It appears to be somehow VLD enters an infinite recursion when calling `Visual LeakDetector::getTls()`.
+What's more interesting is despite the fact that this crash is repeatable, VLD has been enabled in our product for long.
+
+Why it happens now?
 
 The call stack looks like this:
 
@@ -54,13 +56,14 @@ The call stack looks like this:
 6dee 0759fe38 00000000 7612d854 0546b610 00000000 ntdll!_RtlUserThreadStart+0x1b
 ```
 
-When a thread starts and tries to allocate memory, VLD kicks in to trace memory
-allocation. Inside VLD it record internal state in a TLS slot. When VLD tries to
-initialize the TLS slot, somehow Windows API TlsSetValue feels like to allocate memory,
-and in return goes back to VLD memory tracing. Thus the loop closes. This is
-what we can conclude from above call stack.
+When a thread starts and tries to allocate memory, VLD will trace all memory
+allocations. VLD records allocation information in a TLS slot to avoid
+contention and reduce performance impact. When VLD tries to
+initialize the TLS slot, Windows API `TlsSetValue` allocates memory,
+and VLD traces the allocation by saving it into TLS. This is
+what we learn from the crash dump.
 
-But why `TlsSetValue` will allocate memory? Take a look at the assembly code:  
+But why `TlsSetValue` will allocate memory? Let's take a look at the disassembled code:  
 (uninteresting details are omited)
 
 ```
@@ -119,29 +122,26 @@ KERNELBASE!TlsSetValue:
 
 ```
 
-From the disassembled code we can found that the expansion occurs when passed in
-a TLS slot >= 0x40. But since VLD will enter infinite loop when it's using a TLS
-slot >= 64, why this stack overflow has never been observed before?
+From the disassembled code we can find that the expansion occurs when the passed-in
+slot >= 0x40. But since VLD will enter infinite recursion when it sees a TLS
+slot >= 0x40, why the stack overflow is never observed before?
 
 This question has puzzled me for quite some time: the expansion is already done
-in `TlsAlloc`, why memory allocation is still needed? Until I notice that the expansion
-is only applied to a **Thread** Environment Block, which means for new
-thread, it will only expand its _own_ TLS at the first-time usage. All other threads'
-expansion TLS remain intact.
-
-That's when the expansion requires memory allocation: VLD gets a TLS slot index >= 64
-and captures the first memory allocation in a new thread.
+in `TlsAlloc` for all threads, why memory allocation is still needed?
+Until I notice that the expansion is only applied to a Thread Environment Block, (TEB, where `fs:[18h]` points to)
+which means the expansion only affect the current thread.
+All other threads remain intact.
 
 ## Reproduce
 
-After above analysis, the root cause if almost clear. Next thing to do is how to
-reproduce this issue.
+After above analysis, we can try to reproduce the infinite recursion so that we can prove the
+conclusion is correct.
 
 To increase TLS slot number, simply calling `TlsAlloc` in a loop will do the trick.
 
-Another thing required to reproduce this issue is make sure VLD gets a TLS slot >= 64.
-To achieve this, first increase TLS slot number, then load enable VLD. After VLD is
-turned on, allocate memory in a new thread.
+Another step required to reproduce is to make sure VLD gets assigned with a TLS slot >= 64.
+To do this, first increase TLS slot number, then load and enable VLD dynamically using `LoadLibrary` & `GetProcAddress`.
+After VLD is enabled, allocate memory in a new thread.
 
 _Minimum reproduce code sample_
 
@@ -164,9 +164,25 @@ int main(int argc, wchar_t *argv[]) {
 }
 ```
 
+## Conclusion
+
+Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
+from our product crash dump. (Except for the first several lines which intializes CLR) The theory is correct,
+but how to explain why the crash is never met before?
+
+VLD is linked to several DLLs of our product, and is statically initialized.
+These DLLs are loaded dynamically at runtime when they are used, or never if they are never required.
+Maybe some recent change removed VLD from one of the DLLs which is always loaded before TLS allocation count
+reaches 0x40, so sometimes when VLD is loaded, there are more than 0x40 TLS slots allocated already.
+VLD gets assigned with TLS slot >= 0x40.
+
+Also we used lots of COM (both STA/MTA) in our product, threads and memory allocation are very common.
+
+When these conditions are met, infinite recursion happens.
+
 ## References
 
-Thanks Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] shed light
+Thanks to Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] shed light
 when I am wondering why this issue happens when TLS expansion is checked inside each API.
 
 I submit an bug for VLD for [this issue].
