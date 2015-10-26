@@ -32,12 +32,12 @@ TLS expansion... In this way, The program will enter infinite recursion.
 ## Analysis
 
 Today I meet a crash because of infinite recursion with call stacks switching between KernelBase.dll and VLD.dll.
-It appears to be somehow VLD enters an infinite recursion when calling `Visual LeakDetector::getTls()`.
+It appears to be somehow VLD enters an infinite recursion when calling `VisualLeakDetector::getTls()`.
 What's more interesting is despite the fact that this crash is repeatable, VLD has been enabled in our product for long.
 
 Why it happens now?
 
-The call stack looks like this:
+The call stack looks like below:
 
 ```
 ...
@@ -61,10 +61,10 @@ allocations. VLD records allocation information in a TLS slot to avoid
 contention and reduce performance impact. When VLD tries to
 initialize the TLS slot, Windows API `TlsSetValue` allocates memory,
 and VLD traces the allocation by saving it into TLS. This is
-what we learn from the crash dump.
+what we can guess from the crash dump.
 
 But why `TlsSetValue` will allocate memory? Let's take a look at the disassembled code:  
-(uninteresting details are omited)
+(uninteresting details are omited, indentations are added for better formating and understanding)
 
 ```
 KERNELBASE!TlsSetValue:
@@ -92,24 +92,25 @@ KERNELBASE!TlsSetValue:
     75c445a7 85c0            test    eax,eax
     75c445a9 753c            jne     KERNELBASE!TlsSetValue+0x67 (75c445e7)  Branch
 
-    KERNELBASE!TlsSetValue+0x2b:
-    75c445ab e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
-    75c445b0 8b402c          mov     eax,dword ptr [eax+2Ch]
-    75c445b3 648b0d18000000  mov     ecx,dword ptr fs:[18h]
-    75c445ba 6800100000      push    1000h
-    75c445bf 83c808          or      eax,8
-    75c445c2 50              push    eax
-    75c445c3 8b4130          mov     eax,dword ptr [ecx+30h]
-    75c445c6 ff7018          push    dword ptr [eax+18h]
-    75c445c9 ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
-    75c445cf 85c0            test    eax,eax
-    75c445d1 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
-    ...
-    KERNELBASE!TlsSetValue+0x61:
-    75c445e1 8986940f0000    mov     dword ptr [esi+0F94h],eax
-
     // if (pTeb->TlsExpansionSlots == NULL)
-    //   pTeb->TlsExpansionSlots = RtlAllocateHeap(...)
+
+      KERNELBASE!TlsSetValue+0x2b:
+      75c445ab e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
+      75c445b0 8b402c          mov     eax,dword ptr [eax+2Ch]
+      75c445b3 648b0d18000000  mov     ecx,dword ptr fs:[18h]
+      75c445ba 6800100000      push    1000h
+      75c445bf 83c808          or      eax,8
+      75c445c2 50              push    eax
+      75c445c3 8b4130          mov     eax,dword ptr [ecx+30h]
+      75c445c6 ff7018          push    dword ptr [eax+18h]
+      75c445c9 ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
+      75c445cf 85c0            test    eax,eax
+      75c445d1 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
+      ...
+      KERNELBASE!TlsSetValue+0x61:
+      75c445e1 8986940f0000    mov     dword ptr [esi+0F94h],eax
+
+      // pTeb->TlsExpansionSlots = RtlAllocateHeap(...)
 
     KERNELBASE!TlsSetValue+0x67:
     75c445e7 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
@@ -123,8 +124,9 @@ KERNELBASE!TlsSetValue:
 ```
 
 From the disassembled code we can find that the expansion occurs when the passed-in
-slot >= 0x40. But since VLD will enter infinite recursion when it sees a TLS
-slot >= 0x40, why the stack overflow is never observed before?
+slot >= 0x40. This confirmed our guess.
+But since VLD will enter infinite recursion when it sees a TLS slot >= 0x40,
+why the stack overflow is never observed before?
 
 This question has puzzled me for quite some time: the expansion is already done
 in `TlsAlloc` for all threads, why memory allocation is still needed?
@@ -164,28 +166,30 @@ int main(int argc, wchar_t *argv[]) {
 }
 ```
 
+Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
+from our product crash dump. (Except for the first several lines which intializes CLR)
+Our theory about VLD and TLS expansion is correct.
+
 ## Conclusion
 
-Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
-from our product crash dump. (Except for the first several lines which intializes CLR) The theory is correct,
-but how to explain why the crash is never met before?
+How to explain why the crash is never met before?
 
-VLD is linked to several DLLs of our product, and is statically initialized.
-These DLLs are loaded dynamically at runtime when they are used, or never if they are never required.
+VLD is linked to several DLLs of our product, and is statically initialized in these DLLs.
+The DLLs are loaded dynamically at runtime when they are used, or never if they are not touched at runtime.
 Maybe some recent change removed VLD from one of the DLLs which is always loaded before TLS allocation count
-reaches 0x40, so sometimes when VLD is loaded, there are more than 0x40 TLS slots allocated already.
-VLD gets assigned with TLS slot >= 0x40.
+reaches 0x40, so sometimes when VLD is loaded, there are chances that more than 0x40 TLS slots allocated already.
+That's why VLD gets assigned with TLS slot >= 0x40.
 
-Also we used lots of COM (both STA/MTA) in our product, threads and memory allocation are very common.
+Also we used lots of COM (both STA/MTA) in our product, threads and memory allocation are not rare.
 
-When these conditions are met, infinite recursion happens.
+When these 2 conditions are met, infinite recursion happens.
 
 ## References
 
 Thanks to Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] shed light
-when I am wondering why this issue happens when TLS expansion is checked inside each API.
+when I am wondering why this issue still happens when TLS expansion is checked inside each API.
 
-I submit an bug for VLD for [this issue].
+I submit an bug for VLD of [this issue].
 
 ## Acknowledge
 
