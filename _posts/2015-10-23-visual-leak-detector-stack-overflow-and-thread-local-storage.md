@@ -7,17 +7,25 @@ tags: [Windows, Debug]
 ---
 {% include JB/setup %}
 
-## In General
+## Abstract
 
-In Windows, Thread Local Storage (TLS) by default has 64 slots. Later it is expand
-to 1024 more slots. These expansion slots are created on demand when TLS APIs
-`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked. The expansion is done by
-calling Window API `RtlAllocateHeap`. Because Visual Leak Detector (VLD) hooked
-`RtlAllocatedHeap` to trace memory allocation, the expansion will be redirect to VLD first.
+On Windows, Thread Local Storage (TLS) by default has 64 slots. Later it is expand
+by 0x400 more slots. These expansion slots are created on demand when TLS APIs
+`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current threads. And the expansion is done by
+calling Window API `RtlAllocateHeap`. When TLS APIs are invoked the first time with
+slot number >= 0x40 in a thread which doesn't expand before, TLS expansion will be triggered.
 
-TLS expansion will be done only for current thread. When a new thread
-tries to access TLS, it will trigger an expansion. If the allocation for expansion is
-redirected to VLD, and VLD accesses TLS, program enters infinite loop.
+Visual Leak Detector (VLD) is a memory allocation tracing library, assisting troubleshooting
+memory leak issues by hook memory allocation APIs, including `RtlAllocateHeap`.
+
+When memory allocation happens, VLD will store memory allocation information in TLS slot to
+avoid lock contention and reduce performance impact. When VLD gets assigned TLS slot >= 0x40
+and the memory allocation happens in a thread that doesn't expand TLS, the access to TLS slot
+of VLD will trigger TLS expansion.
+
+However, the expansion will call `RtlAllocateHeap` to allocate memory and the record of
+this memory allocation will be saved to TLS slot by VLD, which will trigger another
+TLS expansion... The program will enter infinite loop.
 
 ---
 
@@ -162,6 +170,11 @@ Thanks Ken Johnson, his post of [Thread Local Storage, part 2: Explicit TLS] she
 when I am wondering why this issue happens when TLS expansion is checked inside each API.
 
 I submit an bug for VLD for [this issue].
+
+## Acknowledge
+
+Thanks to my smart & beautiful girlfriend Jianing Zou for her patience and time to review
+this post and give insightful comments.
 
 [TLS on MSDN]: https://msdn.microsoft.com/en-us/library/ms686749.aspx
 [Thread Local Storage, part 2: Explicit TLS]: http://www.nynaeve.net/?p=181
