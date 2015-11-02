@@ -191,7 +191,7 @@ when I am wondering why this issue still happens when TLS expansion is checked i
 
 I submit an bug for VLD of [this issue].
 
-## Acknowledge
+## Acknowledgement
 
 Thanks to my smart & beautiful girlfriend Jianing Zou for her patience and time to review
 this post and give insightful comments.
