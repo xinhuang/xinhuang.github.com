@@ -193,7 +193,7 @@ I submit an bug for VLD of [this issue].
 
 ## Acknowledgement
 
-Thanks to my smart & beautiful girlfriend Jianing Zou for her patience and time to review
+Thanks to my smart & beautiful scientist girlfriend Z for her patience and time to review
 this post and give insightful comments.
 
 [TLS on MSDN]: https://msdn.microsoft.com/en-us/library/ms686749.aspx
