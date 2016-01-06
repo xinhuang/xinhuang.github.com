@@ -38,7 +38,7 @@ I made computation faster.
 * Profiled computation engine using Intel vTune and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on how to improve computation speed  
-* Refactored legacy code and added tests (total lines of code > 20M)  
+* Refactored legacy code and added tests on code base of total lines of code > 20M
 
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
@@ -76,7 +76,7 @@ I made system run faster.
 
 *  2015 - OpenVML: Open-sourced version of Vector Math Library, focused on high performance. Collaboration project.  
     [https://github.com/xianyi/OpenVML](https://github.com/xianyi/OpenVML)
-*  2013 - LifeGame: A demo in SLB C++ workshop on verterization. Conway's Game of Life implemented in various ways: raw loop, OpenMP, Intel IPP, Intel TBB, GLSL Shader  
+*  2013 - LifeGame: A demo in Schlumberger C++ workshop on vecterization. Conway's Game of Life implemented in various ways: raw loop, OpenMP, Intel IPP, Intel TBB, GLSL Shader  
     [https://github.com/xinhuang/HelloCinder/tree/master/LifeGame](https://github.com/xinhuang/HelloCinder/tree/master/LifeGame)
 
 
