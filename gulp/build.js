@@ -3,6 +3,7 @@
 var path = require('path');
 var gulp = require('gulp');
 var conf = require('./conf');
+var fs = require('fs');
 
 var $ = require('gulp-load-plugins')({
   pattern: ['gulp-*', 'main-bower-files', 'uglify-save-license', 'del']
@@ -76,6 +77,18 @@ gulp.task('fonts', function () {
     .pipe(gulp.dest(path.join(conf.paths.dist, '/fonts/')));
 });
 
+gulp.task('blog', function(cb) {
+	var assetPath = path.join(conf.paths.src, 'assets/posts');
+	fs.readdir(assetPath, function(err, files) {
+		if (err) {
+			conf.errorHandler(err);
+		} else {
+			fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(files));
+		}
+		cb();
+	});
+});
+
 gulp.task('other', function () {
   var fileFilter = $.filter(function (file) {
     return file.stat.isFile();
@@ -93,4 +106,4 @@ gulp.task('clean', function () {
   return $.del([path.join(conf.paths.dist, '/'), path.join(conf.paths.tmp, '/')]);
 });
 
-gulp.task('build', ['html', 'fonts', 'other']);
+gulp.task('build', ['html', 'fonts', 'blog', 'other']);
