@@ -33,7 +33,7 @@
   },
   "extends": [
     "eslint:recommended",
-    "airbnb/base"
+    "angular"
   ],
   "plugins": ["angular"],
   "ecmaFeatures": {
@@ -43,5 +43,8 @@
     "angular": true,
     "module": true,
     "inject": true
+  },
+  "parserOptions": {
+    "sourceType": "module",
   }
 }
