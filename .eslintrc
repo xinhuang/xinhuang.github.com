@@ -1,11 +1,41 @@
 {
-  "extends": "eslint:recommended",
-  "plugins": ["angular"],
+  "rules": {
+    "no-mixed-spaces-and-tabs": [2, "smart-tabs"],
+    "indent": [
+      2,
+      "tab",
+      {
+        "SwitchCase": 1
+      }
+    ],
+    "space-before-function-paren": [
+      2,
+      {
+        "anonymous": "always",
+        "named": "never"
+      }
+    ],
+    "no-use-before-define": [
+      2,
+      "nofunc"
+    ],
+    // TODO: turn on later
+    "comma-dangle": [
+      0
+    ]
+  },
   "env": {
+    "node": true,
+    "mocha": true,
     "es6": true,
     "browser": true,
     "jasmine": true
   },
+  "extends": [
+    "eslint:recommended",
+    "airbnb/base"
+  ],
+  "plugins": ["angular"],
   "ecmaFeatures": {
     "modules": true
   },
