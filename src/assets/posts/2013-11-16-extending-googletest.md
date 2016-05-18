@@ -1,0 +1,156 @@
+---
+layout: post
+title: "Extending GoogleTest"
+description: "If you want to make your own unit test DSL, how to make use of googletest to do the execution & reporting?"
+category: 
+tags: [googletest, HowTo]
+---
+{% include JB/setup %}
+
+Maybe you are tired of the syntax [googletest] has chosen, so you deside to invent you own unit test DSL. But re-implementing the whole execution & report part of a unit test framework would be too much, esp. you want to ship your "product" somewhere.
+
+Then the option left would be extending an existing one, and [googletest] is a good candidate.
+
+## Behind the curtain
+
+### A basic version
+
+First of all, before extending googletest, we need to know what's behind the curtain.  
+A typical unit test would be:
+
+    class Fixture : public ::testing::Test {
+    };
+    
+    TEST_F(Fixture, GIVEN_1_THEN_add_1_SHOULD_return_0) {
+        ASSERT_EQ(0, 1 + 1);
+    }
+    
+_Sorry for my bad math._
+
+In above code snippet, googletest does 3 things:  
+1. Create a class inherited from `Fixture`.  
+2. Override a method in `Fixture`.  
+3. Execute some code to register the newly created class somewhere.
+
+All the magic is done within macro `TEST_F`.  
+If you are familiar with macro, it won't take a minute to figure out `TEST_F` actually expand to:  
+
+    / --------- Expand start -----------> /
+    class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+        void SomeMethodCalledWhenExecuteTest();
+    };
+    void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+    / <-------- Expand end -------------- /
+    {
+        ASSERT_EQ(0, 1 + 1);
+    }
+    
+Now, we've done No. 1 and No. 2. But what about No. 3? How to execute some code outside the `main` function?  
+The answer is simple: _Use global variables_, and perform registration in the construction of the variable:
+
+    / --------- Expand start -----------> /
+    class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+        void SomeMethodCalledWhenExecuteTest();
+    };
+    prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix instance_GIVEN_1_THEN_add_1_SHOULD_return_0;
+    void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+    / <-------- Expand end -------------- /
+
+### The googletest version
+
+This only demonstrate the basic idea of how `TEST_F` works. Knowing this, we can find out how to extend googletest.
+
+Watching the macro _TEST\_F_, it does a bit more than our basic version:
+
+    #define GTEST_TEST_(test_case_name, test_name, parent_class, parent_id)\
+    class GTEST_TEST_CLASS_NAME_(test_case_name, test_name) : public parent_class {\
+     public:\
+      GTEST_TEST_CLASS_NAME_(test_case_name, test_name)() {}\
+     private:\
+      virtual void TestBody();\
+      static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;\
+      GTEST_DISALLOW_COPY_AND_ASSIGN_(\
+          GTEST_TEST_CLASS_NAME_(test_case_name, test_name));\
+    };\
+    
+Above code defines the test class inherites from test fixture.
+
+First, create the global variable:
+    
+    ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)\
+      ::test_info_ =\
+      
+Then, initialize the global variable:
+      
+        ::testing::internal::MakeAndRegisterTestInfo(\
+            #test_case_name, #test_name, NULL, NULL, \
+            (parent_id), \
+            parent_class::SetUpTestCase, \
+            parent_class::TearDownTestCase, \
+            new ::testing::internal::TestFactoryImpl<\
+                GTEST_TEST_CLASS_NAME_(test_case_name, test_name)>);\
+                
+Registration is performed inside `::testing::internal::MakeAndRegisterTestInfo`.
+    
+At last, is the _TestBody_ stub, which connects real test code:
+                
+    void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
+
+#### Inside RegisterTestInfo
+
+Let's take a closer look at what happened inside `MakeAndRegisterTestInfo`:
+
+    TestInfo* MakeAndRegisterTestInfo(
+        const char* test_case_name,
+        const char* name,
+        const char* type_param,
+        const char* value_param,
+        TypeId fixture_class_id,
+        SetUpTestCaseFunc set_up_tc,                // Set up for the first of fixture class.
+        TearDownTestCaseFunc tear_down_tc,          // Tear down after execute of all tests in a fixture.
+        TestFactoryBase* factory);                  // Factory creates the test class instances.
+        
+First 2 parameters are easy to tell from their name, last 3 are also not difficult.  
+`type_param` and `value_param` are both passed as `NULL` in `TEST_F` macro, so we can ignore them until we really got some problem.
+
+Then, what is `fixture_class_id`? If we are using a different model from googletest, what should the value be?   
+By searching the code, we can easily find out the type id is used to tell a test going to run whether is the first one under a fixture. If it is, then the `tear_down_tc` of previous fixture and `set_up_tc` of the fixture should be called.  
+So if you don't care about it, ignore it.
+
+## Register our test
+
+After all the work, it is clear that all the macro makes googletest "user interface". If we want to connect our unit test DSL with googletest, register the test via `MakeAndRegisterTestInfo`.
+
+Now we are ready to let our test sneaks in. Here is the complete code: (C++ 11)
+
+    class NoFixture {};
+    void nop() {}
+    
+    class FunctionTest : public ::testing::Test {
+    public:
+        FunctionTest(function<void()> function) 
+            : function_(function) 
+        {}
+    private:
+        const function<void()> function_;
+        void TestBody() override { function_(); }
+    };
+    
+    class TestFactory : public ::testing::internal::TestFactoryBase {
+    public:
+        TestFactory(function<void()> function) 
+            : function_(function) {}
+        ::testing::Test* CreateTest() override {
+            return new FunctionTest(function_);
+        }
+    private:
+        const function<void()> function_;
+    };
+    
+    void Register(const string& test_name, const string& case_name, function<void()> test) {
+        static auto fixture_class_id = ::testing::internal::GetTypeId<NoFixture>();
+        ::testing::internal::MakeAndRegisterTestInfo(test_name.c_str(), case_name.c_str(), nullptr, nullptr,
+            fixture_class_id, nop, nop, new TestFactory(test));
+    }
+
+[googletest]: https://code.google.com/p/googletest/

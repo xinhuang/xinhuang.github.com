@@ -1,5 +1,5 @@
 export class MainController {
-  constructor($scope) {
+  constructor($scope, $http) {
     'ngInject';
 
 		$scope.message = "Hello world!";
