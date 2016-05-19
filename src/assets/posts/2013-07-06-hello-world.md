@@ -2,12 +2,12 @@
 layout: post
 title: "Hello, world!"
 description: ""
-category: 
+category:
 tags: [HowTo, Jekyll]
 ---
 {% include JB/setup %}
 
-This is the first post. Struggling with it for hours, even cloned somebody's 
+This is the first post. Struggling with it for hours, even cloned somebody's
 repository, finally realize it is not what the *appearence* that matters, it's
 how much you **value** it, it's the **content** that matters.
 
@@ -16,6 +16,7 @@ how much you **value** it, it's the **content** that matters.
 You might be enthusiastic wrote a new post, but when start Jekyll, following
 error strikes you:
 
+```
 	D:\Documents\blog\xinhuang.github.com>jekyll serve
 	Configuration file: D:/Documents/blog/xinhuang.github.com/_config.yml
 	[33m       Deprecation: Auto-regeneration can no longer be set from your config
@@ -25,10 +26,11 @@ error strikes you:
 	      Generating... Error reading file D:/Documents/blog/xinhuang.github.com/_po
 	sts/2013-07-07-how-to-type-chinese-in-miktex.md: invalid byte sequence in GBK
 	error: invalid byte sequence in GBK. Use --trace to view backtrace
+```
 
-To temprorily fix this error, just modify the Jekyll source. 
+To temprorily fix this error, just modify the Jekyll source.
 
-Open `gems\1.9.1\gems\jekyll-1.0.3\lib\jekyll\convertible.rb`, and change the 
+Open `gems\1.9.1\gems\jekyll-1.0.3\lib\jekyll\convertible.rb`, and change the
 `read_yaml` function:
 
     def read_yaml(base, name)
