@@ -1,9 +1,7 @@
----
-title: "Clang Tutorial: Finding Declarations"
-layout: post
-category : Clang
-tagline: "traverse AST using RecursiveASTVisitor"
-tags : [c++, howto]
+"title": "Clang Tutorial: Finding Declarations"
+"category" : "Clang"
+"tagline": "traverse AST using RecursiveASTVisitor"
+"tags" : ["C++", "HowTo"]
 ---
 
 Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to

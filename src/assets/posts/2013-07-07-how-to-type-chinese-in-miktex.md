@@ -1,9 +1,5 @@
----
-layout: post
-title: "How to type Chinese in MiKTex"
-description: ""
-category:
-tags: [LaTeX, HowTo]
+"title": "How to type Chinese in MiKTex"
+"tags": ["LaTeX", "HowTo"]
 ---
 
 After install MiKTeX on Windows, and play around with some examples, you will

@@ -1,9 +1,6 @@
----
-title: "Use TBB to Generate Dynamic Dependency Graph For Computation"
-layout: post
-category : Multi-Threading
-tagline: ""
-tags : [TBB, multithreading]
+"title": "Use TBB to Generate Dynamic Dependency Graph For Computation"
+"category" : "Multi-Threading"
+"tags" : ["TBB", "multithreading"]
 ---
 
 # Overview

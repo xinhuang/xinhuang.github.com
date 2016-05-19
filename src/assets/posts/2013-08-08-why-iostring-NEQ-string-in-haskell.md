@@ -1,9 +1,5 @@
----
-layout: post
-title: "Why IOString != String In Haskell"
-description: ""
-category:
-tags: [Haskell, Design]
+"title": "Why IOString != String In Haskell"
+"tags": ["Haskell", "Design"]
 ---
 
 In GHCi, I want to test my `headRev` function, while loading Mercurial log from a file and pass the content to headRev function:

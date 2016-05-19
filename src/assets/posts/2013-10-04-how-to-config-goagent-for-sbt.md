@@ -1,9 +1,5 @@
----
-layout: post
-title: "How to Config GoAgent For SBT"
-description: ""
-category:
-tags: [HowTo, GoAgent, SBT]
+"title": "How to Config GoAgent For SBT"
+"tags": ["HowTo", "GoAgent", "SBT"]
 ---
 
 ## Proxy Setting For SBT

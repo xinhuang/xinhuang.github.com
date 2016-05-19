@@ -1,9 +1,6 @@
----
-layout: post
-title: "Visual Leak Detector Stack Overflow And Thread Local Storage"
-description: ""
-category: Debug
-tags: [Windows, Debug]
+"title": "Visual Leak Detector Stack Overflow And Thread Local Storage"
+"category": "Debug"
+"tags": ["Windows", "Debug"]
 ---
 
 ## Abstract

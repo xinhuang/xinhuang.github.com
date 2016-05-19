@@ -1,9 +1,7 @@
----
-title: "Clang Tutorial: The AST Matcher"
-layout: post
-category : Clang
-tagline: "using AST matcher to find pass-by-value std::vector parameters"
-tags : [c++, howto]
+"title": "Clang Tutorial: The AST Matcher"
+"category" : "Clang"
+"tagline": "using AST matcher to find pass-by-value std::vector parameters"
+"tags" : ["C++", "HowTo"]
 ---
 
 In [previous post] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the

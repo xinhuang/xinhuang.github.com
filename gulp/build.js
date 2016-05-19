@@ -88,11 +88,11 @@ gulp.task('blog', function(cb) {
 		} else {
       const list = {};
       list.blogs = [];
-      Observable.from(files)
+      Observable.from(files).filter(path => path.endsWith('.md'))
         .map(f => {
           const filePath = path.join(conf.paths.src, 'assets/posts', f);
           let lines = fs.readFileSync(filePath).toString().split('\n');
-          lines.unshift(f);
+          lines.unshift(`"file": "${f}"`);
           return lines;
         })
         .map(lines => blog.extractHeader(lines))

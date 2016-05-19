@@ -1,9 +1,5 @@
----
-layout: post
-title: "Hello, world!"
-description: ""
-category:
-tags: [HowTo, Jekyll]
+"title": "Hello, world!"
+"tags": ["HowTo", "Jekyll"]
 ---
 
 This is the first post. Struggling with it for hours, even cloned somebody's

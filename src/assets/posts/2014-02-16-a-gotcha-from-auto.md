@@ -1,9 +1,6 @@
----
-layout: post
-title: "A Gotcha From auto"
-description: ""
-category: C++
-tags: [C++, gotcha]
+"title": "A Gotcha From auto"
+"category": "C++"
+"tags": ["C++", "gotcha"]
 ---
 
 Recently, I found my random generator doesn't work. Which is:

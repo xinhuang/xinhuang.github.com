@@ -1,9 +1,7 @@
----
-title: "How A Multi-Threaded Implementation of The Observer Pattern Can Fail"
-layout: post
-category : Multi-Threading
-tagline: "Revisit Design Pattern In A Concurrent View"
-tags : [design pattern]
+"title": "How A Multi-Threaded Implementation of The Observer Pattern Can Fail"
+"category" : "Multi-Threading"
+"tagline": "Revisit Design Pattern In A Concurrent View"
+"tags" : ["design pattern"]
 ---
 
 ## Overview

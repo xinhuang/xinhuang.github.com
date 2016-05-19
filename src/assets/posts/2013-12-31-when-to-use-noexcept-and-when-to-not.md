@@ -1,9 +1,6 @@
----
-layout: post
-title: "When to use `noexcept` and when to not"
-description: ""
-category: C++
-tags: [C++11, C++]
+"title": "When to use `noexcept` and when to not"
+"category": "C++"
+"tags": ["C++11", "C++"]
 ---
 
 In C++ 11, a new keyword `noexcept` is introduced. Being a replacement of deprecated `throw()`, what is `noexcept` good for? When should it be used and when should be avoided?
