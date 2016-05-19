@@ -1,10 +1,12 @@
 import path from 'path';
 
 export class BlogController {
-  constructor($scope, $stateParams, $http) {
+  constructor($rootScope, $scope, $stateParams, $http) {
     'ngInject';
 
-    const blogFile = path.join('/assets/posts/', $stateParams['blogFile']);
+    const blogFileName = $stateParams['blogFile'];
+    $rootScope.header = blogFileName;
+    const blogFile = path.join('/assets/posts/', blogFileName);
 
     $http.get(blogFile).success((data) => {
       $scope.data = data;
