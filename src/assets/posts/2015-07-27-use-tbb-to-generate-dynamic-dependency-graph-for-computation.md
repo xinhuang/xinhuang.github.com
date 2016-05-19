@@ -41,7 +41,7 @@ int main() {
    return 0;
 }
 ```
-_Example taken from [tbb::flow::join_node documentation]._
+*Example taken from [tbb::flow::join_node documentation].*
 
 # Dynamic Graph
 
@@ -270,4 +270,4 @@ same with a few tweaks.
 [merge_node sources]:https://gist.github.com/xinhuang/16e03ec6d560df5ca03c
 [Pipeline]:https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm
 [criticizing on TBB's flow-based programming]:https://groups.google.com/forum/#!topic/flow-based-programming/JkInzGvySAg
-[dependency-graph-example]:/assets/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png
+[dependency-graph-example]:/assets/images/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png

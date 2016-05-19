@@ -78,5 +78,5 @@ The "[why not noexcept]" question on StackOverflow.
 [why not noexcept]: http://stackoverflow.com/a/20521414/2190129
 [An Effective C++11/14 Sampler]: http://channel9.msdn.com/Events/GoingNative/2013/An-Effective-Cpp11-14-Sampler
 [this question]: http://stackoverflow.com/questions/1853243/c-do-you-really-write-exception-safe-code
-[Use copy constructor to expand a vector]:/assets/posts/when-to-use-noexcept-and-when-to-not/copy-construct.png
-[Use move constructor to expand a vector]:/assets/posts/when-to-use-noexcept-and-when-to-not/move-construct.png
+[Use copy constructor to expand a vector]:/assets/images/posts/when-to-use-noexcept-and-when-to-not/copy-construct.png
+[Use move constructor to expand a vector]:/assets/images/posts/when-to-use-noexcept-and-when-to-not/move-construct.png

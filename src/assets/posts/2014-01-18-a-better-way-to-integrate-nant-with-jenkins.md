@@ -68,4 +68,4 @@ Although all environment variables will be loaded into NAnt properties, and many
 [NAnt]: http://nant.sourceforge.net/
 [NAnt Plugin]: https://wiki.jenkins-ci.org/display/JENKINS/NAnt+Plugin
 [LoadEnvTask]: https://github.com/xinhuang/NAntEnv
-[nant-build-step]: /assets/posts/a-better-way-to-integrate-nant-with-jenkins/nant-build-step.png
+[nant-build-step]: /assets/images/posts/a-better-way-to-integrate-nant-with-jenkins/nant-build-step.png
