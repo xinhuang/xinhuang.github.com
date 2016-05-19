@@ -2,10 +2,9 @@
 layout: post
 title: "Extending GoogleTest"
 description: "If you want to make your own unit test DSL, how to make use of googletest to do the execution & reporting?"
-category: 
+category:
 tags: [googletest, HowTo]
 ---
-{% include JB/setup %}
 
 Maybe you are tired of the syntax [googletest] has chosen, so you deside to invent you own unit test DSL. But re-implementing the whole execution & report part of a unit test framework would be too much, esp. you want to ship your "product" somewhere.
 
@@ -20,11 +19,11 @@ A typical unit test would be:
 
     class Fixture : public ::testing::Test {
     };
-    
+
     TEST_F(Fixture, GIVEN_1_THEN_add_1_SHOULD_return_0) {
         ASSERT_EQ(0, 1 + 1);
     }
-    
+
 _Sorry for my bad math._
 
 In above code snippet, googletest does 3 things:  
@@ -44,7 +43,7 @@ If you are familiar with macro, it won't take a minute to figure out `TEST_F` ac
     {
         ASSERT_EQ(0, 1 + 1);
     }
-    
+
 Now, we've done No. 1 and No. 2. But what about No. 3? How to execute some code outside the `main` function?  
 The answer is simple: _Use global variables_, and perform registration in the construction of the variable:
 
@@ -72,16 +71,16 @@ Watching the macro _TEST\_F_, it does a bit more than our basic version:
       GTEST_DISALLOW_COPY_AND_ASSIGN_(\
           GTEST_TEST_CLASS_NAME_(test_case_name, test_name));\
     };\
-    
+
 Above code defines the test class inherites from test fixture.
 
 First, create the global variable:
-    
+
     ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)\
       ::test_info_ =\
-      
+
 Then, initialize the global variable:
-      
+
         ::testing::internal::MakeAndRegisterTestInfo(\
             #test_case_name, #test_name, NULL, NULL, \
             (parent_id), \
@@ -89,11 +88,11 @@ Then, initialize the global variable:
             parent_class::TearDownTestCase, \
             new ::testing::internal::TestFactoryImpl<\
                 GTEST_TEST_CLASS_NAME_(test_case_name, test_name)>);\
-                
+
 Registration is performed inside `::testing::internal::MakeAndRegisterTestInfo`.
-    
+
 At last, is the _TestBody_ stub, which connects real test code:
-                
+
     void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
 
 #### Inside RegisterTestInfo
@@ -109,7 +108,7 @@ Let's take a closer look at what happened inside `MakeAndRegisterTestInfo`:
         SetUpTestCaseFunc set_up_tc,                // Set up for the first of fixture class.
         TearDownTestCaseFunc tear_down_tc,          // Tear down after execute of all tests in a fixture.
         TestFactoryBase* factory);                  // Factory creates the test class instances.
-        
+
 First 2 parameters are easy to tell from their name, last 3 are also not difficult.  
 `type_param` and `value_param` are both passed as `NULL` in `TEST_F` macro, so we can ignore them until we really got some problem.
 
@@ -125,20 +124,20 @@ Now we are ready to let our test sneaks in. Here is the complete code: (C++ 11)
 
     class NoFixture {};
     void nop() {}
-    
+
     class FunctionTest : public ::testing::Test {
     public:
-        FunctionTest(function<void()> function) 
-            : function_(function) 
+        FunctionTest(function<void()> function)
+            : function_(function)
         {}
     private:
         const function<void()> function_;
         void TestBody() override { function_(); }
     };
-    
+
     class TestFactory : public ::testing::internal::TestFactoryBase {
     public:
-        TestFactory(function<void()> function) 
+        TestFactory(function<void()> function)
             : function_(function) {}
         ::testing::Test* CreateTest() override {
             return new FunctionTest(function_);
@@ -146,7 +145,7 @@ Now we are ready to let our test sneaks in. Here is the complete code: (C++ 11)
     private:
         const function<void()> function_;
     };
-    
+
     void Register(const string& test_name, const string& case_name, function<void()> test) {
         static auto fixture_class_id = ::testing::internal::GetTypeId<NoFixture>();
         ::testing::internal::MakeAndRegisterTestInfo(test_name.c_str(), case_name.c_str(), nullptr, nullptr,

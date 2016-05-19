@@ -2,10 +2,10 @@
 layout: post
 title: "A better way to integrate NAnt with Jenkins"
 description: ""
-category: 
+category:
 tags: [NAnt, Jenkins, CI]
 ---
-{% include JB/setup %}
+
 ## Use NAnt by NAnt plugin of Jenkins
 
 As a popular CI tool, [Jenkins] is widely used in many places. [NAnt] is a popular .NET build tool. If you are using NAnt with Jenkins, you should have been using [NAnt Plugin].
@@ -27,7 +27,7 @@ Jenkins will set environment variable according to given build parameters. So yo
     <if test="${environment::variable-exists('VAR_NAME')}">
         <property name="var.name" value="${environment::get-variable('VAR_NAME')}"/>
     </if>
-    
+
 This is handy. Adding 1 configuration parameter just needs to *copy* above 3 lines.
 
 But soon you will find these 3 similar lines scatterring every where. Especially when your NAnt scripts share lots of common logic, you want to extract all these setting up code into a `common.include`. Months later, you realize it becomes a monster with hundreds of these `test-set` lines.
@@ -45,7 +45,7 @@ In our build script, we have following conventions:
 
 When pass build parameters, we load it from environment variables in NAnt scripts. What it does is transforming the uppercase form into the lowercase form.
 
-This gives us opportunities to eliminate those duplications: let NAnt task do the transformation, without breaking existing code or current script guidelines. 
+This gives us opportunities to eliminate those duplications: let NAnt task do the transformation, without breaking existing code or current script guidelines.
 
 ### Load environment variables into NAnt properties
 
@@ -56,7 +56,7 @@ Here is the [LoadEnvTask] project. To use it, call `load-environment` task in yo
 
         <echo message="my.var loaded from environment variable: ${my.var}"/>
     </target>
-    
+
 And you will see from the log:
 
 > systemdrive = C:  

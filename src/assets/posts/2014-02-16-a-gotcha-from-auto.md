@@ -5,7 +5,6 @@ description: ""
 category: C++
 tags: [C++, gotcha]
 ---
-{% include JB/setup %}
 
 Recently, I found my random generator doesn't work. Which is:
 

@@ -5,7 +5,6 @@ category : Multi-Threading
 tagline: ""
 tags : [TBB, multithreading]
 ---
-{% include JB/setup %}
 
 # Overview
 

@@ -2,13 +2,12 @@
 layout: post
 title: "How to type Chinese in MiKTex"
 description: ""
-category: 
+category:
 tags: [LaTeX, HowTo]
 ---
-{% include JB/setup %}
 
-After install MiKTeX on Windows, and play around with some examples, you will 
-recognize that the Chinese is not showing up. To fix this problem, you will 
+After install MiKTeX on Windows, and play around with some examples, you will
+recognize that the Chinese is not showing up. To fix this problem, you will
 need:
 
 Install Asian language support
@@ -29,7 +28,7 @@ Enable new font
 
 2. Run command `initexmf -u`
 
-3. Run command `initexmf --edit-config-file updmap`, then type in following 
+3. Run command `initexmf --edit-config-file updmap`, then type in following
 commands in poped up editor. (Don't forget to save.)
 
 		Map cwmu.map

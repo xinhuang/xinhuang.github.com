@@ -5,7 +5,6 @@ category : Clang
 tagline: "using AST matcher to find pass-by-value std::vector parameters"
 tags : [c++, howto]
 ---
-{% include JB/setup %}
 
 In [previous post] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the
 declarations in a given source file. Now Let's play with Clang AST matchers and make another tool to

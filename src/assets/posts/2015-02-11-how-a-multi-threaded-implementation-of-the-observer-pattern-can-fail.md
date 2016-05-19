@@ -5,7 +5,6 @@ category : Multi-Threading
 tagline: "Revisit Design Pattern In A Concurrent View"
 tags : [design pattern]
 ---
-{% include JB/setup %}
 
 ## Overview
 

@@ -5,7 +5,6 @@ description: ""
 category:
 tags: [HowTo, Jekyll]
 ---
-{% include JB/setup %}
 
 This is the first post. Struggling with it for hours, even cloned somebody's
 repository, finally realize it is not what the *appearence* that matters, it's

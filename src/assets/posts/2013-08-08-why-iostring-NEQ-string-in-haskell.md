@@ -2,10 +2,9 @@
 layout: post
 title: "Why IOString != String In Haskell"
 description: ""
-category: 
+category:
 tags: [Haskell, Design]
 ---
-{% include JB/setup %}
 
 In GHCi, I want to test my `headRev` function, while loading Mercurial log from a file and pass the content to headRev function:
 
@@ -22,7 +21,7 @@ Why `IO String` is not compatible with `String`? Why is it designed like this?
 After googled the error, here is a insightful reason to this question.
 
 > There is a very good reason why there is no such function.
-> 
+>
 > Haskell has the notion of functional purity. This means that a
 > function will always return the same result when called with the same
 > parameters. The only place where IO is allowed is inside the IO Monad.
@@ -43,4 +42,3 @@ Then in GHCi:
     interactWith f "hg.log"
 
 [1]: http://stackoverflow.com/a/1676052/2190129
-

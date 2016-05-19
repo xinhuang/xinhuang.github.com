@@ -2,10 +2,9 @@
 layout: post
 title: "Test Daemon For Nose In Python"
 description: "A daemon to run your unit tests automatically after they are modified."
-category: 
+category:
 tags: [Python]
 ---
-{% include JB/setup %}
 
 Last week we had a great night with Tim Ottinger, playing with Python to analyze commit history.
 

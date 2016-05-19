@@ -5,7 +5,6 @@ description: ""
 category: C++
 tags: [C++11, C++]
 ---
-{% include JB/setup %}
 
 In C++ 11, a new keyword `noexcept` is introduced. Being a replacement of deprecated `throw()`, what is `noexcept` good for? When should it be used and when should be avoided?
 
@@ -17,7 +16,7 @@ In C++ 11, a new keyword `noexcept` is introduced. Being a replacement of deprec
     void foo2() noexcept(true);      // same as foo
     void bar();                      // a function might throw exception
     void bar2() noexcept(false);     // same as bar
-    
+
 However, same as `throw()`, *`noexcept` implies no compile-time check*. What if a function specified with `noexcept` throws an exception?
 
 Unlike `throw()`, if an exception is thrown out of a `noexcept` function, `std::unexpected` will not be called. Stack unwinding, during which destructor of stack allocated objects will be called, is *not guaranteed*. But `std::terminated` will be called immediately.
@@ -67,7 +66,7 @@ Just like other interface specifications, the principle of when and how to use `
 > possible, and return type should be as specific as possible, so future
 > modification can be made easily.   
 >
-> The `noexcept` specification should also be as *generic* as possible, 
+> The `noexcept` specification should also be as *generic* as possible,
 > i.e. `noexcept(false)`.
 
 (1) What if an exception is thrown during destroying copied elements?  

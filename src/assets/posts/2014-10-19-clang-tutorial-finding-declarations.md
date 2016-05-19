@@ -5,17 +5,16 @@ category : Clang
 tagline: "traverse AST using RecursiveASTVisitor"
 tags : [c++, howto]
 ---
-{% include JB/setup %}
 
-Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to 
-take advantage of it's syntax parsing, AST construction, semantics analysis, optimization, 
-assembly generation and JIT compilation. Here let's have some fun playing with Clang and 
+Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to
+take advantage of it's syntax parsing, AST construction, semantics analysis, optimization,
+assembly generation and JIT compilation. Here let's have some fun playing with Clang and
 build a Clang tool to list all the declarations in a given file.
 
 ## The "Hello World" Program
 
 Let's try to use Clang to write a "Hello World" program: Find all the declarations in a given
-source file. 
+source file.
 
 Given source file below:
 
@@ -64,8 +63,8 @@ You can also use `make install` to install your built version to the system.
 
 ## LibTooling
 
-LibTooling is the C++ interface Clang provided. It is very useful when you want to have full control 
-over AST (e.g. static analysis), or to implement a refactoring tool. There are other interfaces like 
+LibTooling is the C++ interface Clang provided. It is very useful when you want to have full control
+over AST (e.g. static analysis), or to implement a refactoring tool. There are other interfaces like
 LibClang and Clang Plugins as well. For detailed information you can refer to [Clang Tooling document].
 
 For our "Hello World" program - finding all declarations, using LibTooling is the easiest way.
@@ -175,7 +174,7 @@ public:
 ```
 
 We can process each declaration ([Decl]) in the our [ASTConsumer], but that will
-require us to identify the actual type of each [Decl] instance: is it a 
+require us to identify the actual type of each [Decl] instance: is it a
 function declaration, a type declaration or a variable declaration?
 
 Clang provides us the [RecursiveASTVisitor] to identify the different type of
@@ -241,7 +240,7 @@ USEDLIBS = clangTooling.a clangFrontend.a clangSerialization.a clangDriver.a \
            clangParse.a clangSema.a clangAnalysis.a \
            clangAST.a clangASTMatchers.a clangEdit.a clangLex.a clangBasic.a
 
-          
+
 include $(CLANG_LEVEL)/Makefile
 ```
 
@@ -257,7 +256,7 @@ CLANG_LEVEL := ../..
 include $(CLANG_LEVEL)/../../Makefile.config
 
 PARALLEL_DIRS := find-decl
-DIRS := 
+DIRS :=
 
 include $(CLANG_LEVEL)/Makefile
 ```
@@ -312,4 +311,3 @@ _All the source code can be found at [clang-playground]._
 [LLVM Coding Standard]:http://llvm.org/docs/CodingStandards.html
 [SourceLocation]:http://clang.llvm.org/doxygen/classclang_1_1SourceLocation.html
 [clang-playground]:https://github.com/xinhuang/clang-playground.git
-

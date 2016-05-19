@@ -5,7 +5,6 @@ description: ""
 category: C++
 tags: [HowTo, Clang]
 ---
-{% include JB/setup %}
 
 To find out where a race condition happens is a big headache, usually it requires good understanding of the program and days of debugging.
 [ThreadSanitizer], one of the many sanitizers shipped with Clang, can be a useful tool to help us find out where the race condition is happening.
@@ -121,12 +120,12 @@ int main(int argc, char const *argv[])
 Compile and run:
 
 ```
-$ clang++ -std=c++11 -pthread -g race_2.cpp 
-$ ./a.out 
-$ ./a.out Segmentation fault (core dumped) 
+$ clang++ -std=c++11 -pthread -g race_2.cpp
+$ ./a.out
+$ ./a.out Segmentation fault (core dumped)
 ```
 
-The first execution is ok, but the second execution yields an segmentation fault, because we called the virtual function `A::foo()` after the instance has been destructed in thread `t2`. 
+The first execution is ok, but the second execution yields an segmentation fault, because we called the virtual function `A::foo()` after the instance has been destructed in thread `t2`.
 
 Seems this is a pretty random data race. Let's run it using ThreadSanitizer see if it can be caught:
 
