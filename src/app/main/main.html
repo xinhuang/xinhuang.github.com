@@ -1,5 +1,11 @@
-<div layout="column" layout-align="center">
+<div layout="column" layout-fill>
 	<li ng-repeat="blog in blogs">
-		<a href="#/blogs/{{blog.file}}">{{blog.title}}</a>
+    <div layout="row">
+      <div flex="30"></div>
+      <div flex="40">
+  		  <a href="#/blogs/{{blog.file}}">{{blog.title}}</a>
+      </div>
+      <div flex></div>
+    </div>
 	</li>
 </div>
