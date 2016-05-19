@@ -4,6 +4,8 @@ var path = require('path');
 var gulp = require('gulp');
 var conf = require('./conf');
 var fs = require('fs');
+import { Observable } from 'rx';
+import blog from '../src/app/components/blog-parser';
 
 var $ = require('gulp-load-plugins')({
   pattern: ['gulp-*', 'main-bower-files', 'uglify-save-license', 'del']
@@ -82,10 +84,28 @@ gulp.task('blog', function(cb) {
 	fs.readdir(assetPath, function(err, files) {
 		if (err) {
 			conf.errorHandler(err);
+      cb();
 		} else {
-			fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(files));
-		}
-		cb();
+      const list = {};
+      list.blogs = [];
+      Observable.from(files)
+        .map(f => {
+          const filePath = path.join(conf.paths.src, 'assets/posts', f);
+          let lines = fs.readFileSync(filePath).toString().split('\n');
+          lines.unshift(f);
+          return lines;
+        })
+        .map(lines => blog.extractHeader(lines))
+        .map(lines => blog.parseHeader(lines))
+        .subscribe(
+          header => {console.log(header); list.blogs.push(header)},
+          error => conf.errorHandler(error),
+          () => {
+            fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
+            cb();
+          }
+        );
+		};
 	});
 });
 
