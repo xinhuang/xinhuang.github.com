@@ -23,6 +23,7 @@ function parseHeader(lines) {
           header[key] = tmp[key];
         }
       }
+      header.date = header.file.substring(0, 10);
       return header;
     }
   } catch(e) {
