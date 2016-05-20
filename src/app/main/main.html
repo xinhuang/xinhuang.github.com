@@ -2,14 +2,14 @@
   <div layout="row">
     <div flex="30" flex-xs="0" flex-sm="15"></div>
     <div id="title" flex="40" flex-xs="100" flex-sm="70">
-      <h2>{{title}}</h2> {{tagline}}
+      <h2>{{main.title}}</h2> {{main.tagline}}
     </div>
     <div flex></div>
   </div>
 
   <div id="blog-list">
     <ul>
-    	<li ng-repeat="blog in blogs">
+    	<li ng-repeat="blog in main.blogs">
         <div layout="row">
           <div flex="30" flex-xs="0" flex-sm="15"></div>
           <div flex="40" flex-xs="100" flex-sm="70">

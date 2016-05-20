@@ -1,12 +1,11 @@
 export class MainController {
-  constructor($rootScope, $scope, $http, $interval) {
+  constructor($rootScope, $http, $interval) {
     'ngInject';
 
     $rootScope.header = 'Life is short,';
-    $scope.title = 'Life is short, ';
-    $scope.tagline = 'eat more.';
+    this.title = 'Life is short, ';
     $http.get('assets/posts/list.json').success((list) => {
-      $scope.blogs = list.blogs;
+      this.blogs = list.blogs;
     });
 
     let itl = 0;
@@ -16,12 +15,13 @@ export class MainController {
       'play more.',
       'code more.',
     ];
+    this.tagline = taglines[itl];
     $interval(() => {
-      $scope.tagline = taglines[itl];
+      this.tagline = taglines[itl];
       itl += 1;
       if (itl >= taglines.length) {
         itl = 0;
       }
-    }, 3000);
+    }, 2000);
   }
 }
