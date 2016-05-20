@@ -14,7 +14,7 @@ function parseHeader(lines) {
     } else {
       let header = {};
       for (let i = 0; i < lines.length; ++i) {
-        const tmp = JSON.parse(`{${lines[i]}}`);
+        const tmp = JSON.parse(`{${lines[i]}}`);  // eslint-disable-line angular/json-functions
         for (let key in tmp) {
           header[key] = tmp[key];
         }
@@ -23,6 +23,7 @@ function parseHeader(lines) {
     }
   } catch(e) {
     console.log(e);
+    throw e;
   }
 }
 
