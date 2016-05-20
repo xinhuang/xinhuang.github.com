@@ -98,8 +98,8 @@ gulp.task('blog', function(cb) {
         .map(lines => blog.extractHeader(lines))
         .map(lines => blog.parseHeader(lines))
         .subscribe(
-          header => {console.log(header); list.blogs.push(header)},
-          error => conf.errorHandler(error),
+          header => { console.log(header); list.blogs.push(header); },
+          error => { console.log(error); conf.errorHandler(error); },
           () => {
             fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
             cb();

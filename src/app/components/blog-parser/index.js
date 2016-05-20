@@ -1,7 +1,11 @@
 function extractHeader(lines) {
+  const header = [];
   for (let i = 0; i < lines.length; ++i) {
-    if (lines[i] === '---') {
-      return lines.slice(0, i);
+    const l = lines[i].trim();
+    if (l === '---') {
+      return header;
+    } else {
+      header.push(l);
     }
   }
   return lines;
@@ -22,8 +26,7 @@ function parseHeader(lines) {
       return header;
     }
   } catch(e) {
-    console.log(e);
-    throw e;
+    throw new Error(`${lines}\n(${e})`);
   }
 }
 

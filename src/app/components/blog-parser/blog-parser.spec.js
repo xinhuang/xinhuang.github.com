@@ -11,6 +11,14 @@ describe('controllers', () => {
       expect(actual).to.be.deep.equal(expected);
     });
 
+    it('should return lines before 1st separator when only 1 separator and trim line breaks', () => {
+      const expected = ['key0: value0', 'key1: value1'];
+
+      const actual = parser.extractHeader(['key0: value0\n', 'key1: value1\n', '---\n']);
+
+      expect(actual).to.be.deep.equal(expected);
+    });
+
     it('should return all lines if no separator', () => {
       const expected = ['key0: value0', 'key1: value1'];
 
