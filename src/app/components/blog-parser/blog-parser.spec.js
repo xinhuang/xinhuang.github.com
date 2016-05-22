@@ -43,16 +43,25 @@ describe('controllers', () => {
       expect(actual).to.be.deep.equal({});
     });
 
-    it('should parse 1 key-value pair', () => {
-      const actual = parser.parseHeader(['"key0": "value0"']);
+    it('should parse file name pair and get date', () => {
+      const actual = parser.parseHeader(['"file": "2016-01-01-a-post"']);
 
-      expect(actual).to.be.deep.equal({ key0: 'value0' });
+      expect(actual).to.be.deep.equal({
+        file: '2016-01-01-a-post',
+        date: '2016-01-01' });
     });
 
     it('should parse 2 key-value pairs', () => {
-      const actual = parser.parseHeader(['"key0": "value0"', '"key1": "value1"']);
+      const actual = parser.parseHeader([
+        '"file": "2016-01-01-a-post"',
+        '"key0": "value0"',
+        '"key1": "value1"']);
 
-      expect(actual).to.be.deep.equal({ key0: 'value0', key1: 'value1' });
+      expect(actual).to.be.deep.equal({
+        file: '2016-01-01-a-post',
+        date: '2016-01-01',
+        key0: 'value0',
+        key1: 'value1' });
     });
   });
 });
