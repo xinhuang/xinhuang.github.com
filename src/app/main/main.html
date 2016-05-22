@@ -9,17 +9,10 @@
     </div>
 
     <div id="blog-list">
-      <!-- <ul>
-      	<li ng-repeat="blog in main.blogs">
-          <div layout="row">
-        		<a href="#/blogs/{{blog.file}}">{{blog.title}}</a>
-          </div>
-      	</li>
-      </ul> -->
       <md-list>
         <md-list-item class="md-2-line" ng-repeat="blog in main.blogs">
           <div class="md-list-item-text" layout="column">
-            <a href="#/blogs/{{blog.file}}>">
+            <a href="#/blogs/{{blog.file}}">
               <h3>{{blog.title}}</h3>
             </a>
             <p>{{blog.date}}</p>
@@ -29,7 +22,7 @@
     </div>
 
     <div id="footer">
-      <hr/>
+      <md-divider/>
       <div layout="row">
         <a href="https://github.com/xinhuang">GitHub</a>
         <div flex="5"></div>

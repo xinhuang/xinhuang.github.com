@@ -1,7 +1,7 @@
 import parser from './index';
 import { expect } from 'chai';
 
-describe('controllers', () => {
+describe('blog-parser', () => {
   describe('extractHeader', () => {
     it('should return lines before 1st separator when only 1 separator', () => {
       const expected = ['key0: value0', 'key1: value1'];
