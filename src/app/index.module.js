@@ -9,6 +9,7 @@ import { BlogController } from './blog/blog.controller';
 angular.module('xinhuangGithubCom',
     ['ngAnimate', 'ngCookies', 'ngTouch', 'ngSanitize', 'ngMessages', 'ngAria', 'ngResource',
      'ui.router', 'ngMaterial', 'toastr', 'hc.marked'])
+  .constant('malarkey', malarkey)
   .constant('moment', moment)
   .config(config)
   .config(routerConfig)
