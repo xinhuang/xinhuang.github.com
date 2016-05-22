@@ -5,22 +5,7 @@
 
     <div id="title" layout="row">
       <div id="title">{{main.title}}</div>
-      <div id="tagline" class="malarkey"></div>
-      <script>
-        var elem = document.querySelector('.malarkey');
-        var opts = {
-          typeSpeed: 50,
-          deleteSpeed: 50,
-          pauseDelay: 2000,
-          loop: true,
-          postfix: ''
-        };
-        malarkey(elem, opts).type('eat more.').pause().delete()
-                            .type('sleep more.').pause().delete()
-                            .type('code more.').pause().delete()
-                            .type('play more.').pause().delete()
-                            ;
-      </script>
+      <acme-malarkey id="tagline" values="main.taglines"></acme-malarkey>
     </div>
 
     <div id="blog-list">

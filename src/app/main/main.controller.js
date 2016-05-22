@@ -1,5 +1,5 @@
 export class MainController {
-  constructor($rootScope, $http, $interval) {
+  constructor($rootScope, $http) {
     'ngInject';
 
     $rootScope.header = 'Life is short,';
@@ -17,20 +17,11 @@ export class MainController {
       })
     });
 
-    let itl = 0;
-    const taglines = [
+    this.taglines = [
       'eat more.',
       'sleep more.',
       'play more.',
       'code more.',
     ];
-    this.tagline = taglines[itl];
-    $interval(() => {
-      this.tagline = taglines[itl];
-      itl += 1;
-      if (itl >= taglines.length) {
-        itl = 0;
-      }
-    }, 2000);
   }
 }

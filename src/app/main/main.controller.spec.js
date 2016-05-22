@@ -11,7 +11,7 @@ describe('controllers', () => {
     expect(vm.title).toEqual(jasmine.any(String));
   });
 
-  it('should have a tagline', () => {
-    expect(vm.tagline).toEqual(jasmine.any(String));
+  it('should have taglines', () => {
+    expect(vm.taglines).toEqual(jasmine.any(Array));
   });
 });
