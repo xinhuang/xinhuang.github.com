@@ -31,7 +31,8 @@ function parseHeader(lines) {
   }
 }
 
-function parse(lines) {
+function parse(filename, lines) {
+  lines.unshift(`"file": "${filename}"`);
   const headerLines = extractHeader(lines);
   lines.splice(0, headerLines.length + 1);
   return {
