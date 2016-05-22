@@ -64,4 +64,28 @@ describe('controllers', () => {
         key1: 'value1' });
     });
   });
+
+  describe('parse', () => {
+    it ('should parse a blog into header & data', () => {
+      const lines = [
+        '"file": "2016-01-01-a-post"',
+        '---',
+        'post content',
+        'remaining post content',
+      ];
+
+      const actual = parser.parse(lines);
+
+      expect(actual).to.be.deep.equal({
+        header: {
+          file: '2016-01-01-a-post',
+          date: '2016-01-01',
+        },
+        content: [
+          'post content',
+          'remaining post content',
+        ]
+      });
+    });
+  });
 });

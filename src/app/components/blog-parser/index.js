@@ -31,4 +31,13 @@ function parseHeader(lines) {
   }
 }
 
-export default { extractHeader, parseHeader };
+function parse(lines) {
+  const headerLines = extractHeader(lines);
+  lines.splice(0, headerLines.length + 1);
+  return {
+    header: parseHeader(headerLines),
+    content: lines,
+  };
+}
+
+export default { extractHeader, parseHeader, parse };
