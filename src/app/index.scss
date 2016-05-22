@@ -48,6 +48,14 @@ html {
   font-family: 'Roboto Slab', serif;
 }
 
+#footer {
+  hr {
+    width: 100%;
+    height: 1px;
+    color: grey;
+  }
+}
+
 /**
  *  Do not remove the comment below. It's the markers used by gulp-inject to inject
  *  all your sass files automatically
