@@ -18,3 +18,12 @@ angular.module('xinhuangGithubCom',
   .controller('MainController', MainController)
   .controller('BlogController', BlogController)
   .directive('acmeMalarkey', MalarkeyDirective);
+  // .config(['markedProvider', function(markedProvider) {
+  //   markedProvider.setRenderer({
+  //     heading: function (text, level) {
+  //       var escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+  //
+  //       return `<h${level} class="md-h${level}">${text}</h${level}>`;
+  //     }
+  //   });
+  // }]);

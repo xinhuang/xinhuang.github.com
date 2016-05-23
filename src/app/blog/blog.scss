@@ -1,3 +1,41 @@
-.entry-meta {
-    color: #9B9B9B;
+article {
+  margin: auto;
+  font-size: 14px;
+}
+
+article .entry-meta {
+  color: #9B9B9B;
+  font-size: 14px;
+}
+
+.article-header {
+  color: #FF001F;
+  font-weight: 400;
+}
+
+article h1 {
+  @extend .article-header;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+article h2 {
+  @extend .article-header;
+  font-size: 18px;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+article code {
+  color: #999;
+}
+
+article pre {
+  line-height: 20px;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
+md-divider {
+  width: 110%;
 }
