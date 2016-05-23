@@ -1,10 +1,5 @@
+"title": "Resume"
 ---
-layout: page
-title: "Resume"
-date: 2014-01-14 00:00:00
----
-{% include JB/setup %}
-
 ## ***Xin Huang***
 
 Email:            [xinhuang.abc@gmail.com]  

@@ -1,12 +1,5 @@
+"title": "About Me"
 ---
-layout: default
-title: About
-group: navigation
----
-{% include JB/setup %}
-
-<br/>
-
 # About Me
 
 Hi, there! My name is Xin Huang. Welcome to my blog.
