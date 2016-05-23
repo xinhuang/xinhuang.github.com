@@ -4,6 +4,7 @@ var path = require('path');
 var gulp = require('gulp');
 var conf = require('./conf');
 var fs = require('fs');
+var gutil = require('gulp-util');
 import { Observable } from 'rx';
 import blog from '../src/app/components/blog-parser';
 
@@ -83,6 +84,7 @@ gulp.task('blog', function(cb) {
 	var assetPath = path.join(conf.paths.src, 'assets/posts');
 	fs.readdir(assetPath, function(err, files) {
 		if (err) {
+      gutil.log(err);
 			conf.errorHandler(err);
       cb();
 		} else {
@@ -98,8 +100,8 @@ gulp.task('blog', function(cb) {
         .map(lines => blog.extractHeader(lines))
         .map(lines => blog.parseHeader(lines))
         .subscribe(
-          header => { console.log(header); list.blogs.push(header); },
-          error => { console.log(error); conf.errorHandler(error); },
+          header => { gutil.log(header); list.blogs.push(header); },
+          error => { gutil.log(error); conf.errorHandler(error); },
           () => {
             fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
             cb();
