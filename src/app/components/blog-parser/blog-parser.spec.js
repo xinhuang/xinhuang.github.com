@@ -1,4 +1,4 @@
-import parser from './index';
+import parser from './blog-parser';
 import { expect } from 'chai';
 
 describe('blog-parser', () => {

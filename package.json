@@ -1,10 +1,6 @@
 {
   "name": "xinhuangGithubCom",
   "version": "0.0.0",
-  "dependencies": {
-    "angular-marked": "^1.2.0",
-    "rx": "^4.1.0"
-  },
   "scripts": {
     "test": "gulp test"
   },
@@ -58,6 +54,7 @@
     "main-bower-files": "~2.9.0",
     "ng-annotate-loader": "0.0.10",
     "phantomjs": "~1.9.18",
+    "rx": "^4.1.0",
     "uglify-save-license": "~0.4.1",
     "webpack-stream": "~2.1.1",
     "wiredep": "~2.2.2",

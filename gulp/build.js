@@ -6,7 +6,7 @@ var conf = require('./conf');
 var fs = require('fs');
 var gutil = require('gulp-util');
 import { Observable } from 'rx';
-import blog from '../src/app/components/blog-parser';
+import blog from '../src/app/components/blog-parser/blog-parser';
 
 var $ = require('gulp-load-plugins')({
   pattern: ['gulp-*', 'main-bower-files', 'uglify-save-license', 'del']
