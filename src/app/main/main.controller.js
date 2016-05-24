@@ -2,7 +2,7 @@ export class MainController {
   constructor($rootScope, $http) {
     'ngInject';
 
-    $rootScope.header = 'Life is short,';
+    $rootScope.header = 'Life is short';
     this.title = 'Life is short, ';
     $http.get('assets/posts/list.json').success((list) => {
       this.blogs = list.blogs;
