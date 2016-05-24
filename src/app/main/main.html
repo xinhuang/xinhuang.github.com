@@ -1,37 +1,39 @@
-<div layout="row" layout-fill>
-  <div flex="30" flex-xs="0" flex-sm="15"></div>
+<article>
+  <div layout="row" layout-fill>
+    <div flex="30" flex-xs="0" flex-sm="15"></div>
 
-  <div layout="column">
+    <div layout="column">
 
-    <div id="title" layout="row" class="header">
-      <div id="title">{{main.title}}</div>
-      <acme-malarkey id="tagline" values="main.taglines"></acme-malarkey>
-    </div>
-
-    <md-divider/>
-
-    <div id="blog-list">
-      <md-list>
-        <md-list-item class="md-2-line" ng-repeat="blog in main.blogs">
-          <div class="md-list-item-text" layout="row">
-            <p id="blog-date">{{blog.date}}</p>
-            <a href="#/blogs/{{blog.file}}" id="blog-link">
-              <h3>{{blog.title}}</h3>
-            </a>
-          </div>
-        </md-list-item>
-      </md-list>
-    </div>
-
-    <md-divider/>
-
-    <div class="footer">
-      <div layout="row">
-        <a href="https://github.com/xinhuang">GitHub</a>
-        <div flex="5"></div>
-        <a href="/#/about">About</a>
+      <div id="title" layout="row" class="header">
+        <div id="title">{{main.title}}</div>
+        <acme-malarkey id="tagline" values="main.taglines"></acme-malarkey>
       </div>
-    </div>
 
+      <md-divider/>
+
+      <div id="blog-list">
+        <md-list>
+          <md-list-item class="md-2-line" ng-repeat="blog in main.blogs">
+            <div class="md-list-item-text" layout="row">
+              <p id="blog-date">{{blog.date}}</p>
+              <a href="#/blogs/{{blog.file}}" id="blog-link">
+                <h3>{{blog.title}}</h3>
+              </a>
+            </div>
+          </md-list-item>
+        </md-list>
+      </div>
+
+      <md-divider/>
+
+      <div class="footer">
+        <div layout="row">
+          <a href="https://github.com/xinhuang">GitHub</a>
+          <div flex="5"></div>
+          <a href="/#/about">About</a>
+        </div>
+      </div>
+
+    </div>
   </div>
-</div>
+</article>
