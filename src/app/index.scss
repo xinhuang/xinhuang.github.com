@@ -45,9 +45,6 @@
   font-feature-settings: 'liga';
 }
 
-html {
-}
-
 h1, h2, h3, h4 {
   font-family: 'Roboto Slab', serif;
 }
@@ -56,7 +53,12 @@ body {
   font-family: 'Ubuntu', sans-serif;
 }
 
-#footer {
+.header {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.footer {
   margin-top: 10px;
   margin-bottom: 10px;
 }
