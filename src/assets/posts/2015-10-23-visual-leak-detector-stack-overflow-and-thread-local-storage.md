@@ -23,8 +23,6 @@ However, the expansion will call `RtlAllocateHeap` to allocate memory and the re
 this memory allocation will be saved into TLS slot by VLD, which will again trigger another
 TLS expansion... In this way, The program will enter infinite recursion.
 
----
-
 ## Analysis
 
 Today I meet a crash because of infinite recursion with call stacks switching between KernelBase.dll and VLD.dll.
