@@ -6,6 +6,7 @@
 // endbower
 
 @import url(http://fonts.googleapis.com/css?family=Roboto+Slab:400,700|Roboto:400,700,700italic,400italic);
+@import url(https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic,700italic);
 
 @font-face {
   font-family: 'Material Icons';
@@ -45,7 +46,14 @@
 }
 
 html {
+}
+
+h1, h2, h3, h4 {
   font-family: 'Roboto Slab', serif;
+}
+
+body {
+  font-family: 'Ubuntu', sans-serif;
 }
 
 #footer {
