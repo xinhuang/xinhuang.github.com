@@ -86,10 +86,13 @@ I made CI system distributed and run faster.
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
 _Last update at May. 31, 2016. Latest resume can be found
-[here](http://xinhuang.github.io/resume.pdf)._
+[here]\|[pdf]._
 
 
 [xinhuang.abc@gmail.com]:                             mailto:xinhuang.abc@gmail.com
 [https://github.com/xinhuang]:                        https://github.com/xinhuang
 [http://stackoverflow.com/users/2190129/xin-huang]:   http://stackoverflow.com/users/2190129/xin-huang
 [http://xinhuang.github.io]:                          http://xinhuang.github.io
+
+[here]:                                               http://xinhuang.github.io/#/pages/resume.md
+[pdf]:                                                http://xinhuang.github.io/resume.pdf
