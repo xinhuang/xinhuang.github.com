@@ -12,7 +12,14 @@ export function routerConfig($stateProvider, $urlRouterProvider) {
       templateUrl: 'app/blog/blog.html',
       controller: 'BlogController',
       controllerAs: 'blog'
-    });
+    })
+    .state('page', {
+      url: '/:pageFile',
+      templateUrl: 'app/page/page.html',
+      controller: 'PageController',
+      controllerAs: 'page'
+    })
+    ;
 
   $urlRouterProvider.otherwise('/');
 }

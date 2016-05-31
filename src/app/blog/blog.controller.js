@@ -12,13 +12,11 @@ export class BlogController {
 
     $http.get(blogFile).success((data) => {
       const lines = data.split('\n');
-      const post = parser.parse(blogFileName, lines);
+      const post = parser.parse(blogFile, lines);
 
-      this.title = post.header.title;
       $rootScope.header = post.header.title;
-      this.date = post.header.date;
 
-      const content = post.content.join('\n');
+      const content = `# ${post.header.title}\n${post.content.join('\n')}`;
       this.content = content;
     });
 
