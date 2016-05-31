@@ -64,8 +64,89 @@ body {
 }
 
 article {
+  margin: auto;
+  font-size: 14px;
   padding: 3px 1em
 }
+
+article .entry-meta {
+  color: #9B9B9B;
+  font-size: 14px;
+}
+
+.article-header {
+  color: #FF001F;
+  font-weight: 400;
+}
+
+article h1 {
+  @extend .article-header;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+article h2 {
+  @extend .article-header;
+  font-size: 18px;
+  margin-top: 25px;
+  margin-bottom: 25px;
+}
+
+article h3 {
+  @extend .article-header;
+  font-size: 16px;
+  margin-top: 25px;
+  margin-bottom: 10px;
+}
+
+.article-header-a {
+  color: #FF001F;
+  text-decoration: none;
+}
+
+article h1 a {
+  @extend .article-header-a;
+}
+
+article h2 a {
+  @extend .article-header-a;
+}
+
+article h3 a {
+  @extend .article-header-a;
+}
+
+.article-header-a-hover {
+  background-color: #FF001F;
+  color: #fff;
+}
+
+article h1 a:hover {
+  @extend .article-header-a-hover;
+}
+
+article h2 a:hover {
+  @extend .article-header-a-hover;
+}
+
+article h3 a:hover {
+  @extend .article-header-a-hover;
+}
+
+article code {
+  color: #999;
+}
+
+article pre {
+  line-height: 20px;
+  margin-bottom: 20px;
+  font-size: 12px;
+}
+
+md-divider {
+  width: 110%;
+}
+
 
 /**
  *  Do not remove the comment below. It's the markers used by gulp-inject to inject
