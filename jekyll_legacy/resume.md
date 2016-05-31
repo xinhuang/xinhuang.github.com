@@ -1,5 +1,3 @@
-"title": "Resume"
----
 ## ***Xin Huang***
 
 Email:            [xinhuang.abc@gmail.com]  
@@ -28,9 +26,9 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 I made computation faster.  
 
-* **Individually replaced computation engine by re-writing using Intel's tbb::flow::graph, reduced lines of code by 90%, achieving same performance and correctness**  
+* **Individually replaced computation engine by re-writing using Intel's Threading Building Blocks, reduced lines of code by 90%, achieving same performance and correctness**  
 * **Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%**  
-* performance profiling using Intel vTune and investigated performance bottleneck  
+* Performance profiling using Intel vTune and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on performance optimization
 * Refactored legacy code and added tests on code base of total lines of code > 20M
@@ -87,8 +85,8 @@ I made CI system distributed and run faster.
 ## ***Education***
 *  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Feb. 24, 2016. Latest resume can be found
-[here](http://xinhuang.github.io/resume.html)\|[pdf](http://xinhuang.github.io/resume.pdf)._
+_Last update at May. 31, 2016. Latest resume can be found
+[here](http://xinhuang.github.io/resume.pdf)._
 
 
 [xinhuang.abc@gmail.com]:                             mailto:xinhuang.abc@gmail.com
