@@ -147,7 +147,9 @@ Below is how my `main.html` looks like:
 </div>
 ```
 
-## Third-Party components
+## Render Your Markdown
+
+To render a markdown file, I use [Angular-Marked]. [Angular Markdown Directive] is also an alternative.
 
 * Markdown rendering  
   - Customized renderer  
@@ -155,18 +157,62 @@ Below is how my `main.html` looks like:
 
 ## Display A Post
 
-Parse post and feed to markdown renderer
+The route setting is configured as below:
+
+```
+export function routerConfig($stateProvider, $urlRouterProvider) {
+  'ngInject';
+  $stateProvider
+    .state('home', {
+      url: '/',
+      templateUrl: 'app/main/main.html',
+      controller: 'MainController',
+      controllerAs: 'main'
+    })
+    .state('blog', {
+      url: '/blogs/:blogFile',
+      templateUrl: 'app/blog/blog.html',
+      controller: 'BlogController',
+      controllerAs: 'blog'
+    });
+
+  $urlRouterProvider.otherwise('/');
+}
+```
+
+To display a post, it has to be downloaded first.
+When a post is visited, the file name will be passed in as `$stateParams['blogFile']` to `BlogController`.
+Then parse out the blog content and feed to [Angular-Marked] to display:
+
+```
+<h1>{{blog.title}}</h1>
+<div>{{blog.date}}</div>
+<div marked="blog.content"></div>
+```
+
+The parsing code is omitted and can be found here: [parsing blog content].
 
 ## Possible Mistakes
 
-* Pitfalls: Deploy doesn't like tests  
+There are some mistakes that make me stuck for quite a while.
+
+1. Don't deploy right after running tests.
+
+It's a good habit to run all tests before deploying, but for e2e tests they will modify build-out
+artifacts to inject testing code. If pages with testing code are deployed, web browser will start
+complain `describe is not defined`.
 
 ## Future Improvements
 
-* inject index into index.html instead of dynamic loading  
-* Display drafts  
-* Publish draft  
-* Gulp task: new draft/post  
+This is only a simply implementation, and there are lots of places for further improvements.
+
+1. To speed up index page visiting time, the index can be injected into `index.html` rather
+than downloading on the fly.  
+2. To speed up post visiting time, parsing the post every time it's downloaded can be avoided
+by deploying parsed document rather than re-parsing at runtime.  
+3. In Jekyll, you can display drafts by `jekyll serve --draft`. This option is very convenient
+and should be added.  
+4. Should support commands for creating new posts/drafts and publishing drafts.  
 
 ## Additional References
 
@@ -174,5 +220,8 @@ Parse post and feed to markdown renderer
 * Responsive Web Design
   - Padding is important  
 
-[AngularJS tutor]:
-[AngularJS tutor: download a JSON file]:
+[AngularJS tutor]:https://docs.angularjs.org/tutorial
+[AngularJS tutor: download a JSON file]:https://docs.angularjs.org/tutorial/step_07
+[AngularMarked]:https://github.com/Hypercubed/angular-marked
+[Angular Markdown Directive]:https://github.com/btford/angular-markdown-directive
+[parsing blog content]:https://github.com/xinhuang/xinhuang.github.com/blob/src/src/app/components/blog-parser/blog-parser.js
