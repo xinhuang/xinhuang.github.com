@@ -94,5 +94,5 @@ _Last update at May. 31, 2016. Latest resume can be found
 [http://stackoverflow.com/users/2190129/xin-huang]:   http://stackoverflow.com/users/2190129/xin-huang
 [http://xinhuang.github.io]:                          http://xinhuang.github.io
 
-[here]:                                               http://xinhuang.github.io/#/pages/resume.md
+[here]:                                               http://xinhuang.github.io/#/resume.md
 [pdf]:                                                http://xinhuang.github.io/resume.pdf
