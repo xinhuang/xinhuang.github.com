@@ -68,8 +68,8 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 ## ***教育背景***
 *  2010 - 北京邮电大学, 计算机科学与技术专业, 本科
 
-*最后更新于2016年5月31日. 最新的简历可在此查看
-[中文](http://xinhuang.github.io/resume_cn.pdf)|[英文](http://xinhuang.github.io/resume.pdf).*
+*最后更新于2016年5月31日. 最新简历可在此查看
+[中文](http://xinhuang.github.io/resume_cn.pdf)|[English](http://xinhuang.github.io/resume.pdf).*
 
 
 [xinhuang.abc@gmail.com]:                             mailto:xinhuang.abc@gmail.com
