@@ -9,7 +9,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 ## ***技术经验***
 
-* 有5年C++开发经验,能够逆向分析汇编代码
+* 有 5 年 C++ 开发经验,能够逆向分析汇编代码
 * 熟悉 C# (能够阅读 MSIL); Python & NodeJS (日常脚本语言); 曾经用过 x86 ASM, Lua, Ruby
 * 拥有并行计算的开发经验, 使用 Intel Threading Building Blocks 创建了计算引擎
 * 多年 Win32, .NET 开发经验
@@ -24,26 +24,26 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 主要职责: 实时油田数据计算软件高性能计算引擎的实现和优化
 
-* 独立使用 Intel Threading Building Blocks 替换了实时数据处理引擎, 在原有正确性和性能基础上将代码体积缩减了90%
+* 独立使用 Intel Threading Building Blocks 重新实现和替换了实时数据处理引擎, 在保持原有正确性和性能基础上将代码体积缩减了90%
 * 使用 SSE2/AVX 指令优化某些地层数据算法, 将整体性能提高了20%
 * 使用 Intel vTune 进行性能调优
-* 对遗留系统代码进行重构与重新实现  
-* 系统功能实现, 维护和用户支持
+* 对遗留系统代码进行重构与重新实现
+* 带领团队实现系统功能, 对已有系统进行维护以及提供用户支持
 
 
 **2013/1 - 2014/12, Maxwell Environment Team**
 
-主要职责: 高性能持续集成 (CI) 系统的实现与维护
+主要职责: 高负载持续集成 (CI) 系统的实现与维护
 
-* 设计与实现基于 PaaS 的分布式CI系统  
-* 引入 Pester 作为 CI 系统开发语言的测试驱动开发 (TDD) 框架, 带领组员学习和实践 CI 系统中的 TDD  
-* 在公司内不定期举办不同主题的编程道场  
+* 设计与实现基于 PaaS 的分布式 CI 系统
+* 引入 Pester 作为 CI 系统开发语言的测试驱动开发 (TDD) 框架, 带领组员学习和实践 CI 系统中的 TDD
+* 在公司内不定期举办不同主题的编程道场
 
 **2012/4 - 2012/12, Maxwell Platform & Performance Team**
 
-* 调研使用 Event Tracing for Windows 技术实现高性能的软件操作日志记录  
-* 调研使用分布式编译软件加速软件构建  
-* 作为 Scrum Master 协调组内事务; 每周定期举办 TDD, OOAD 主题的编程道场  
+* 调研使用 Event Tracing for Windows 技术实现高性能的软件操作日志记录
+* 调研使用分布式编译软件加速软件构建
+* 作为 Scrum Master 协调组内事务; 每周主持举办以 TDD, OOAD 为主题的编程道场
 
 **2011/8 - 2012/3, Maxwell DataPrep Team**
 
