@@ -9,7 +9,7 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 ## ***技术经验***
 
-* 有 5 年 C++ 开发经验,能够逆向分析汇编代码
+* 有 6 年 C++ 开发经验,能够逆向分析汇编代码
 * 熟悉 C# (能够阅读 MSIL); Python & NodeJS (日常脚本语言); 曾经用过 x86 ASM, Lua, Ruby
 * 拥有并行计算的开发经验, 使用 Intel Threading Building Blocks 创建了计算引擎
 * 多年 Win32, .NET 开发经验
@@ -47,15 +47,15 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 
 **2011/8 - 2012/3, Maxwell DataPrep Team**
 
-* 实现和维护油田实时数据计算引擎  
-* 实现和维护用于数据正确性验证和性能测试的 Re-Compute Robot  
+* 实现和维护油田实时数据计算引擎
+* 实现和维护用于数据正确性验证和性能测试的 Re-Compute Robot
 
 ### **畅游, [cyou.com](http://www.cyou.com), 软件工程师, 2010 - 2011**
 
-* 实现与维护物品, 家族, 天梯和 PVP 系统  
-* 优化字体渲染系统性能  
-* 提出并实现类似 WinForm .NET 的 UI 系统   
-* 创建 Lua 物品操作脚本模板提高开发效率, 减少重复代码  
+* 实现与维护物品, 家族, 天梯和 PVP 系统
+* 优化字体渲染系统性能
+* 提出并实现类似 WinForm .NET 的 UI 系统
+* 创建 Lua 物品操作脚本模板提高开发效率, 减少重复代码
 * 实现用于服务器压力测试的游戏机器人
 
 ## ***开源项目***
