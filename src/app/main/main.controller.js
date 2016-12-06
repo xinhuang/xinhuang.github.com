@@ -12,7 +12,10 @@ export class MainController {
         } else {
           return 1;
         }
-      })
+      });
+      this.blogs.forEach((e, i) => {
+        this.blogs[i].file = this.blogs[i].file.slice(0, -3);
+      });
     });
 
     this.taglines = [

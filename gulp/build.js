@@ -80,8 +80,8 @@ gulp.task('fonts', function () {
     .pipe(gulp.dest(path.join(conf.paths.dist, '/fonts/')));
 });
 
-function getStaticPagePath(postPath, filename) {
-    return path.join(postPath, `${filename.slice(0, -3)}.html`);
+function getStaticPagePath(filename) {
+    return path.join(conf.paths.src, `${filename.slice(0, -3)}.html`);
 }
 
 function generateStaticPage(post, dest) {
@@ -127,7 +127,7 @@ gulp.task('blog', function(cb) {
             post => {
                 gutil.log(post.header);
                 list.blogs.push(post.header);
-                generateStaticPage(post, getStaticPagePath(conf.paths.src, `${post.header.file}`))
+                generateStaticPage(post, getStaticPagePath(`${post.header.file}`))
             },
             error => { gutil.log(error, error.stack); conf.errorHandler(error); },
             () => {
