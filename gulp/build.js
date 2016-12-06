@@ -21,7 +21,7 @@ gulp.task('partials', function () {
       removeEmptyAttributes: true,
       removeAttributeQuotes: true,
       collapseBooleanAttributes: true,
-      collapseWhitespace: true
+      collapseWhitespace: true,
     }))
     .pipe($.angularTemplatecache('templateCacheHtml.js', {
       module: 'xinhuangGithubCom',
