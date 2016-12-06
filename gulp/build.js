@@ -85,7 +85,8 @@ function getStaticPagePath(postPath, filename) {
 }
 
 function generateStaticPage(post, dest) {
-    const blogTemplate = path.join(conf.paths.src, 'assets/templates', 'blog.template.html');
+    const layoutType = post.header.layout;
+    const blogTemplate = path.join(conf.paths.src, 'assets/templates', `${layoutType}.template.html`);
     let templateContent = fs.readFileSync(blogTemplate).toString();
 
     var map = {

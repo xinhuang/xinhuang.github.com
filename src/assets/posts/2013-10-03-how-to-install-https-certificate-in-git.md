@@ -1,6 +1,7 @@
 "title": "How to Install HTTPS Certificate In Git"
 "description": "How to Install HTTPS Certificate In Git So I Can Use GoAgent When GitHub Is BLOCKED By GFW"
 "tags": ["HowTo", "Git", "GoAgent"]
+"layout": "post"
 ---
 
 Suppose you want to push to a repo on GitHub. Before you are using SSH to access the repo, but now you are behind a HTTP proxy, and SSH won't work.
