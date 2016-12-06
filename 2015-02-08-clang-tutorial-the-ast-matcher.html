@@ -1,8 +1,165 @@
-<!doctype html><html ng-app=xinhuangGithubCom ng-strict-di><head><meta charset=utf-8><title>> Life is short - Clang Tutorial: The AST Matcher</title><meta name=description content=""><meta name=viewport content="width=device-width"><!-- Place favicon.ico and apple-touch-icon.png in the root directory --><link rel=stylesheet href=styles/vendor-bfbf54ee58.css><link rel=stylesheet href=styles/app-d5a71a58a1.css><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+<!doctype html>
+<html ng-app=xinhuangGithubCom ng-strict-di>
+  <head>
+    <meta charset=utf-8>
+    <title>Clang Tutorial: The AST Matcher</title>
+    <meta name=description content="">
+    <meta name=viewport content="width=device-width">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+
+    <link rel=stylesheet href=styles/vendor-bfbf54ee58.css>
+
+    <link rel=stylesheet href=styles/app-d5a71a58a1.css>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
       ga('create', 'UA-42274645-1', 'auto');
-      ga('send', 'pageview');</script></head><body><!--[if lt IE 10]>
+      ga('send', 'pageview');
+    </script>
+  </head>
+  <body>
+    <!--[if lt IE 10]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-    <![endif]--><article id=top class=anchor><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1 class=md-h1>Clang Tutorial: The AST Matcher</h1><div class=entry-meta>2015-02-08</div><marked>In [previous post] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the declarations in a given source file. Now Let&#039;s play with Clang AST matchers and make another tool to detect when a _std::vector_ is passed by value - which usually causes a performance hit. ## The Pass-by-Value std::vector Finding Program The example.cpp: ``` #include &lt;vector&gt; using namespace std; void foo(vector&lt;int&gt; is); void bar(const vector&lt;int&gt; is); void foobar(const vector&lt;int&gt;&amp; cis); void fooboo(vector&lt;int&gt;&amp; cis); ``` Let&#039;s feed it to our _find-vec_ program: &gt; $ ./find-vec example.cpp -- -std=c++11 &gt; example.cpp:5:6 &gt; example.cpp:6:6 _Here we told Clang parser to use C++ 11 syntax by passing `-std=c++11` after `--`._ ## The Clang AST If you still remember the _Decl_ and _Stmt_, these are the AST nodes that we will come across when processing a source file. With different _Decl_, _Stmt_ and their derived classes like _NamedDecl_ and _CallExpr_, we can obtain lots of information like variable type, name, definition information, etc. To examine all the function declarations with any parameter of type _std::vector_, we will need to match specific AST node that is: * Function declaration or definition * Has at least one parameter of type _std::vector_ Clang provides us a domain specific language (DSL) to create predicates on Clang&#039;s AST. It is written in and can be used from C++, allowing us to match AST nodes and extract its attributes. ## The AST Matcher To use the AST matchers, we need to do is to call a bunch of matcher creation function, chain them together to compose the matcher we need, and/or bind the target node with a name so we can extract it later. To match a function declaration: ``` DeclarationMatcher Matcher = functionDecl(); ``` Then let&#039;s match its parameter: ``` DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...)); ``` To matcher a parameter, we can use _hasParameter(N, ParamMatcher)_, which will match the N&#039;th of parameter with given parameter matcher. Here we will need to match any parameter that of type _std::vector_, so we will use _hasAnyParameter_. Next match the parameter type: ``` DeclarationMatcher Matcher = functionDecl( hasAnyParameter(hasType(recordDecl(matchesName(&quot;std::vector&quot;)))); ``` ## The MatchCallback When the AST matcher find the right node, the corresponding `clang::ast_matchers::MatchFinder::MatchCallback` will be invoked with matched result. By providing a `MatchCallback`, we can print the function declarations/definitions that accept any parameter of type `std::vector` that is passed by value. ``` class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback { public: virtual void run(const clang::ast_matchers::MatchFinder::MatchResult &amp;Result) final { llvm::outs() &lt;&lt; &quot;.&quot;; if (const auto *F = Result.Nodes.getDeclAs&lt;clang::FunctionDecl&gt;(FunctionID)) { const auto&amp; SM = *Result.SourceManager; const auto&amp; Loc = F-&gt;getLocation(); llvm::outs() &lt;&lt; SM.getFilename(Loc) &lt;&lt; &quot;:&quot; &lt;&lt; SM.getSpellingLineNumber(Loc) &lt;&lt; &quot;:&quot; &lt;&lt; SM.getSpellingColumnNumber(Loc) &lt;&lt; &quot;\n&quot;; } } }; ``` ## References Clang also provides a simple document of AST matchers: [Matching the Clang AST]. For a complete reference of AST matchers, you can find it in [AST Matcher Reference]. _All the source code in this post can be found at [clang-playground]._ [previous post]: http://xinhuang.github.io/clang/2014/10/19/clang-tutorial-finding-declarations [AST Matcher Reference]:http://clang.llvm.org/docs/LibASTMatchersReference.html [clang-playground]:https://github.com/xinhuang/clang-playground.git [Matching the Clang AST]: http://clang.llvm.org/docs/LibASTMatchers.html</marked></div></div><md-divider></md-divider><div class=footer layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70 layout=row><a href=/ >Home</a><div flex></div><a href="" ng-click=blog.scrollToTop()>Top</a></div></div></article><script src=scripts/vendor-b1387507a1.js></script><script src=scripts/app-1e997bf866.js></script></body></html>
+    <![endif]-->
+
+    <article id=top class=anchor>
+      <div layout=row>
+        <div flex=30 flex-xs=0 flex-sm=15></div>
+        <div flex=40 flex-xs=100 flex-sm=70>
+          <h1 class=md-h1>Clang Tutorial: The AST Matcher</h1>
+          <div class=entry-meta>2015-02-08</div>
+          <marked>
+              
+In [previous post] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the
+declarations in a given source file. Now Let&#039;s play with Clang AST matchers and make another tool to
+detect when a _std::vector_ is passed by value - which usually causes a
+performance hit.
+
+## The Pass-by-Value std::vector Finding Program
+
+The example.cpp:
+
+```
+#include &lt;vector&gt;
+
+using namespace std;
+
+void foo(vector&lt;int&gt; is);
+void bar(const vector&lt;int&gt; is);
+void foobar(const vector&lt;int&gt;&amp; cis);
+void fooboo(vector&lt;int&gt;&amp; cis);
+```
+
+Let&#039;s feed it to our _find-vec_ program:
+
+&gt; $ ./find-vec example.cpp -- -std=c++11  
+&gt; example.cpp:5:6  
+&gt; example.cpp:6:6  
+
+_Here we told Clang parser to use C++ 11 syntax by passing `-std=c++11` after `--`._
+
+## The Clang AST
+
+If you still remember the _Decl_ and _Stmt_, these are the AST nodes that we will come
+across when processing a source file. With different _Decl_, _Stmt_ and their derived
+classes like _NamedDecl_ and _CallExpr_, we can obtain lots of information like
+variable type, name, definition information, etc.
+
+To examine all the function declarations with any parameter of type _std::vector_,
+we will need to match specific AST node that is:
+
+* Function declaration or definition
+* Has at least one parameter of type _std::vector_
+
+Clang provides us a domain specific language (DSL) to create predicates on Clang&#039;s AST.
+It is written in and can be used from C++, allowing us to match AST nodes and
+extract its attributes.
+
+## The AST Matcher
+
+To use the AST matchers, we need to do is to call a bunch of matcher creation
+function, chain them together to compose the matcher we need, and/or bind the target
+node with a name so we can extract it later.
+
+To match a function declaration:
+
+```
+DeclarationMatcher Matcher = functionDecl();
+```
+
+Then let&#039;s match its parameter:
+
+```
+DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));
+```
+
+To matcher a parameter, we can use _hasParameter(N, ParamMatcher)_, which will match
+ the N&#039;th of parameter with given parameter matcher. Here we will need to match any
+ parameter that of type _std::vector_, so we will use _hasAnyParameter_.
+
+Next match the parameter type:
+
+```
+DeclarationMatcher Matcher = functionDecl(
+  hasAnyParameter(hasType(recordDecl(matchesName(&quot;std::vector&quot;))));
+```
+
+## The MatchCallback
+
+When the AST matcher find the right node, the corresponding
+`clang::ast_matchers::MatchFinder::MatchCallback` will be invoked with matched result. By providing a `MatchCallback`, we can print the function declarations/definitions that accept any parameter of type `std::vector` that is passed by value.
+
+```
+class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
+public:
+  virtual void
+  run(const clang::ast_matchers::MatchFinder::MatchResult &amp;Result) final {
+    llvm::outs() &lt;&lt; &quot;.&quot;;
+    if (const auto *F =
+            Result.Nodes.getDeclAs&lt;clang::FunctionDecl&gt;(FunctionID)) {
+      const auto&amp; SM = *Result.SourceManager;
+      const auto&amp; Loc = F-&gt;getLocation();
+      llvm::outs() &lt;&lt; SM.getFilename(Loc) &lt;&lt; &quot;:&quot;
+                   &lt;&lt; SM.getSpellingLineNumber(Loc) &lt;&lt; &quot;:&quot;
+                   &lt;&lt; SM.getSpellingColumnNumber(Loc) &lt;&lt; &quot;\n&quot;;
+    }
+  }
+};
+```
+
+## References
+
+Clang also provides a simple document of AST matchers: [Matching the Clang AST].
+For a complete reference of AST matchers, you can find it in [AST Matcher Reference].
+
+_All the source code in this post can be found at [clang-playground]._
+
+[previous post]: http://xinhuang.github.io/clang/2014/10/19/clang-tutorial-finding-declarations
+[AST Matcher Reference]:http://clang.llvm.org/docs/LibASTMatchersReference.html
+[clang-playground]:https://github.com/xinhuang/clang-playground.git
+[Matching the Clang AST]: http://clang.llvm.org/docs/LibASTMatchers.html
+
+          </marked>
+        </div>
+      </div>
+
+      <md-divider></md-divider>
+
+      <div class=footer layout=row>
+        <div flex=30 flex-xs=0 flex-sm=15></div>
+        <div flex=40 flex-xs=100 flex-sm=70 layout=row>
+          <a href=/ >Home</a>
+          <div flex></div>
+          <a href="" ng-click=blog.scrollToTop()>Top</a>
+        </div>
+      </div>
+    </article>
+
+    <script src=scripts/vendor-b1387507a1.js></script>
+
+    <script src=scripts/app-1e997bf866.js></script>
+
+  </body>
+</html>
