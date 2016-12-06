@@ -81,34 +81,34 @@ gulp.task('fonts', function () {
 });
 
 gulp.task('blog', function(cb) {
-	var assetPath = path.join(conf.paths.src, 'assets/posts');
+    var assetPath = path.join(conf.paths.src, 'assets/posts');
 	fs.readdir(assetPath, function(err, files) {
-		if (err) {
-      gutil.log(err);
-			conf.errorHandler(err);
-      cb();
-		} else {
-      const list = {};
-      list.blogs = [];
-      Observable.from(files).filter(path => path.endsWith('.md'))
-        .map(f => {
-          const filePath = path.join(conf.paths.src, 'assets/posts', f);
-          let lines = fs.readFileSync(filePath).toString().split('\n');
-          lines.unshift(`"file": "${f}"`);
-          return lines;
-        })
-        .map(lines => blog.extractHeader(lines))
-        .map(lines => blog.parseHeader(lines))
-        .subscribe(
-          header => { gutil.log(header); list.blogs.push(header); },
-          error => { gutil.log(error); conf.errorHandler(error); },
-          () => {
-            fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
-            cb();
-          }
-        );
-		};
-	});
+	  if (err) {
+        gutil.log(err);
+		conf.errorHandler(err);
+        cb();
+	  } else {
+        const list = {};
+        list.blogs = [];
+        Observable.from(files).filter(path => path.endsWith('.md'))
+          .map(f => {
+            const filePath = path.join(conf.paths.src, 'assets/posts', f);
+            let lines = fs.readFileSync(filePath).toString().split('\n');
+            lines.unshift(`"file": "${f}"`);
+            return lines;
+          })
+          .map(lines => blog.extractHeader(lines))
+          .map(lines => blog.parseHeader(lines))
+          .subscribe(
+            header => { gutil.log(header); list.blogs.push(header); },
+            error => { gutil.log(error); conf.errorHandler(error); },
+            () => {
+              fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
+              cb();
+            }
+          );
+	  };
+    });
 });
 
 gulp.task('other', function () {
