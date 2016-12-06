@@ -1,5 +1,6 @@
 "title": "How to type Chinese in MiKTex"
 "tags": ["LaTeX", "HowTo"]
+"layout": "post"
 ---
 
 After install MiKTeX on Windows, and play around with some examples, you will

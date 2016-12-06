@@ -1,6 +1,7 @@
 "title": "Detect Race Condition Using Clang Thread Sanitizer"
 "category": "C++"
 "tags": ["HowTo", "Clang"]
+"layout": "post"
 ---
 
 To find out where a race condition happens is a big headache, usually it requires good understanding of the program and days of debugging.

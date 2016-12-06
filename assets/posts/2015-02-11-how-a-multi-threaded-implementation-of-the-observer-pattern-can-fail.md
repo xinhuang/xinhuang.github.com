@@ -2,6 +2,7 @@
 "category" : "Multi-Threading"
 "tagline": "Revisit Design Pattern In A Concurrent View"
 "tags" : ["design pattern"]
+"layout": "post"
 ---
 
 ## Overview

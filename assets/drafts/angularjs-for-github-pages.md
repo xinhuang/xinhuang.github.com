@@ -202,26 +202,34 @@ It's a good habit to run all tests before deploying, but for e2e tests they will
 artifacts to inject testing code. If pages with testing code are deployed, web browser will start
 complain `describe is not defined`.
 
+# Pitfalls
+
+1.  Dynamic web page is bad for blog
+    1.  dynamic only when necessary
+        *   not in title, never
+        *   not in index
+        *   dynamic image loading, could be
+
 ## Future Improvements
 
 This is only a simply implementation, and there are lots of places for further improvements.
 
 1. To speed up index page visiting time, the index can be injected into `index.html` rather
-than downloading on the fly.  
+   than downloading on the fly.  
 2. To speed up post visiting time, parsing the post every time it's downloaded can be avoided
-by deploying parsed document rather than re-parsing at runtime.  
+   by deploying parsed document rather than re-parsing at runtime.  
 3. In Jekyll, you can display drafts by `jekyll serve --draft`. This option is very convenient
-and should be added.  
+   and should be added.  
 4. Should support commands for creating new posts/drafts and publishing drafts.  
 
 ## Additional References
 
 * AngularJS Directive  
 * Responsive Web Design
-  - Padding is important  
+- Padding is important  
 
-[AngularJS tutor]:https://docs.angularjs.org/tutorial
-[AngularJS tutor: download a JSON file]:https://docs.angularjs.org/tutorial/step_07
-[AngularMarked]:https://github.com/Hypercubed/angular-marked
-[Angular Markdown Directive]:https://github.com/btford/angular-markdown-directive
-[parsing blog content]:https://github.com/xinhuang/xinhuang.github.com/blob/src/src/app/components/blog-parser/blog-parser.js
+[AngularJS tutor]: https://docs.angularjs.org/tutorial
+[AngularJS tutor: download a JSON file]: https://docs.angularjs.org/tutorial/step_07
+[AngularMarked]: https://github.com/Hypercubed/angular-marked
+[Angular Markdown Directive]: https://github.com/btford/angular-markdown-directive
+[parsing blog content]: https://github.com/xinhuang/xinhuang.github.com/blob/src/src/app/components/blog-parser/blog-parser.js
