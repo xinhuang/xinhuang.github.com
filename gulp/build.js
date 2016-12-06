@@ -87,12 +87,27 @@ function getStaticPagePath(postPath, filename) {
 function generateStaticPage(post, dest) {
     const blogTemplate = path.join(conf.paths.src, 'assets/templates', 'blog.template.html');
     let templateContent = fs.readFileSync(blogTemplate).toString();
-    const content = templateContent
-        .replace('$$blog.title$$', post.header.title)
-        .replace('$$blog.date$$', post.header.date)
-        .replace('$$blog.content$$', `# ${post.header.title}\n${post.content.join('\n')}`)
+
+    var map = {
+        '$$blog.title$$': post.header.title,
+        '$$blog.date$$': post.header.date,
+        '$$blog.content$$': escapeHtml(post.content.join('\n')),
+    };
+    const content = templateContent.replace(/\$\$.*?\$\$/g, function(m) { return map[m]; });
 
     fs.writeFileSync(dest, content);
+}
+
+function escapeHtml(text) {
+  var map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+
+  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
 gulp.task('blog', function(cb) {
