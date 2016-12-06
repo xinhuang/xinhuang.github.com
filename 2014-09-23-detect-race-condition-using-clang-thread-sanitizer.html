@@ -1,37 +1,13 @@
-<!doctype html>
-<html ng-app=xinhuangGithubCom ng-strict-di>
-  <head>
-    <meta charset=utf-8>
-    <title>Detect Race Condition Using Clang Thread Sanitizer</title>
-    <meta name=description content="">
-    <meta name=viewport content="width=device-width">
-    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-
-    <link rel=stylesheet href=styles/vendor-bfbf54ee58.css>
-
-    <link rel=stylesheet href=styles/app-d5a71a58a1.css>
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+<!doctype html><html ng-app=xinhuangGithubCom ng-strict-di><head><meta charset=utf-8><title>Detect Race Condition Using Clang Thread Sanitizer</title><meta name=description content=""><meta name=viewport content="width=device-width"><!-- Place favicon.ico and apple-touch-icon.png in the root directory --><link rel=stylesheet href=styles/vendor-bfbf54ee58.css><link rel=stylesheet href=styles/app-d5a71a58a1.css><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
       })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
       ga('create', 'UA-42274645-1', 'auto');
-      ga('send', 'pageview');
-    </script>
-  </head>
-  <body>
-    <!--[if lt IE 10]>
+      ga('send', 'pageview');</script></head><body><!--[if lt IE 10]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-    <![endif]-->
-
-    <article id=top class=anchor>
-      <div layout=row>
-        <div flex=30 flex-xs=0 flex-sm=15></div>
-        <div flex=40 flex-xs=100 flex-sm=70>
-          <h1 class=md-h1>Detect Race Condition Using Clang Thread Sanitizer</h1>
-          <div class=entry-meta>2014-09-23</div>
-          <marked>
-              
+    <![endif]--><article id=top class=anchor><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1 class=md-h1>Detect Race Condition Using Clang Thread Sanitizer</h1><div class=entry-meta>2014-09-23</div><textarea>
+              <marked>
+                  
 To find out where a race condition happens is a big headache, usually it requires good understanding of the program and days of debugging.
 [ThreadSanitizer], one of the many sanitizers shipped with Clang, can be a useful tool to help us find out where the race condition is happening.
 
@@ -233,25 +209,5 @@ _This article is for Sep. 2014 newsletter of SWDEV Sig Schlumberger._
 
 [the ThreadSanitizer wiki]: https://code.google.com/p/thread-sanitizer/wiki/Algorithm
 
-          </marked>
-        </div>
-      </div>
-
-      <md-divider></md-divider>
-
-      <div class=footer layout=row>
-        <div flex=30 flex-xs=0 flex-sm=15></div>
-        <div flex=40 flex-xs=100 flex-sm=70 layout=row>
-          <a href=/ >Home</a>
-          <div flex></div>
-          <a href="" ng-click=blog.scrollToTop()>Top</a>
-        </div>
-      </div>
-    </article>
-
-    <script src=scripts/vendor-b1387507a1.js></script>
-
-    <script src=scripts/app-1e997bf866.js></script>
-
-  </body>
-</html>
+              </marked>
+          </textarea></div></div><md-divider></md-divider><div class=footer layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70 layout=row><a href=/ >Home</a><div flex></div><a href="" ng-click=blog.scrollToTop()>Top</a></div></div></article><script src=scripts/vendor-b1387507a1.js></script><script src=scripts/app-1e997bf866.js></script></body></html>
