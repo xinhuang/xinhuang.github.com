@@ -92,8 +92,7 @@ gulp.task('blog', function(cb) {
         list.blogs = [];
         Observable.from(files).filter(path => path.endsWith('.md'))
           .map(f => {
-            const filePath = path.join(conf.paths.src, 'assets/posts', f);
-            let lines = fs.readFileSync(filePath).toString().split('\n');
+            let lines = fs.readFileSync(path.join(assetPath, f)).toString().split('\n');
             lines.unshift(`"file": "${f}"`);
             return lines;
           })
