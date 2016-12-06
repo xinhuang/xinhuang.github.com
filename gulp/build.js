@@ -46,17 +46,15 @@ gulp.task('html', ['inject', 'partials'], function () {
     .pipe($.inject(partialsInjectFile, partialsInjectOptions))
     .pipe($.useref())
     .pipe(jsFilter)
-    .pipe($.sourcemaps.init())
+    // .pipe($.sourcemaps.init())
     .pipe($.uglify({ preserveComments: $.uglifySaveLicense })).on('error', conf.errorHandler('Uglify'))
     .pipe($.rev())
-    .pipe($.sourcemaps.write('maps'))
+    // .pipe($.sourcemaps.write('maps'))
     .pipe(jsFilter.restore)
     .pipe(cssFilter)
-    // .pipe($.sourcemaps.init())
     .pipe($.replace('../../bower_components/material-design-iconfont/iconfont/', '../fonts/'))
     .pipe($.cssnano())
     .pipe($.rev())
-    // .pipe($.sourcemaps.write('maps'))
     .pipe(cssFilter.restore)
     .pipe($.revReplace())
     .pipe(htmlFilter)
@@ -81,7 +79,7 @@ gulp.task('fonts', function () {
 });
 
 function getStaticPagePath(filename) {
-    return path.join(conf.paths.src, `${filename.slice(0, -3)}.html`);
+    return path.join(conf.paths.tmp, `${filename.slice(0, -3)}.html`);
 }
 
 function generateStaticPage(post, dest) {
@@ -156,4 +154,4 @@ gulp.task('clean', function () {
   return $.del([path.join(conf.paths.dist, '/'), path.join(conf.paths.tmp, '/')]);
 });
 
-gulp.task('build', ['html', 'fonts', 'blog', 'other']);
+gulp.task('build', ['html', 'fonts', 'other']);
