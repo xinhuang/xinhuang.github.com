@@ -8,7 +8,7 @@ function extractHeader(lines) {
       header.push(l);
     }
   }
-  return lines;
+  throw new Error('Seems there is no header in the lines');
 }
 
 function parseHeader(lines) {
@@ -27,7 +27,7 @@ function parseHeader(lines) {
       return header;
     }
   } catch(e) {
-    throw new Error(`${lines}\n(${e})`);
+    throw new Error(`parseHeader: Error at line '${lines}'\n(${e})`);
   }
 }
 

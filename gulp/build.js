@@ -80,9 +80,24 @@ gulp.task('fonts', function () {
     .pipe(gulp.dest(path.join(conf.paths.dist, '/fonts/')));
 });
 
+function getStaticPagePath(postPath, filename) {
+    return path.join(postPath, `${filename}.html`);
+}
+
+function generateStaticPage(post, dest) {
+    const blogTemplate = path.join(conf.paths.src, 'assets/templates', 'blog.template.html');
+    let templateContent = fs.readFileSync(blogTemplate).toString();
+    const content = templateContent
+        .replace('$$blog.title$$', post.header.title)
+        .replace('$$blog.date$$', post.header.date)
+        .replace('$$blog.content$$', `# ${post.header.title}\n${post.content.join('\n')}`)
+
+    fs.writeFileSync(dest, content);
+}
+
 gulp.task('blog', function(cb) {
-    var assetPath = path.join(conf.paths.src, 'assets/posts');
-	fs.readdir(assetPath, function(err, files) {
+    var postPath = path.join(conf.paths.src, 'assets/posts');
+	fs.readdir(postPath, function(err, files) {
 	  if (err) {
         gutil.log(err);
 		conf.errorHandler(err);
@@ -91,18 +106,16 @@ gulp.task('blog', function(cb) {
         const list = {};
         list.blogs = [];
         Observable.from(files).filter(path => path.endsWith('.md'))
-          .map(f => {
-            let lines = fs.readFileSync(path.join(assetPath, f)).toString().split('\n');
-            lines.unshift(`"file": "${f}"`);
-            return lines;
-          })
-          .map(lines => blog.extractHeader(lines))
-          .map(lines => blog.parseHeader(lines))
+          .map(f => blog.parse(f, fs.readFileSync(path.join(postPath, f)).toString().split('\n')))
           .subscribe(
-            header => { gutil.log(header); list.blogs.push(header); },
-            error => { gutil.log(error); conf.errorHandler(error); },
+            post => {
+                gutil.log(post.header);
+                list.blogs.push(post.header);
+                generateStaticPage(post, getStaticPagePath(postPath, `${post.header.file}`))
+            },
+            error => { gutil.log(error, error.stack); conf.errorHandler(error); },
             () => {
-              fs.writeFileSync(path.join(assetPath, 'list.json'), JSON.stringify(list));
+              fs.writeFileSync(path.join(postPath, 'list.json'), JSON.stringify(list));
               cb();
             }
           );
