@@ -4,6 +4,7 @@ var path = require('path');
 var gulp = require('gulp');
 var conf = require('./conf');
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 var gutil = require('gulp-util');
 import { Observable } from 'rx';
 import blog from '../src/app/components/blog-parser/blog-parser';
@@ -11,7 +12,7 @@ import blog from '../src/app/components/blog-parser/blog-parser';
 function getStaticPagePath(filename) {
     const postPartialPath = path.join(conf.paths.tmp, 'partials/posts');
     if (!fs.existsSync(postPartialPath)) {
-        fs.mkdirSync(postPartialPath);
+        mkdirp.sync(postPartialPath);
     }
     return path.join(postPartialPath, `${filename.slice(0, -3)}.html`);
 }
@@ -29,6 +30,7 @@ function generateStaticPage(post, dest) {
     const content = templateContent.replace(/\$\$.*?\$\$/g, function(m) { return map[m]; });
 
     fs.writeFileSync(dest, content);
+    gutil.log(`${dest} generated.`);
 }
 
 function escapeHtml(text) {
@@ -57,7 +59,6 @@ gulp.task('blog', function(cb) {
           .map(f => blog.parse(f, fs.readFileSync(path.join(postPath, f)).toString().split('\n')))
           .subscribe(
             post => {
-                gutil.log(`Post: "${post.header.title}"`);
                 list.blogs.push(post.header);
                 generateStaticPage(post, getStaticPagePath(`${post.header.file}`))
             },
