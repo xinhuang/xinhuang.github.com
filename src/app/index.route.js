@@ -7,13 +7,7 @@ export function routerConfig($stateProvider, $urlRouterProvider) {
       controller: 'MainController',
       controllerAs: 'main'
     })
-    .state('blog', {
-      url: '/blogs/:blogFile',
-      templateUrl: 'app/blog/blog.html',
-      controller: 'BlogController',
-      controllerAs: 'blog'
-    })
-    .state('page', {
+    .state('about', {
       url: '/:pageFile',
       templateUrl: 'app/page/page.html',
       controller: 'PageController',

@@ -4,7 +4,6 @@ import { config } from './index.config';
 import { routerConfig } from './index.route';
 import { runBlock } from './index.run';
 import { MainController } from './main/main.controller';
-import { BlogController } from './blog/blog.controller';
 import { PageController } from './page/page.controller';
 import { MalarkeyDirective } from './components/malarkey/malarkey.directive';
 
@@ -17,7 +16,6 @@ angular.module('xinhuangGithubCom',
   .config(routerConfig)
   .run(runBlock)
   .controller('MainController', MainController)
-  .controller('BlogController', BlogController)
   .controller('PageController', PageController)
   .directive('acmeMalarkey', MalarkeyDirective);
   // .config(['markedProvider', function(markedProvider) {
