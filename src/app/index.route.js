@@ -6,14 +6,7 @@ export function routerConfig($stateProvider, $urlRouterProvider) {
       templateUrl: 'app/main/main.html',
       controller: 'MainController',
       controllerAs: 'main'
-    })
-    .state('resume', {
-      url: '/:pageFile',
-      templateUrl: 'app/page/page.html',
-      controller: 'PageController',
-      controllerAs: 'page'
-    })
-    ;
+    });
 
   $urlRouterProvider.otherwise('/');
 }
