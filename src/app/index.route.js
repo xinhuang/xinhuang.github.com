@@ -7,7 +7,7 @@ export function routerConfig($stateProvider, $urlRouterProvider) {
       controller: 'MainController',
       controllerAs: 'main'
     })
-    .state('about', {
+    .state('resume', {
       url: '/:pageFile',
       templateUrl: 'app/page/page.html',
       controller: 'PageController',

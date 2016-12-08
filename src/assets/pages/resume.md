@@ -1,4 +1,6 @@
-## ***Xin Huang***
+"title": "Xin Huang"
+"layout": "page"
+---
 
 Email:            [xinhuang.abc@gmail.com]  
 Mobile:           (+86) 186-0040-6436  

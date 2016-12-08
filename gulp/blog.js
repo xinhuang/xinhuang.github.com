@@ -45,7 +45,7 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-gulp.task('blog', function(cb) {
+gulp.task('blog:posts', function(cb) {
     var postPath = path.join(conf.paths.src, 'assets/posts');
 	fs.readdir(postPath, function(err, files) {
 	  if (err) {
@@ -71,3 +71,32 @@ gulp.task('blog', function(cb) {
 	  };
     });
 });
+
+gulp.task('blog:pages', function(cb) {
+    var postPath = path.join(conf.paths.src, 'assets/pages');
+	fs.readdir(postPath, function(err, files) {
+	  if (err) {
+        gutil.log(err);
+		conf.errorHandler(err);
+        cb();
+	  } else {
+        const list = {};
+        list.blogs = [];
+        Observable.from(files).filter(path => path.endsWith('.md'))
+          .map(f => blog.parse(f, fs.readFileSync(path.join(postPath, f)).toString().split('\n')))
+          .subscribe(
+            post => {
+                list.blogs.push(post.header);
+                generateStaticPage(post, getStaticPagePath(`${post.header.file}`))
+            },
+            error => { gutil.log(error, error.stack); conf.errorHandler(error); },
+            () => {
+              fs.writeFileSync(path.join(postPath, 'list.json'), JSON.stringify(list));
+              cb();
+            }
+          );
+	  };
+    });
+});
+
+gulp.task('blog', ['blog:posts', 'blog:pages'], cb => { cb(); });
