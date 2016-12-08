@@ -30,7 +30,8 @@ gulp.task('inject', ['scripts', 'styles'], function () {
     addRootSlash: false
   };
 
-  return gulp.src(path.join(conf.paths.src, '/*.html'))
+  return gulp.src([path.join(conf.paths.src, '/*.html'),
+                   path.join(conf.paths.tmp, '*.html')])
     .pipe($.inject(injectStyles, injectOptions))
     .pipe($.inject(injectScripts, injectOptions))
     .pipe(wiredep(_.extend({}, conf.wiredep)))

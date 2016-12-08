@@ -10,7 +10,7 @@ import { Observable } from 'rx';
 import blog from '../src/app/components/blog-parser/blog-parser';
 
 function getStaticPagePath(filename) {
-    const postPartialPath = path.join(conf.paths.tmp, 'partials/posts');
+    const postPartialPath = path.join(conf.paths.tmp);
     if (!fs.existsSync(postPartialPath)) {
         mkdirp.sync(postPartialPath);
     }
