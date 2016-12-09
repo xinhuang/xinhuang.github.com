@@ -85,7 +85,7 @@ The index generation is simple, but it would be better if it's re-generated ever
 we build our website. To achieve this, create a Gulp task and make `build` task depends
 on it:
 
-```
+```javascript
 gulp.task('blog', function(cb) {
 	var assetPath = path.join(conf.paths.src, 'assets/posts');
 	fs.readdir(assetPath, function(err, files) {
@@ -106,7 +106,7 @@ downloaded by accessing `/index.json`.
 
 The format of my `index.json` is:
 
-```
+```json
 {
   "blogs":[{
     "file":"2013-07-06-hello-world.md",
@@ -132,7 +132,7 @@ If you don't know how to download a JSON file and parse it, please refer to
 
 Below is how my `main.html` looks like:
 
-```
+```javascript
 <div id="blog-list">
   <md-list>
     <md-list-item class="md-2-line" ng-repeat="blog in main.blogs">
@@ -159,7 +159,7 @@ To render a markdown file, I use [Angular-Marked]. [Angular Markdown Directive] 
 
 The route setting is configured as below:
 
-```
+```javascript
 export function routerConfig($stateProvider, $urlRouterProvider) {
   'ngInject';
   $stateProvider
@@ -202,13 +202,14 @@ It's a good habit to run all tests before deploying, but for e2e tests they will
 artifacts to inject testing code. If pages with testing code are deployed, web browser will start
 complain `describe is not defined`.
 
-# Pitfalls
+# Drawbacks
 
 1.  Dynamic web page is bad for blog
     1.  dynamic only when necessary
         *   not in title, never
         *   not in index
-        *   dynamic image loading, could be
+        *   could be for dynamic image loading
+2.  The web page size should be small, so that the first access loads data fast.
 
 ## Future Improvements
 
@@ -233,3 +234,4 @@ This is only a simply implementation, and there are lots of places for further i
 [AngularMarked]: https://github.com/Hypercubed/angular-marked
 [Angular Markdown Directive]: https://github.com/btford/angular-markdown-directive
 [parsing blog content]: https://github.com/xinhuang/xinhuang.github.com/blob/src/src/app/components/blog-parser/blog-parser.js
+[AngularJS and SEO]: https://www.yearofmoo.com/2012/11/angularjs-and-seo.html
