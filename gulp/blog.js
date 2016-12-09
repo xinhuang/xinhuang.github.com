@@ -23,9 +23,9 @@ function generateStaticPage(post, dest) {
     let templateContent = fs.readFileSync(blogTemplate).toString();
 
     var map = {
-        '$$blog.title$$': post.header.title,
-        '$$blog.date$$': post.header.date,
-        '$$blog.content$$': escapeHtml(post.content.join('\n')),
+        '$$title$$': post.header.title,
+        '$$date$$': post.header.date,
+        '$$data$$': escapeHtml(post.content.join('\n')),
     };
     const content = templateContent.replace(/\$\$.*?\$\$/g, function(m) { return map[m]; });
 

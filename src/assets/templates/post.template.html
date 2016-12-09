@@ -2,7 +2,7 @@
 <html ng-app="xinhuangGithubCom" ng-strict-di>
   <head>
     <meta charset="utf-8">
-    <title>$$blog.title$$</title>
+    <title>$$title$$</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
@@ -36,11 +36,11 @@
       <div layout="row">
         <div flex="30" flex-xs="0" flex-sm="15"></div>
         <div flex="40" flex-xs="100" flex-sm="70">
-          <h1 class="md-h1">$$blog.title$$</h1>
-          <div class="entry-meta">$$blog.date$$</div>
+          <h1 class="md-h1">$$title$$</h1>
+          <div class="entry-meta">$$date$$</div>
             <!-- htmlmin:ignore -->
             <marked>
-                $$blog.content$$
+                $$data$$
             </marked>
             <!-- htmlmin:ignore -->
         </div>
