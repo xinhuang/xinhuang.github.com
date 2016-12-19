@@ -27,12 +27,11 @@ function parseHeader(lines) {
       return header;
     }
   } catch(e) {
-    throw new Error(`parseHeader: Error at line '${lines}'\n(${e})`);
+    throw new Error(`parseHeader: Error at line '${lines}'\n(${e})\n${e.stack}`);
   }
 }
 
-function parse(filename, lines) {
-  lines.unshift(`"file": "${filename}"`);
+function parse(lines) {
   const headerLines = extractHeader(lines);
   lines.splice(0, headerLines.length + 1);
   return {

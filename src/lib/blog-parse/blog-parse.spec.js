@@ -68,12 +68,13 @@ describe('blog-parse', () => {
   describe('parse', () => {
     it ('should parse a blog into header & data', () => {
       const lines = [
+        '"file": "2016-01-01-a-post"',
         '---',
         'post content',
         'remaining post content',
       ];
 
-      const actual = parser.parse('2016-01-01-a-post', lines);
+      const actual = parser.parse(lines);
 
       expect(actual).to.be.deep.equal({
         header: {
