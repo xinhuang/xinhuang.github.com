@@ -7,6 +7,7 @@ import print from 'gulp-print';
 import fs from 'fs-extra';
 import { Observable } from 'rx';
 import gutil from 'gulp-util';
+import mocha from 'gulp-mocha';
 
 var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
@@ -28,6 +29,11 @@ gulp.task('inject', () => {
         .pipe(gulp.dest(path.join(conf.paths.tmp, 'serve')));
 });
 
+gulp.task('test', () => {
+    return gulp.src([path.join(conf.paths.src, '**/*.spec.js')], {read: false})
+        .pipe(print())
+        .pipe(mocha());
+});
 
 function getStaticPagePath(filename) {
     const postPartialPath = path.join(conf.paths.tmp);
