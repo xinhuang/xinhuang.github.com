@@ -1,5 +1,5 @@
 import conf from './conf';
-import blog from '../src/lib/blog-parser/blog-parser';
+import blog from '../src/lib/blog-parse/blog-parse';
 
 import gulp from 'gulp';
 import path from 'path';
