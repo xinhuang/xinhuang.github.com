@@ -68,7 +68,7 @@ describe('blog-parse', () => {
   describe('parse', () => {
     it ('should parse a blog into header & data', () => {
       const lines = [
-        '"file": "2016-01-01-a-post"',
+        '"file": "you/got/a/full/path/2016-01-01-a-post.md"',
         '---',
         'post content',
         'remaining post content',
@@ -78,7 +78,7 @@ describe('blog-parse', () => {
 
       expect(actual).to.be.deep.equal({
         header: {
-          file: '2016-01-01-a-post',
+          file: 'you/got/a/full/path/2016-01-01-a-post.md',
           date: '2016-01-01',
         },
         content: [

@@ -7,6 +7,7 @@
  */
 
 import gutil from 'gulp-util';
+import fs from 'fs-extra';
 
 /**
  *  The main paths of your project handle these with care
@@ -16,8 +17,13 @@ exports.paths = {
   data: 'data',
   dist: 'dist',
   tmp: '.tmp',
-  e2e: 'e2e'
 };
+
+for (const key of Object.keys(exports.paths)) {
+    if (!fs.existsSync(exports.paths[key])) {
+        fs.mkdirsSync(exports.paths[key]);
+    }
+}
 
 /**
  *  Wiredep is the lib which inject bower dependencies in your project

@@ -1,5 +1,6 @@
 import conf from './conf';
 import blog from '../src/lib/blog-parse/blog-parse';
+import rxfs from '../src/lib/rx-fs-extra';
 
 import gulp from 'gulp';
 import path from 'path';
@@ -18,8 +19,9 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('build', () => {
-
+gulp.task('build', ['blog:index'], () => {
+    // build page: for each page: create a template copy, then inject content
+    // build post: for each post: create a template copy, then inject content
 });
 
 gulp.task('inject', () => {
@@ -71,44 +73,43 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-function walkDir(dir) {
-    return Observable.create(o => {
-        fs.walk(dir)
-            .on('data', item => o.onNext(item.path))
-            .on('end', item => o.onCompleted());
-    });
+function loadIndex(path) {
+    if (!fs.existsSync(path)) {
+        return {};
+    } else {
+        const data = fs.readFileSync(path).toString();
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            gutil.log(e);
+            return {};
+        }
+    }
 }
 
-function makeIndex(dir) {
-    return walkDir(dir).filter(p => p.slice(-3) === '.md')
-        .map(f => `"filename": "${f}"` + fs.readFileSync(f).toString().split('\n'))
-        .map(lines => blog.parse(lines))
-        .toList();
+function buildIndex(dir) {
+    const indexPath = path.join(conf.paths.tmp, 'index.json');
+    const index = loadIndex(indexPath);
+    return rxfs.walk(dir)
+      .filter(p => p.endsWith('.md'))
+      .map(f => {
+          var data = fs.readFileSync(f).toString().split('\n');
+          data.unshift(`"file": "${f}"`);
+          return blog.parse(data).header;
+      })
+      .toArray()
+      .first()
+      .doOnError(e => { gutil.log(e); conf.errorHandler(err) })
+      .map(headers => {
+          index.blogs = headers;
+          fs.writeFileSync(path.join(conf.paths.tmp, 'index.json'), JSON.stringify(index));
+      });
 }
 
 gulp.task('blog:index', cb => {
-    var postPath = path.join(conf.paths.data, 'posts');
-    fs.readdir(postPath, function(err, files) {
-	  if (err) {
-        gutil.log(err);
-		conf.errorHandler(err);
-        cb();
-	  } else {
-        const index = {};
-        index.blogs = [];
-        Observable.from(files).filter(path => path.endsWith('.md'))
-          .map(f => blog.parse(f, fs.readFileSync(path.join(postPath, f)).toString().split('\n')))
-          .subscribe(
-            post => {
-                index.blogs.push(post.header);
-                generateStaticPage(post, getStaticPagePath(`${post.header.file}`))
-            },
-            error => { gutil.log(error, error.stack); conf.errorHandler(error); },
-            () => {
-              fs.writeFileSync(path.join(postPath, 'index.json'), JSON.stringify(index));
-              cb();
-            }
-          );
-	  };
-    });
+    buildIndex(path.join(conf.paths.data, 'posts')).subscribe(
+        e => {},
+        () => cb(),
+        () => cb()
+    );
 });

@@ -1,3 +1,5 @@
+import path from 'path';
+
 function extractHeader(lines) {
   const header = [];
   for (let i = 0; i < lines.length; ++i) {
@@ -23,7 +25,7 @@ function parseHeader(lines) {
           header[key] = tmp[key];
         }
       }
-      header.date = header.file.substring(0, 10);
+      header.date = path.basename(header.file).substring(0, 10);
       return header;
     }
   } catch(e) {
