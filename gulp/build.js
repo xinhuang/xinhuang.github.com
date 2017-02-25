@@ -1,5 +1,5 @@
 import conf from './conf';
-import blog from '../src/lib/blog-parse/blog-parse';
+import parse from '../src/lib/blog-parse/blog-parse';
 import rxfs from '../src/lib/rx-fs-extra';
 
 import gulp from 'gulp';
@@ -9,6 +9,7 @@ import fs from 'fs-extra';
 import { Observable } from 'rx';
 import gutil from 'gulp-util';
 import mocha from 'gulp-mocha';
+import marked from 'marked';
 
 var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
@@ -46,19 +47,11 @@ function getStaticPagePath(filename) {
 }
 
 function generateStaticPage(post, dest) {
-    const layoutType = post.header.layout;
-    const blogTemplate = path.join(conf.paths.src, 'templates', `${layoutType}.template.html`);
-    let templateContent = fs.readFileSync(blogTemplate).toString();
-
-    var map = {
-        '$$title$$': post.header.title,
-        '$$date$$': post.header.date,
-        '$$data$$': escapeHtml(post.content.join('\n')),
-    };
-    const content = templateContent.replace(/\$\$.*?\$\$/g, function(m) { return map[m]; });
-
-    fs.writeFileSync(dest, content);
-    gutil.log(`${dest} generated.`);
+    const layout = post.layout;
+    const blogTemplate = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
+    const targetFile = path.join(dest, layout, `${path.basename(post.file)}.html`);
+    fs.copy(blogTemplate, targetFile);
+    gutil.log(`Empty template for ${targetFile} generated.`);
 }
 
 function escapeHtml(text) {
@@ -73,11 +66,12 @@ function escapeHtml(text) {
   return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-function loadIndex(path) {
-    if (!fs.existsSync(path)) {
+function loadIndex() {
+    const indexPath = path.join(conf.paths.tmp, 'index.json');
+    if (!fs.existsSync(indexPath)) {
         return {};
     } else {
-        const data = fs.readFileSync(path).toString();
+        const data = fs.readFileSync(indexPath).toString();
         try {
             return JSON.parse(data);
         } catch (e) {
@@ -88,14 +82,13 @@ function loadIndex(path) {
 }
 
 function buildIndex(dir) {
-    const indexPath = path.join(conf.paths.tmp, 'index.json');
-    const index = loadIndex(indexPath);
+    const index = loadIndex();
     return rxfs.walk(dir)
       .filter(p => p.endsWith('.md'))
       .map(f => {
           var data = fs.readFileSync(f).toString().split('\n');
           data.unshift(`"file": "${f}"`);
-          return blog.parse(data).header;
+          return parse.parse(data).header;
       })
       .toArray()
       .first()
@@ -103,13 +96,41 @@ function buildIndex(dir) {
       .map(headers => {
           index.blogs = headers;
           fs.writeFileSync(path.join(conf.paths.tmp, 'index.json'), JSON.stringify(index));
+          return index;
       });
 }
 
 gulp.task('blog:index', cb => {
     buildIndex(path.join(conf.paths.data, 'posts')).subscribe(
-        e => {},
+        index => {
+            for (var i in index.blogs) {
+                generateStaticPage(index.blogs[i], conf.paths.tmp);
+            }
+        },
         () => cb(),
         () => cb()
     );
+});
+
+gulp.task('blog:render', cb => {
+    marked.setOptions({
+        renderer: new marked.Renderer(),
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false
+    });
+    const index = loadIndex();
+    Observable.fromArray(index.blogs)
+        .subscribe(
+            blog => {
+                var text = fs.readFileSync(blog.file).toString();
+                const rendered = marked(parse.body(text));
+            },
+            e => { gutil.log(e); conf.errorHandler(e); cb(); },
+            () => cb()
+        );
 });

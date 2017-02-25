@@ -42,4 +42,9 @@ function parse(lines) {
   };
 }
 
-export default { extractHeader, parseHeader, parse };
+function body(text) {
+    const p = text.indexOf('---');
+    return text.substring(p + 4);
+}
+
+export default { extractHeader, parseHeader, parse, body };
