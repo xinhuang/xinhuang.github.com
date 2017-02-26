@@ -10,6 +10,7 @@ import { Observable } from 'rx';
 import gutil from 'gulp-util';
 import mocha from 'gulp-mocha';
 import marked from 'marked';
+import mustache from 'mustache';
 
 var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
@@ -20,9 +21,8 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('build', ['blog:index'], () => {
+gulp.task('build', ['blog'], () => {
     // build page: for each page: create a template copy, then inject content
-    // build post: for each post: create a template copy, then inject content
 });
 
 gulp.task('inject', () => {
@@ -100,19 +100,18 @@ function buildIndex(dir) {
       });
 }
 
+gulp.task('blog', ['blog:index', 'blog:render'], () => {});
+
 gulp.task('blog:index', cb => {
     buildIndex(path.join(conf.paths.data, 'posts')).subscribe(
         index => {
-            for (var i in index.blogs) {
-                generateStaticPage(index.blogs[i], conf.paths.tmp);
-            }
         },
         () => cb(),
         () => cb()
     );
 });
 
-gulp.task('blog:render', cb => {
+gulp.task('blog:render', ['blog:index'], cb => {
     marked.setOptions({
         renderer: new marked.Renderer(),
         gfm: true,
@@ -127,8 +126,18 @@ gulp.task('blog:render', cb => {
     Observable.fromArray(index.blogs)
         .subscribe(
             blog => {
-                var text = fs.readFileSync(blog.file).toString();
-                const rendered = marked(parse.body(text));
+                const text = fs.readFileSync(blog.file).toString();
+
+                const layout = blog.layout;
+                const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
+                const template = fs.readFileSync(templateFile).toString();
+                const rendered = mustache.render(template, {
+                    title: blog.title,
+                    date: blog.date,
+                    content: marked(parse.body(text)),
+                });
+
+                fs.writeFileSync(path.join(conf.paths.dist, `${path.basename(blog.file, '.md')}.html`), rendered);
             },
             e => { gutil.log(e); conf.errorHandler(e); cb(); },
             () => cb()
