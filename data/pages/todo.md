@@ -7,6 +7,7 @@
 1. add `gulp serve` task to preview locally (done)
 2. extract css sheet and inject using `gulp-inject`
 3. change background color for code/quote block in `marked`
+4. preview drafts
 
 ## as a general notebook framework
 
