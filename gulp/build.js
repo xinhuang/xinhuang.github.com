@@ -70,6 +70,7 @@ function buildIndex(type) {
       .doOnError(e => { gutil.log(e); conf.errorHandler(err) })
       .map(headers => {
           index.posts = headers;
+          index.posts.reverse();
           fs.mkdirsSync(path.join(conf.paths.tmp, type))
           fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
           return index;
