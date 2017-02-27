@@ -111,7 +111,7 @@ If we chain the <code>join_node</code> with a <code>function_node</code>, there 
 <p>But here comes another problem: How to store these nodes of different types.
 The entire graph is created dynamically, and all nodes need to be kept alive
 before computation finishes. Take below topology for example:</p>
-<p><img src="/assets/images/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png" alt="dependency-graph-example">  </p>
+<p><img src="/images/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png" alt="dependency-graph-example">  </p>
 <pre><code>auto *afnode = new function_node&lt;msg_t, msg_t&gt;(...);
 auto *bfnode = new function_node&lt;msg_t, msg_t&gt;(...);
 auto *cjnode = new join_node&lt;tuple&lt;msg_t, msg_t&gt;&gt;(...);

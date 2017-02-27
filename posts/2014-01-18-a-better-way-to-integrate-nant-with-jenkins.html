@@ -5,7 +5,7 @@
 <p>To pass build parameters to NAnt script, usually there are 2 ways to achieve it:</p>
 <h3 id="pass-by-property-through-nant-plugin">Pass by property through NAnt plugin</h3>
 <p>After adding a NAnt build step, click the <code>Advanced</code> button, a panel will show up. You can fill desired NAnt properties inside; if you need to access build parameters, you can use <code>$BUILD_PARAM</code>.</p>
-<p><img src="/assets/images/posts/a-better-way-to-integrate-nant-with-jenkins/nant-build-step.png" alt="nant-build-step"></p>
+<p><img src="/images/posts/a-better-way-to-integrate-nant-with-jenkins/nant-build-step.png" alt="nant-build-step"></p>
 <h3 id="load-property-from-environment-variable">Load property from environment variable</h3>
 <p>Jenkins will set environment variable according to given build parameters. So you can query them inside NAnt scripts:</p>
 <pre><code>&lt;if test=&quot;${environment::variable-exists(&#39;VAR_NAME&#39;)}&quot;&gt;

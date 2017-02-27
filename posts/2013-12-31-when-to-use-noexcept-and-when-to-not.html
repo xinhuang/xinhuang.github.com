@@ -17,7 +17,7 @@ void bar2() noexcept(false);     // same as bar
 <p>Let&#39;s see an interesting example.</p>
 <h2 id="noexcept-and-std-vector">noexcept and std::vector</h2>
 <p>As you might have known, a <code>vector</code> has its capacity. If it&#39;s full when <code>push_back</code>, it will allocate a bigger memory, copy (or move if C++ 11) all existing elements to the new trunk, then add the new element to the back.</p>
-<p><img src="/assets/images/posts/when-to-use-noexcept-and-when-to-not/copy-construct.png" alt="Use copy constructor to expand a vector"></p>
+<p><img src="/images/posts/when-to-use-noexcept-and-when-to-not/copy-construct.png" alt="Use copy constructor to expand a vector"></p>
 <p>But what if an exception is thrown out while allocating memory, or copying the element to the new trunk?</p>
 <ul>
 <li><p>If exception is thrown during allocating memory, the vector is in its original state. It&#39;s fine just re-throw the exception and let user handle it.</p>
@@ -28,7 +28,7 @@ void bar2() noexcept(false);     // same as bar
 <h3 id="noexcept-and-move">noexcept and move</h3>
 <p>Come to the era of C++ 11, we have a powerful weapon called <code>move</code>. It allows us to steal resources from unused objects. std::vector will use <code>move</code> when it needs to increase(or decrease) the capacity, <em>as long as</em> the <code>move</code> operation is <strong>noexcept</strong>.</p>
 <p>Suppose an exception throws during the move, the previous trunk is not the same as before <code>move</code> happens: resources are stolen, leaving the vector in an <em>broken</em> state. User cannot handle the exception because everything is in an nondeterministic state.</p>
-<p><img src="/assets/images/posts/when-to-use-noexcept-and-when-to-not/move-construct.png" alt="Use move constructor to expand a vector"></p>
+<p><img src="/images/posts/when-to-use-noexcept-and-when-to-not/move-construct.png" alt="Use move constructor to expand a vector"></p>
 <p>That&#39;s why <code>std::vector</code> relies on <code>move constructor</code> to be <strong>noexcept</strong>.</p>
 <p>This is a demostration how client code would rely on <code>noexcept</code> as an interface specification. If later the <code>noexcept</code> requirement is not met, any code previously depends on it will be broken.</p>
 <h2 id="noexcept-is-an-interface-specification">noexcept is an interface specification</h2>
