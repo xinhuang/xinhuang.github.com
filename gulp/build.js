@@ -6,7 +6,9 @@ import gulp from 'gulp';
 import path from 'path';
 import print from 'gulp-print';
 import fs from 'fs-extra';
-import { Observable } from 'rx';
+import {
+    Observable
+} from 'rx';
 import gutil from 'gulp-util';
 import mocha from 'gulp-mocha';
 import marked from 'marked';
@@ -14,14 +16,14 @@ import mustache from 'mustache';
 
 var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
-  pattern: ['gulp-*', 'del', 'uglify-save-license']
+    pattern: ['gulp-*', 'del', 'uglify-save-license']
 });
 
 gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('content', ['post', 'homepage']);
+gulp.task('content', ['post', 'homepage', 'page']);
 
 gulp.task('inject', () => {
     return gulp.src([path.join(conf.paths.src, '**/*.html')])
@@ -31,7 +33,9 @@ gulp.task('inject', () => {
 });
 
 gulp.task('test', () => {
-    return gulp.src([path.join(conf.paths.src, '**/*.spec.js')], {read: false})
+    return gulp.src([path.join(conf.paths.src, '**/*.spec.js')], {
+            read: false
+        })
         .pipe(print())
         .pipe(mocha());
 });
@@ -55,24 +59,27 @@ function buildIndex(type) {
     const index = loadIndex(type);
     const dir = path.join(conf.paths.data, type);
     return rxfs.walk(dir)
-      .filter(p => p.endsWith('.md'))
-      .map(f => {
-          var data = fs.readFileSync(f).toString().split('\n');
-          data.unshift(`"file": "${f}"`);
-          const header = parse.parse(data).header;
-          header.url = `/posts/${path.basename(header.file, '.md')}.html`;
-          return header;
-      })
-      .toArray()
-      .first()
-      .doOnError(e => { gutil.log(e); conf.errorHandler(err) })
-      .map(headers => {
-          index.posts = headers;
-          index.posts.reverse();
-          fs.mkdirsSync(path.join(conf.paths.tmp, type))
-          fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
-          return index;
-      });
+        .filter(p => p.endsWith('.md'))
+        .map(f => {
+            var data = fs.readFileSync(f).toString().split('\n');
+            data.unshift(`"file": "${f}"`);
+            const header = parse.parse(data).header;
+            header.url = `/posts/${path.basename(header.file, '.md')}.html`;
+            return header;
+        })
+        .toArray()
+        .first()
+        .doOnError(e => {
+            gutil.log(e);
+            conf.errorHandler(err);
+        })
+        .map(headers => {
+            index.posts = headers;
+            index.posts.reverse();
+            fs.mkdirsSync(path.join(conf.paths.tmp, type))
+            fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
+            return index;
+        });
 }
 
 gulp.task('post', ['post:index', 'post:render'], () => {});
@@ -85,7 +92,7 @@ gulp.task('post:index', cb => {
     );
 });
 
-gulp.task('post:render', ['post:index'], cb => {
+function render(dir) {
     marked.setOptions({
         renderer: new marked.Renderer(),
         gfm: true,
@@ -96,27 +103,35 @@ gulp.task('post:render', ['post:index'], cb => {
         smartLists: true,
         smartypants: false
     });
-    const index = loadIndex('posts');
-    fs.mkdirsSync(path.join(conf.paths.tmp, 'posts'));
-    Observable.fromArray(index.posts)
-        .subscribe(
-            post => {
-                const text = fs.readFileSync(post.file).toString();
+    const index = loadIndex(dir);
+    fs.mkdirsSync(path.join(conf.paths.tmp, dir));
+    return Observable.fromArray(index.posts)
+        .map(post => {
+            const text = fs.readFileSync(post.file).toString();
 
-                const layout = post.layout;
-                const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
-                const template = fs.readFileSync(templateFile).toString();
-                const rendered = mustache.render(template, {
-                    title: post.title,
-                    date: post.date,
-                    content: marked(parse.body(text)),
-                });
+            const layout = post.layout;
+            const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
+            const template = fs.readFileSync(templateFile).toString();
+            const rendered = mustache.render(template, {
+                title: post.title,
+                date: post.date,
+                content: marked(parse.body(text)),
+            });
 
-                fs.writeFileSync(path.join(conf.paths.tmp, 'posts', `${path.basename(post.file, '.md')}.html`), rendered);
-            },
-            e => { gutil.log(e); conf.errorHandler(e); cb(); },
-            () => cb()
-        );
+            fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(post.file, '.md')}.html`), rendered);
+        })
+        .doOnError(e => {
+            gutil.log(e);
+            conf.errorHandler(err);
+        });
+}
+
+gulp.task('post:render', ['post:index'], cb => {
+    render('posts').subscribe(
+        _ => {},
+        () => cb(),
+        () => cb()
+    )
 });
 
 gulp.task('homepage', ['post'], () => {
@@ -128,6 +143,24 @@ gulp.task('homepage', ['post'], () => {
     fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
 });
 
+gulp.task('page', ['page:index', 'page:render']);
+
+gulp.task('page:index', cb => {
+    buildIndex('pages').subscribe(
+        index => {},
+        () => cb(),
+        () => cb()
+    );
+});
+
+gulp.task('page:render', ['page:index'], cb => {
+    render('pages').subscribe(
+        _ => {},
+        () => cb(),
+        () => cb()
+    )
+});
+
 gulp.task('dist', ['content'], () => {
     return gulp.src([path.join(conf.paths.tmp, '/**/*.html')])
         .pipe($.htmlmin({
@@ -137,7 +170,8 @@ gulp.task('dist', ['content'], () => {
             removeEmptyAttributes: true,
             removeAttributeQuotes: true,
             collapseBooleanAttributes: true,
-            collapseWhitespace: true,}))
+            collapseWhitespace: true,
+        }))
         .pipe(gulp.dest(conf.paths.dist));
 });
 
