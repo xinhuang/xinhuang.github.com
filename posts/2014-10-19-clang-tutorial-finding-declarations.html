@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>Clang Tutorial: Finding Declarations</title>
+    <style>
+    body {
+        margin: 1em auto;
+        max-width: 40em;
+        padding: 0 .62em;
+        font: 1.2em/1.62em sans-serif;
+        background-color: #f0efd1;
+    }
+
+    h1,
+    h2,
+    h3 {
+        line-height: 1.2em;
+    }
+
+    @media print {
+        body {
+            max-width: none;
+        }
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    li {
+        list-style: none;
+    }
+
+    article {
+        margin: auto;
+        font-size: 14px;
+        padding: 3px 1em
+    }
+
+    .metadata {
+        color: rgba(0, 0, 0, 0.54);
+    }
+    </style>
+</head>
+
+<body>
+    <article id="top" class="anchor">
+        <div layout="row">
+            <div flex="30" flex-xs="0" flex-sm="15"></div>
+            <div flex="40" flex-xs="100" flex-sm="70">
+                <h1>Clang Tutorial: Finding Declarations</h1>
+                <div class="metadata">2014-10-19</div>
+                <!-- htmlmin:ignore -->
+                <p>Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to
+take advantage of it&#39;s syntax parsing, AST construction, semantics analysis, optimization,
+assembly generation and JIT compilation. Here let&#39;s have some fun playing with Clang and
+build a Clang tool to list all the declarations in a given file.</p>
+<h2 id="the-hello-world-program">The &quot;Hello World&quot; Program</h2>
+<p>Let&#39;s try to use Clang to write a &quot;Hello World&quot; program: Find all the declarations in a given
+source file.</p>
+<p>Given source file below:</p>
+<pre><code>class MyClass {
+  int foo;
+public:
+  void bar() {}
+};
+
+MyClass foobar() {
+  MyClass a;
+  return a;
+}
+</code></pre><p>Run our program to find all declarations:</p>
+<blockquote>
+<p>./find-decl test.cpp --
+Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1<br>Found MyClass::foo at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3<br>Found MyClass::bar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3<br>Found foobar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1<br>Found a at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  </p>
+</blockquote>
+<p><em>Note: Any argument after <code>--</code> will be passed to Clang. You can use that to specify arguments like include path <code>-I/path/to/my/include</code> or macro definition <code>-DMY_MACRO</code>.</em></p>
+<p>Let&#39;s write the program together.</p>
+<h2 id="building-clang">Building clang</h2>
+<p>First build clang:</p>
+<ol>
+<li><p>Get the source code from svn or git repository:  </p>
+<pre><code> git clone http://llvm.org/git/llvm.git src
+ git clone http://llvm.org/git/clang.git src/tools/clang
+</code></pre></li>
+<li><p>Configure and build using <em>make</em>:  </p>
+<pre><code> mkdir debug &amp;&amp; cd debug
+ ../configure           # add --enable-optimized --disable-assertions for release build
+ make                   # this would take quite some time
+</code></pre></li>
+</ol>
+<p>You can also use <code>make install</code> to install your built version to the system.</p>
+<h2 id="libtooling">LibTooling</h2>
+<p>LibTooling is the C++ interface Clang provided. It is very useful when you want to have full control
+over AST (e.g. static analysis), or to implement a refactoring tool. There are other interfaces like
+LibClang and Clang Plugins as well. For detailed information you can refer to <a href="http://clang.llvm.org/docs/Tooling.html">Clang Tooling document</a>.</p>
+<p>For our &quot;Hello World&quot; program - finding all declarations, using LibTooling is the easiest way.</p>
+<h2 id="the-entry-of-everything">The Entry of Everything</h2>
+<p>Let&#39;s start with the main function first:</p>
+<pre><code>#include &quot;DeclFindingAction.h&quot;
+#include &quot;clang/Tooling/CommonOptionsParser.h&quot;
+#include &quot;clang/Tooling/Tooling.h&quot;
+
+static llvm::cl::extrahelp
+    CommonHelp(clang::tooling::CommonOptionsParser::HelpMessage);
+llvm::cl::OptionCategory FindDeclCategory(&quot;find-decl options&quot;);
+
+static char FindDeclUsage[] = &quot;find-decl &lt;source file&gt;&quot;;
+
+int main(int argc, const char **argv) {
+  clang::tooling::CommonOptionsParser option(argc, argv, FindDeclCategory,
+                                             FindDeclUsage);
+  auto files = option.getSourcePathList();
+  clang::tooling::ClangTool tool(option.getCompilations(), files);
+
+  return tool.run(clang::tooling::newFrontendActionFactory&lt;DeclFindingAction&gt;().get());
+}
+</code></pre><p>This code is quite self-explained. We create an <a href="http://llvm.org/docs/doxygen/html/classllvm_1_1cl_1_1OptionCategory.html">OptionCategory</a>, use
+<a href="http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1CommonOptionsParser.html">CommonOptionsParser</a> to parse command line arguments for us, then feed source
+files to <a href="http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1ClangTool.html">ClangTool</a>, and run it with our own <em>DeclFindingAction</em>.</p>
+<h2 id="the-compiler-frontend">The Compiler Frontend</h2>
+<p>Like most compilers, LLVM is a three-phase compiler. Clang is its C, C++,
+Objective C and Objective C++ frontend.</p>
+<p><img src="/latfig1.gif" alt="LLVM three-phase structure"><br><em>Image from <a href="http://www.drdobbs.com/architecture-and-design/the-design-of-llvm/240001128?pgno=1">The Design of LLVM</a></em></p>
+<p>The frontend will parse the source code, check for syntax error and build the
+abstract syntax tree (AST). Let&#39;s create our own <a href="http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html">FrontendAction</a>:</p>
+<pre><code>#pragma once
+
+#include &quot;DeclFinder.h&quot;
+
+#include &quot;clang/Frontend/FrontendAction.h&quot;
+#include &quot;clang/Frontend/CompilerInstance.h&quot;
+
+#include &lt;memory&gt;
+
+class DeclFindingAction : public clang::ASTFrontendAction {
+public:
+  std::unique_ptr&lt;clang::ASTConsumer&gt;
+  CreateASTConsumer(clang::CompilerInstance &amp;CI, clang::StringRef) final {
+    return std::unique_ptr&lt;clang::ASTConsumer&gt;(
+        new DeclFinder(CI.getSourceManager()));
+  }
+};
+</code></pre><p>Our frontend action will only consume AST and find all declarations, it
+is inherited from <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTFrontendAction.html">ASTFrontendAction</a>, and create our own AST consumer via
+<a href="http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html#a9277d23d8eec19dad5a9aeef721cd6a3">FrontendAction::CreateASTConsumer</a>. AST will be consumed by our
+ASTConsumer - <em>DeclFinder</em>.</p>
+<h2 id="ast-abstract-syntax-tree">AST: Abstract Syntax Tree</h2>
+<p>In Clang, there are two basic types of AST classes: <a href="http://clang.llvm.org/doxygen/classclang_1_1Decl.html">Decl</a> and <a href="http://clang.llvm.org/doxygen/classclang_1_1Stmt.html">Stmt</a>, which
+have many subclasses that covers all the AST nodes we will meet in a source
+file. For example:</p>
+<ul>
+<li>FunctionDecl</li>
+<li>TypeDecl</li>
+<li>CallExpr</li>
+</ul>
+<h2 id="ast-consumer">AST Consumer</h2>
+<p>The <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html">ASTConsumer</a> will read AST. It provides many interfaces to be overridden
+when certain type of AST node has been parsed, or after all the translation unit
+has been parsed.</p>
+<p>We will override <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html#a2bea2db1d0e8af16c60ee7847f0d46ff">ASTConsumer::HandleTranslationUnit</a> to read the AST after we have
+all the information needed of the file.</p>
+<pre><code>#pragma once
+
+#include &quot;DeclVisitor.h&quot;
+
+#include &quot;clang/AST/ASTConsumer.h&quot;
+#include &quot;clang/AST/ASTContext.h&quot;
+#include &quot;clang/Basic/SourceManager.h&quot;
+
+class DeclFinder : public clang::ASTConsumer {
+  DeclVisitor Visitor;
+public:
+  DeclFinder(clang::SourceManager &amp;SM) : Visitor(SM) {}
+
+  void HandleTranslationUnit(clang::ASTContext &amp;Context) final {
+    Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+  }
+};
+</code></pre><p>We can process each declaration (<a href="http://clang.llvm.org/doxygen/classclang_1_1Decl.html">Decl</a>) in the our <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html">ASTConsumer</a>, but that will
+require us to identify the actual type of each <a href="http://clang.llvm.org/doxygen/classclang_1_1Decl.html">Decl</a> instance: is it a
+function declaration, a type declaration or a variable declaration?</p>
+<p>Clang provides us the <a href="http://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html">RecursiveASTVisitor</a> to identify the different type of
+declarations and statements.</p>
+<h2 id="ast-visitor">AST Visitor</h2>
+<pre><code>#pragma once
+
+#include &quot;clang/AST/RecursiveASTVisitor.h&quot;
+#include &quot;clang/Basic/SourceManager.h&quot;
+#include &quot;llvm/Support/raw_ostream.h&quot;
+
+#include &lt;string&gt;
+#include &lt;sstream&gt;
+
+class DeclVisitor : public clang::RecursiveASTVisitor&lt;DeclVisitor&gt; {
+  clang::SourceManager &amp;SourceManager;
+
+public:
+  DeclVisitor(clang::SourceManager &amp;SourceManager)
+      : SourceManager(SourceManager) {}
+
+  bool VisitNamedDecl(clang::NamedDecl *NamedDecl) {
+    llvm::outs() &lt;&lt; &quot;Found &quot; &lt;&lt; NamedDecl-&gt;getQualifiedNameAsString() &lt;&lt; &quot; at &quot;
+                 &lt;&lt; getDeclLocation(NamedDecl-&gt;getLocStart()) &lt;&lt; &quot;\n&quot;;
+    return true;
+  }
+
+private:
+  std::string getDeclLocation(clang::SourceLocation Loc) const {
+    std::ostringstream OSS;
+    OSS &lt;&lt; SourceManager.getFilename(Loc).str() &lt;&lt; &quot;:&quot;
+        &lt;&lt; SourceManager.getSpellingLineNumber(Loc) &lt;&lt; &quot;:&quot;
+        &lt;&lt; SourceManager.getSpellingColumnNumber(Loc);
+    return OSS.str();
+  }
+};
+</code></pre><p>This is where the work is done: we overwrite the
+<em>RecursiveASTVisitor::VisitNamedDecl</em> method to find all the named
+declaration, print its qualified name and definition location.</p>
+<p>Above source code introduced the <a href="http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html">SourceManager</a> class. As its name suggested,
+it manages all the source files. We first get the location of a declaration, then translate it into human readable content.</p>
+<p>The <em>llvm::outs()</em> is similiar to the <em>std::cout</em>, but it&#39;s suggested to use
+<em>llvm::outs()</em> instead of <em>std::cout</em> according to the <a href="http://llvm.org/docs/CodingStandards.html">LLVM Coding Standard</a>.</p>
+<h2 id="put-it-all-together">Put It All Together</h2>
+<p>Here is our makefile:</p>
+<pre><code>CLANG_LEVEL := ../../..
+TOOLNAME = find-decl
+include $(CLANG_LEVEL)/../../Makefile.config
+LINK_COMPONENTS := $(TARGETS_TO_BUILD) asmparser bitreader support mc option
+USEDLIBS = clangTooling.a clangFrontend.a clangSerialization.a clangDriver.a \
+           clangRewriteFrontend.a clangRewrite.a \
+           clangParse.a clangSema.a clangAnalysis.a \
+           clangAST.a clangASTMatchers.a clangEdit.a clangLex.a clangBasic.a
+
+
+include $(CLANG_LEVEL)/Makefile
+</code></pre><p>All the source code above should be put under
+_${llvm<em>src}/tools/clang/tools/clang-playground/find-decl/</em>.</p>
+<p>And put another makefile in
+_${llvm<em>src}/tools/clang/tools/clang-playground/</em>:</p>
+<pre><code>CLANG_LEVEL := ../..
+
+include $(CLANG_LEVEL)/../../Makefile.config
+
+PARALLEL_DIRS := find-decl
+DIRS :=
+
+include $(CLANG_LEVEL)/Makefile
+</code></pre><p>Edit <em>Makefile</em> in _${llvm<em>src}/tools/clang/tools/</em>, add <em>clang-playground</em> to
+_OPTIONAL_PARALLEL_DIRS_ so Clang makefile can find our project.</p>
+<p>Now you should be able to build our project along with Clang. The built out binary should
+be located in <em>debug/Debug+Asserts/bin/</em>.</p>
+<h2 id="the-glitch">The Glitch</h2>
+<p>Wait! When there is a <code>#include &lt;vector&gt;</code> in the source file, our <em>find-decl</em> will
+print out all the declarations in that included file, because these included files
+are parsed and consumed as a whole with our source file. To fix this, we need to
+check if the declarations are defined in our source file:</p>
+<pre><code>  void HandleTranslationUnit(clang::ASTContext &amp;Context) final {
+    auto Decls = Context.getTranslationUnitDecl()-&gt;decls();
+    for (auto &amp;Decl : Decls) {
+      const auto&amp; FileID = SourceManager.getFileID(Decl-&gt;getLocation());
+      if (FileID != SourceManager.getMainFileID())
+        continue;
+      Visitor.TraverseDecl(Decl);
+    }
+  }
+</code></pre><p>This is the improved logic. We find out the file ID of each declaration belongs to,
+compare it with the <em>main file ID</em>. If they are equal, that means it&#39;s defined in
+our source file.</p>
+<p><em>All the source code can be found at <a href="https://github.com/xinhuang/clang-playground.git">clang-playground</a>.</em></p>
+
+                <!-- htmlmin:ignore -->
+            </div>
+        </div>
+    </article>
+</body>
+
+</html>

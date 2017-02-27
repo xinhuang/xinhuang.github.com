@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>How to Config GoAgent For SBT</title>
+    <style>
+    body {
+        margin: 1em auto;
+        max-width: 40em;
+        padding: 0 .62em;
+        font: 1.2em/1.62em sans-serif;
+        background-color: #f0efd1;
+    }
+
+    h1,
+    h2,
+    h3 {
+        line-height: 1.2em;
+    }
+
+    @media print {
+        body {
+            max-width: none;
+        }
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    li {
+        list-style: none;
+    }
+
+    article {
+        margin: auto;
+        font-size: 14px;
+        padding: 3px 1em
+    }
+
+    .metadata {
+        color: rgba(0, 0, 0, 0.54);
+    }
+    </style>
+</head>
+
+<body>
+    <article id="top" class="anchor">
+        <div layout="row">
+            <div flex="30" flex-xs="0" flex-sm="15"></div>
+            <div flex="40" flex-xs="100" flex-sm="70">
+                <h1>How to Config GoAgent For SBT</h1>
+                <div class="metadata">2013-10-04</div>
+                <!-- htmlmin:ignore -->
+                <h2 id="proxy-setting-for-sbt">Proxy Setting For SBT</h2>
+<p>SBT proxy configuration is supported through Java options. Passing Java following definitions:</p>
+<pre><code>-Dhttp.proxyHost=yourserver
+-Dhttp.proxyPort=8080
+-Dhttp.proxyUser=username
+-Dhttp.proxyPassword=password
+</code></pre><h3 id="windows">Windows</h3>
+<pre><code>set JAVA_OPTS=&quot;%JAVA_OPTS% -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8087&quot;
+</code></pre><h3 id="linux-like-system-">Linux like system:</h3>
+<pre><code>export JAVA_OPTS=&quot;$JAVA_OPTS -Dhttp.proxyHost=localhost -Dhttp.proxyPort=8087&quot;
+</code></pre><p>Then run <code>sbt</code>, and it will use the proxy.</p>
+<h2 id="openssl">OpenSSL</h2>
+<h3 id="windows">Windows</h3>
+<p>No need, as long as you installed GoAgent CA into system.</p>
+<h3 id="linux">Linux</h3>
+<p>After configuring SBT, you might observe in GoAgent log, all pom URLs tried by sbt returns HTTP 404, even the file exists.<br>When try to <code>wget www.google.com</code> via GoAgent, GoAgent reports it&#39;s because SSL failure.  </p>
+<p>Since GoAgent is using OpenSSL, we need to import GoAgent certificate into OpenSSL.<br>Using following command:</p>
+<pre><code>openssl x509 -noout -hash -in &lt;GoAgent/local/CA.crt&gt;
+</code></pre><p>After that HTTP 404 should disappear.</p>
+<p>Also turning off HTTPS in proxy.ini works.</p>
+
+                <!-- htmlmin:ignore -->
+            </div>
+        </div>
+    </article>
+</body>
+
+</html>

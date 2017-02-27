@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>How A Multi-Threaded Implementation of The Observer Pattern Can Fail</title>
+    <style>
+    body {
+        margin: 1em auto;
+        max-width: 40em;
+        padding: 0 .62em;
+        font: 1.2em/1.62em sans-serif;
+        background-color: #f0efd1;
+    }
+
+    h1,
+    h2,
+    h3 {
+        line-height: 1.2em;
+    }
+
+    @media print {
+        body {
+            max-width: none;
+        }
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    li {
+        list-style: none;
+    }
+
+    article {
+        margin: auto;
+        font-size: 14px;
+        padding: 3px 1em
+    }
+
+    .metadata {
+        color: rgba(0, 0, 0, 0.54);
+    }
+    </style>
+</head>
+
+<body>
+    <article id="top" class="anchor">
+        <div layout="row">
+            <div flex="30" flex-xs="0" flex-sm="15"></div>
+            <div flex="40" flex-xs="100" flex-sm="70">
+                <h1>How A Multi-Threaded Implementation of The Observer Pattern Can Fail</h1>
+                <div class="metadata">2015-02-11</div>
+                <!-- htmlmin:ignore -->
+                <h2 id="overview">Overview</h2>
+<p>In an implementation of the Observer Pattern, usually there are two ways for an
+ observer to de-register itself during destruction:</p>
+<ol>
+<li>De-register in <code>Observer</code> destructor</li>
+<li>Use <code>std::weak_ptr</code> in <code>Observable</code></li>
+</ol>
+<p>For option 1, there will be a race condition if de-registering happens in the
+ destructor of the base observer class, because the destructor of
+ <code>AbstractObserver</code> is called after <code>ConcreteObserver</code>. If an event is triggered
+ between the invocation of concrete destructor and abstract destructor, the
+ observer will be in a partial state.</p>
+<p>This misbehavior cannot be fixed as long as the concrete class inherits from
+ <code>AbstractObserver</code> class, because <code>AbstractObserver</code> is always constructed
+ first, and destroyed last.</p>
+<p>To avoid such a problem, either use a combination of <code>std::shared_ptr</code> and
+ <code>std::weak_ptr</code>, or use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead of reinventing the wheel.</p>
+<h2 id="the-gof-observer-pattern-">The <a href="http://en.wikipedia.org/wiki/Observer_pattern">GoF Observer Pattern</a></h2>
+<pre><code>class IObservable {
+public:
+    virtual ~IObservable() {}
+    virtual void add(IObserver* observer) = 0;
+    virtual void remove(IObserver* observer) = 0;
+    virtual void notify() = 0;
+};
+
+class IObserver {
+public:
+    virtual ~IObserver() {}
+    virtual void onNotify() = 0;
+};
+</code></pre><h2 id="what-happens-when-an-observer-is-going-to-be-destroyed-">What happens when an observer is going to be destroyed?</h2>
+<p>Before an observer is destroyed, it has to be removed from the observers list.
+ Explicit removal of the observer before each destruction is too much work
+ and duplicate code, it is convenient, therefore, to automate observer
+ un-registration.</p>
+<p>Here is our new <code>AbstractObservable</code>/<code>AbstractObserver</code> with automatic
+ un-registration in destructor:</p>
+<pre><code>class AbstractObservable : public IObservable {
+public:
+    virtual ~AbstractObservable() {}
+    void add(AbstractObserver* observer) {
+        observers.insert(observer);
+        observer.setObservable(this);
+    }
+    void remove(AbstractObserver* observer) {
+        observers.erase(observer);
+    }
+    void notify() {
+        for (auto&amp; o : observers) {
+            o-&gt;notify();
+        }
+    }
+
+private:
+  std::unordered_set&lt;AbstractObserver*&gt; observers;
+};
+
+class AbstractObserver : public IObserver {
+public:
+    virtual ~AbstractObserver() { observable.remove(this); }
+    virtual void notify() = 0;
+    void setObservable(AbstractObservable* observable) { this-&gt;observable = observable; }
+
+private:
+    AbstractObservable* observable;
+};
+</code></pre><h2 id="but-what-will-happen-in-a-multi-threaded-environment-">But what will happen in a multi-threaded environment?</h2>
+<p>In a multi-threaded environment a race condition can happen when the
+ observer list is updated. Simple problem! Only need a lock:</p>
+<pre><code>// same for add and notify
+void AbstractObservable::remove(AbstractObserver* observer) {
+    std::lock_guard&lt;std::mutex&gt; lock(mutex);
+    observers.erase(observer);
+}
+</code></pre><p>But think again about the runtime behavior. Is it really thread-safe?</p>
+<p>Here is the normal destruction order of an observer:</p>
+<ol>
+<li><p><code>ConcreteObserver::~ConcreteObserver()</code></p>
+</li>
+<li><p><code>AbstractObserver::~AbstractObserver()</code></p>
+</li>
+</ol>
+<p>What if, during the destruction of an observer, an event is fired?
+ Now the following invocation sequence can occur:</p>
+<ol>
+<li><p><code>ConcreteObserver::~ConcreteObserver()</code></p>
+</li>
+<li><p><code>ConcreteObservable::notify()</code></p>
+</li>
+<li><p><code>ConcreteObserver::onNotify()</code></p>
+</li>
+<li><p><code>AbstractObserver::~AbstractObserver()</code></p>
+</li>
+</ol>
+<p>Previously, to ensure the exclusive call to <code>add</code>, <code>remove</code> and <code>notify</code> functions
+ of <code>AbstractObservable</code>, we use a lock. But the destructor of <code>ConcreteObserver</code>
+ and <code>notify</code> functions of <code>AbstractObservable</code> are not exclusive. Hence when
+ an event is triggered while the destructor <code>ConcreteObserver</code> is executing, the
+ <code>onNotify</code> of the <code>ConcreteObserver</code> will be called on a (partially) destroyed
+ object. This is why the race condition can happen.</p>
+<h2 id="is-there-a-better-way-">Is there a better way?</h2>
+<p>To avoid this problem, there are several alternatives:</p>
+<ol>
+<li><p>Explicitly remove observer in the most derived destructor. This could be error
+prone, and the problem can still occur because you can always inherit from
+<code>ConcreteObserver</code>.</p>
+</li>
+<li><p>Explicitly un-registe observer before its destructor is called. This requires
+a customized deleter to call an unregister function if you use <code>std::shared_ptr</code>,
+or having to be careful if the observer&#39;s life span is managed manually - with a
+lot of repeated code to remove observers to boot.</p>
+<p> For example:</p>
+<pre><code> // manually unregister observer from observable
+ {
+   ConcreteObserver scopedObserver;
+   observable.add(scopedObserver);
+   // ...
+   observable.remove(scopedObserver);
+ } // scopredObserver is destroyed here
+
+ // manually unregister observer from observable using std::shared_ptr
+ std::shared_ptr&lt;Observer&gt; observer(new ConcreteObserver(),
+                                    [&amp;](Observer* o) {
+                                      observable.remove(o);
+                                    });
+ observable.add(observer);
+</code></pre></li>
+<li><p>Use a combination of <code>std::shared_ptr</code> and <code>std::weak_ptr</code>. In this way the
+race condition can be avoided completely.</p>
+<p> For example:</p>
+<pre><code> class IObserver {
+ public:
+   virtual ~IObserver() {}
+   virtual void onNotify() = 0;
+ };
+
+ class Observable {
+   std::mutex mutex;
+   // of course the std::vector can be replace by a concurrent container
+   std::vector&lt;std::weak_ptr&lt;IObserver&gt;&gt; observers;  
+
+ public:
+   virtual ~Observable() {}
+   void add(const std::shared_ptr&lt;IObserver&gt;&amp; o) {
+     std::lock_guard&lt;std::mutex&gt; lock(mutex);
+     observers.emplace_back(o);
+   }
+   void remove(const std::shared_ptr&lt;IObserver&gt;&amp; o) {
+     /* here we do nothing, invalid observers will be removed in notify */
+   }
+   void notify() {
+     std::lock_guard&lt;std::mutex&gt; lock(mutex);
+     for (auto&amp; o : observers) {
+       if (auto p = o.lock())
+         p-&gt;onNotify();
+     }
+     remove_invalid_observer();
+   }
+
+ private:
+   void remove_invalid_observer() {
+     auto first_invalid = std::remove_if(std::begin(observers),
+                                         std::end(observers),
+                                         [](const std::weak_ptr&lt;IObserver&gt;&amp; o) {
+                                           return o.expired();
+                                         });
+     observers.erase(last_valid, std::end(observers));
+   }
+ };
+</code></pre></li>
+<li><p>Don&#39;t reinvent the wheel, use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead.
+<a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2/thread-safety.html#idp430084640">&quot;It can be used safely in a multi-threaded environment.&quot;</a></p>
+</li>
+</ol>
+<h2 id="so-what-is-the-real-problem-">So what is the real problem?</h2>
+<p>The moral of this tale is that inheritance isn&#39;t always as harmless as it might
+ seem, notwithstanding the great benefit of code re-usability. In a
+ multi-threaded environment, inheritance can easily break the constraints while
+ giving the user an illusion that the original constraints are naturally
+ &quot;inherited&quot;. <strong>Code and functions can be inherited, but the situation is not
+ the same for concurrent constraints.</strong></p>
+<hr>
+<p> <em>Many thanks to David Wales who helped review this post.</em></p>
+
+                <!-- htmlmin:ignore -->
+            </div>
+        </div>
+    </article>
+</body>
+
+</html>

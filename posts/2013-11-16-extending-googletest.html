@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+
+    <title>Extending GoogleTest</title>
+    <style>
+    body {
+        margin: 1em auto;
+        max-width: 40em;
+        padding: 0 .62em;
+        font: 1.2em/1.62em sans-serif;
+        background-color: #f0efd1;
+    }
+
+    h1,
+    h2,
+    h3 {
+        line-height: 1.2em;
+    }
+
+    @media print {
+        body {
+            max-width: none;
+        }
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    li {
+        list-style: none;
+    }
+
+    article {
+        margin: auto;
+        font-size: 14px;
+        padding: 3px 1em
+    }
+
+    .metadata {
+        color: rgba(0, 0, 0, 0.54);
+    }
+    </style>
+</head>
+
+<body>
+    <article id="top" class="anchor">
+        <div layout="row">
+            <div flex="30" flex-xs="0" flex-sm="15"></div>
+            <div flex="40" flex-xs="100" flex-sm="70">
+                <h1>Extending GoogleTest</h1>
+                <div class="metadata">2013-11-16</div>
+                <!-- htmlmin:ignore -->
+                <p>Maybe you are tired of the syntax <a href="https://code.google.com/p/googletest/">googletest</a> has chosen, so you deside to invent you own unit test DSL. But re-implementing the whole execution &amp; report part of a unit test framework would be too much, esp. you want to ship your &quot;product&quot; somewhere.</p>
+<p>Then the option left would be extending an existing one, and <a href="https://code.google.com/p/googletest/">googletest</a> is a good candidate.</p>
+<h2 id="behind-the-curtain">Behind the curtain</h2>
+<h3 id="a-basic-version">A basic version</h3>
+<p>First of all, before extending googletest, we need to know what&#39;s behind the curtain.<br>A typical unit test would be:</p>
+<pre><code>class Fixture : public ::testing::Test {
+};
+
+TEST_F(Fixture, GIVEN_1_THEN_add_1_SHOULD_return_0) {
+    ASSERT_EQ(0, 1 + 1);
+}
+</code></pre><p><em>Sorry for my bad math.</em></p>
+<p>In above code snippet, googletest does 3 things:  </p>
+<ol>
+<li>Create a class inherited from <code>Fixture</code>.  </li>
+<li>Override a method in <code>Fixture</code>.  </li>
+<li>Execute some code to register the newly created class somewhere.</li>
+</ol>
+<p>All the magic is done within macro <code>TEST_F</code>.<br>If you are familiar with macro, it won&#39;t take a minute to figure out <code>TEST_F</code> actually expand to:  </p>
+<pre><code>/ --------- Expand start -----------&gt; /
+class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+    void SomeMethodCalledWhenExecuteTest();
+};
+void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+/ &lt;-------- Expand end -------------- /
+{
+    ASSERT_EQ(0, 1 + 1);
+}
+</code></pre><p>Now, we&#39;ve done No. 1 and No. 2. But what about No. 3? How to execute some code outside the <code>main</code> function?<br>The answer is simple: <em>Use global variables</em>, and perform registration in the construction of the variable:</p>
+<pre><code>/ --------- Expand start -----------&gt; /
+class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+    void SomeMethodCalledWhenExecuteTest();
+};
+prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix instance_GIVEN_1_THEN_add_1_SHOULD_return_0;
+void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+/ &lt;-------- Expand end -------------- /
+</code></pre><h3 id="the-googletest-version">The googletest version</h3>
+<p>This only demonstrate the basic idea of how <code>TEST_F</code> works. Knowing this, we can find out how to extend googletest.</p>
+<p>Watching the macro _TEST_F_, it does a bit more than our basic version:</p>
+<pre><code>#define GTEST_TEST_(test_case_name, test_name, parent_class, parent_id)\
+class GTEST_TEST_CLASS_NAME_(test_case_name, test_name) : public parent_class {\
+ public:\
+  GTEST_TEST_CLASS_NAME_(test_case_name, test_name)() {}\
+ private:\
+  virtual void TestBody();\
+  static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;\
+  GTEST_DISALLOW_COPY_AND_ASSIGN_(\
+      GTEST_TEST_CLASS_NAME_(test_case_name, test_name));\
+};\
+</code></pre><p>Above code defines the test class inherites from test fixture.</p>
+<p>First, create the global variable:</p>
+<pre><code>::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)\
+  ::test_info_ =\
+</code></pre><p>Then, initialize the global variable:</p>
+<pre><code>    ::testing::internal::MakeAndRegisterTestInfo(\
+        #test_case_name, #test_name, NULL, NULL, \
+        (parent_id), \
+        parent_class::SetUpTestCase, \
+        parent_class::TearDownTestCase, \
+        new ::testing::internal::TestFactoryImpl&lt;\
+            GTEST_TEST_CLASS_NAME_(test_case_name, test_name)&gt;);\
+</code></pre><p>Registration is performed inside <code>::testing::internal::MakeAndRegisterTestInfo</code>.</p>
+<p>At last, is the <em>TestBody</em> stub, which connects real test code:</p>
+<pre><code>void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
+</code></pre><h4 id="inside-registertestinfo">Inside RegisterTestInfo</h4>
+<p>Let&#39;s take a closer look at what happened inside <code>MakeAndRegisterTestInfo</code>:</p>
+<pre><code>TestInfo* MakeAndRegisterTestInfo(
+    const char* test_case_name,
+    const char* name,
+    const char* type_param,
+    const char* value_param,
+    TypeId fixture_class_id,
+    SetUpTestCaseFunc set_up_tc,                // Set up for the first of fixture class.
+    TearDownTestCaseFunc tear_down_tc,          // Tear down after execute of all tests in a fixture.
+    TestFactoryBase* factory);                  // Factory creates the test class instances.
+</code></pre><p>First 2 parameters are easy to tell from their name, last 3 are also not difficult.<br><code>type_param</code> and <code>value_param</code> are both passed as <code>NULL</code> in <code>TEST_F</code> macro, so we can ignore them until we really got some problem.</p>
+<p>Then, what is <code>fixture_class_id</code>? If we are using a different model from googletest, what should the value be?<br>By searching the code, we can easily find out the type id is used to tell a test going to run whether is the first one under a fixture. If it is, then the <code>tear_down_tc</code> of previous fixture and <code>set_up_tc</code> of the fixture should be called.<br>So if you don&#39;t care about it, ignore it.</p>
+<h2 id="register-our-test">Register our test</h2>
+<p>After all the work, it is clear that all the macro makes googletest &quot;user interface&quot;. If we want to connect our unit test DSL with googletest, register the test via <code>MakeAndRegisterTestInfo</code>.</p>
+<p>Now we are ready to let our test sneaks in. Here is the complete code: (C++ 11)</p>
+<pre><code>class NoFixture {};
+void nop() {}
+
+class FunctionTest : public ::testing::Test {
+public:
+    FunctionTest(function&lt;void()&gt; function)
+        : function_(function)
+    {}
+private:
+    const function&lt;void()&gt; function_;
+    void TestBody() override { function_(); }
+};
+
+class TestFactory : public ::testing::internal::TestFactoryBase {
+public:
+    TestFactory(function&lt;void()&gt; function)
+        : function_(function) {}
+    ::testing::Test* CreateTest() override {
+        return new FunctionTest(function_);
+    }
+private:
+    const function&lt;void()&gt; function_;
+};
+
+void Register(const string&amp; test_name, const string&amp; case_name, function&lt;void()&gt; test) {
+    static auto fixture_class_id = ::testing::internal::GetTypeId&lt;NoFixture&gt;();
+    ::testing::internal::MakeAndRegisterTestInfo(test_name.c_str(), case_name.c_str(), nullptr, nullptr,
+        fixture_class_id, nop, nop, new TestFactory(test));
+}
+</code></pre>
+                <!-- htmlmin:ignore -->
+            </div>
+        </div>
+    </article>
+</body>
+
+</html>

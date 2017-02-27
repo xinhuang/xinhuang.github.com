@@ -1,8 +1,160 @@
-<!doctype html><html ng-app=xinhuangGithubCom ng-strict-di><head><meta charset=utf-8><title>> Life is short</title><meta name=description content=""><meta name=viewport content="width=device-width"><!-- Place favicon.ico and apple-touch-icon.png in the root directory --><link rel=stylesheet href=styles/vendor-742ba0962d.css><link rel=stylesheet href=styles/app-d5a71a58a1.css><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-      ga('create', 'UA-42274645-1', 'auto');
-      ga('send', 'pageview');</script></head><body><!--[if lt IE 10]>
-      <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
-    <![endif]--><div ui-view></div><script src=scripts/vendor-992057851c.js></script><script src=scripts/app-9a0b2c27d9.js></script></body></html>
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <title>
+        Life is short,
+    </title>
+    <style>
+        body {
+            margin: 1em auto;
+            max-width: 40em;
+            padding: 0 .62em;
+            font: 1.2em/1.62em sans-serif;
+            background-color: #f0efd1;
+        }
+
+        h1,
+        h2,
+        h3 {
+            line-height: 1.2em;
+        }
+
+        @media print {
+            body {
+                max-width: none;
+            }
+        }
+
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        article {
+            margin: auto;
+            font-size: 14px;
+            padding: 3px 1em
+        }
+
+        .metadata {
+            color: rgba(0, 0, 0, 0.54);
+        }
+
+        .index {
+            padding-left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <article>
+        <header><h1>Life is short,</h1></header>
+        <ul class="index">
+            <li>
+                <span class="metadata">2015-10-23</span>
+                <a href="&#x2F;posts&#x2F;2015-10-23-visual-leak-detector-stack-overflow-and-thread-local-storage.html">
+                    Visual Leak Detector Stack Overflow And Thread Local Storage
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2015-07-27</span>
+                <a href="&#x2F;posts&#x2F;2015-07-27-use-tbb-to-generate-dynamic-dependency-graph-for-computation.html">
+                    Use TBB to Generate Dynamic Dependency Graph For Computation
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2015-02-11</span>
+                <a href="&#x2F;posts&#x2F;2015-02-11-how-a-multi-threaded-implementation-of-the-observer-pattern-can-fail.html">
+                    How A Multi-Threaded Implementation of The Observer Pattern Can Fail
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2015-02-08</span>
+                <a href="&#x2F;posts&#x2F;2015-02-08-clang-tutorial-the-ast-matcher.html">
+                    Clang Tutorial: The AST Matcher
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2014-10-19</span>
+                <a href="&#x2F;posts&#x2F;2014-10-19-clang-tutorial-finding-declarations.html">
+                    Clang Tutorial: Finding Declarations
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2014-09-23</span>
+                <a href="&#x2F;posts&#x2F;2014-09-23-detect-race-condition-using-clang-thread-sanitizer.html">
+                    Detect Race Condition Using Clang Thread Sanitizer
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2014-02-16</span>
+                <a href="&#x2F;posts&#x2F;2014-02-16-a-gotcha-from-auto.html">
+                    A Gotcha From auto
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2014-01-18</span>
+                <a href="&#x2F;posts&#x2F;2014-01-18-a-better-way-to-integrate-nant-with-jenkins.html">
+                    A better way to integrate NAnt with Jenkins
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-12-31</span>
+                <a href="&#x2F;posts&#x2F;2013-12-31-when-to-use-noexcept-and-when-to-not.html">
+                    When to use &#x60;noexcept&#x60; and when to not
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-11-16</span>
+                <a href="&#x2F;posts&#x2F;2013-11-16-extending-googletest.html">
+                    Extending GoogleTest
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-11-03</span>
+                <a href="&#x2F;posts&#x2F;2013-11-03-test-daemon-for-nose-in-python.html">
+                    Test Daemon For Nose In Python
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-10-04</span>
+                <a href="&#x2F;posts&#x2F;2013-10-04-how-to-config-goagent-for-sbt.html">
+                    How to Config GoAgent For SBT
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-10-03</span>
+                <a href="&#x2F;posts&#x2F;2013-10-03-how-to-install-https-certificate-in-git.html">
+                    How to Install HTTPS Certificate In Git
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-08-08</span>
+                <a href="&#x2F;posts&#x2F;2013-08-08-why-iostring-NEQ-string-in-haskell.html">
+                    Why IOString !&#x3D; String In Haskell
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-07-07</span>
+                <a href="&#x2F;posts&#x2F;2013-07-07-how-to-type-chinese-in-miktex.html">
+                    How to type Chinese in MiKTex
+                </a>
+            </li>
+            <li>
+                <span class="metadata">2013-07-06</span>
+                <a href="&#x2F;posts&#x2F;2013-07-06-hello-world.html">
+                    Hello, world!
+                </a>
+            </li>
+        </ul>
+    </article>
+</body>
+
+</html>
