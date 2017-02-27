@@ -30,9 +30,7 @@ for (const key of Object.keys(exports.paths)) {
  *  Mainly used to inject script tags in the index.html but also used
  *  to inject css preprocessor deps and js files in karma
  */
-exports.wiredep = {
-  directory: 'bower_components'
-};
+exports.wiredep = {};
 
 /**
  *  Common implementation for an error handler of a Gulp plugin

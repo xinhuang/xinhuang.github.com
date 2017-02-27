@@ -21,7 +21,7 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('build', ['blog'], () => {
+gulp.task('build', ['post'], () => {
     // build page: for each page: create a template copy, then inject content
 });
 
@@ -37,34 +37,6 @@ gulp.task('test', () => {
         .pipe(print())
         .pipe(mocha());
 });
-
-function getStaticPagePath(filename) {
-    const postPartialPath = path.join(conf.paths.tmp);
-    if (!fs.existsSync(postPartialPath)) {
-        fs.mkdirsSync(postPartialPath);
-    }
-    return path.join(postPartialPath, `${filename.slice(0, -3)}.html`);
-}
-
-function generateStaticPage(post, dest) {
-    const layout = post.layout;
-    const blogTemplate = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
-    const targetFile = path.join(dest, layout, `${path.basename(post.file)}.html`);
-    fs.copy(blogTemplate, targetFile);
-    gutil.log(`Empty template for ${targetFile} generated.`);
-}
-
-function escapeHtml(text) {
-  var map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-
-  return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-}
 
 function loadIndex() {
     const indexPath = path.join(conf.paths.tmp, 'index.json');
@@ -94,15 +66,15 @@ function buildIndex(dir) {
       .first()
       .doOnError(e => { gutil.log(e); conf.errorHandler(err) })
       .map(headers => {
-          index.blogs = headers;
+          index.posts = headers;
           fs.writeFileSync(path.join(conf.paths.tmp, 'index.json'), JSON.stringify(index));
           return index;
       });
 }
 
-gulp.task('blog', ['blog:index', 'blog:render'], () => {});
+gulp.task('post', ['post:index', 'post:render'], () => {});
 
-gulp.task('blog:index', cb => {
+gulp.task('post:index', cb => {
     buildIndex(path.join(conf.paths.data, 'posts')).subscribe(
         index => {
         },
@@ -111,7 +83,7 @@ gulp.task('blog:index', cb => {
     );
 });
 
-gulp.task('blog:render', ['blog:index'], cb => {
+gulp.task('post:render', ['post:index'], cb => {
     marked.setOptions({
         renderer: new marked.Renderer(),
         gfm: true,
@@ -123,21 +95,21 @@ gulp.task('blog:render', ['blog:index'], cb => {
         smartypants: false
     });
     const index = loadIndex();
-    Observable.fromArray(index.blogs)
+    Observable.fromArray(index.posts)
         .subscribe(
-            blog => {
-                const text = fs.readFileSync(blog.file).toString();
+            post => {
+                const text = fs.readFileSync(post.file).toString();
 
-                const layout = blog.layout;
+                const layout = post.layout;
                 const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
                 const template = fs.readFileSync(templateFile).toString();
                 const rendered = mustache.render(template, {
-                    title: blog.title,
-                    date: blog.date,
+                    title: post.title,
+                    date: post.date,
                     content: marked(parse.body(text)),
                 });
 
-                fs.writeFileSync(path.join(conf.paths.dist, `${path.basename(blog.file, '.md')}.html`), rendered);
+                fs.writeFileSync(path.join(conf.paths.dist, `${path.basename(post.file, '.md')}.html`), rendered);
             },
             e => { gutil.log(e); conf.errorHandler(e); cb(); },
             () => cb()
