@@ -92,7 +92,7 @@ gulp.task('post:index', cb => {
     );
 });
 
-function render(dir) {
+function render(dir, underRoot = false) {
     marked.setOptions({
         renderer: new marked.Renderer(),
         gfm: true,
@@ -118,7 +118,11 @@ function render(dir) {
                 content: marked(parse.body(text)),
             });
 
-            fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(post.file, '.md')}.html`), rendered);
+            if (underRoot) {
+                fs.writeFileSync(path.join(conf.paths.tmp, `${path.basename(post.file, '.md')}.html`), rendered);
+            } else {
+                fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(post.file, '.md')}.html`), rendered);
+            }
         })
         .doOnError(e => {
             gutil.log(e);
@@ -154,7 +158,7 @@ gulp.task('page:index', cb => {
 });
 
 gulp.task('page:render', ['page:index'], cb => {
-    render('pages').subscribe(
+    render('pages', true).subscribe(
         _ => {},
         () => cb(),
         () => cb()
