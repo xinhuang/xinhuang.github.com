@@ -21,8 +21,7 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('build', ['post', 'homepage'], () => {
-});
+gulp.task('content', ['post', 'homepage']);
 
 gulp.task('inject', () => {
     return gulp.src([path.join(conf.paths.src, '**/*.html')])
@@ -120,7 +119,7 @@ gulp.task('post:render', ['post:index'], cb => {
         );
 });
 
-gulp.task('homepage', ['post'], cb => {
+gulp.task('homepage', ['post'], () => {
     const index = loadIndex('posts');
     const template = fs.readFileSync(path.join(conf.paths.src, 'templates', 'index.template.html')).toString();
     const rendered = mustache.render(template, {
@@ -129,7 +128,7 @@ gulp.task('homepage', ['post'], cb => {
     fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
 });
 
-gulp.task('dist', function () {
+gulp.task('dist', ['content'], () => {
     return gulp.src([path.join(conf.paths.tmp, '/**/*.html')])
         .pipe($.htmlmin({
             minifyCSS: true,
@@ -141,3 +140,5 @@ gulp.task('dist', function () {
             collapseWhitespace: true,}))
         .pipe(gulp.dest(conf.paths.dist));
 });
+
+gulp.task('build', ['content', 'dist'], () => {});
