@@ -23,7 +23,7 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('content', ['post', 'homepage', 'page', 'attachments']);
+gulp.task('content', ['post', 'homepage', 'page', 'resources']);
 
 gulp.task('inject', () => {
     return gulp.src([path.join(conf.paths.src, '**/*.html')])
@@ -165,8 +165,8 @@ gulp.task('page:render', ['page:index'], cb => {
     )
 });
 
-gulp.task('attachments', () => {
-   return gulp.src(path.join(conf.paths.data, 'attachments', '/**/*.*'))
+gulp.task('resources', () => {
+   return gulp.src(path.join(conf.paths.data, 'resources', '/**/*.*'))
         .pipe(gulp.dest(path.join(conf.paths.dist)));
 });
 
