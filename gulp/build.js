@@ -14,7 +14,7 @@ import mustache from 'mustache';
 
 var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
-  pattern: ['del']
+  pattern: ['gulp-*', 'del', 'uglify-save-license']
 });
 
 gulp.task('clean', () => {
@@ -22,7 +22,6 @@ gulp.task('clean', () => {
 });
 
 gulp.task('build', ['post', 'homepage'], () => {
-    // build page: for each page: create a template copy, then inject content
 });
 
 gulp.task('inject', () => {
@@ -99,7 +98,7 @@ gulp.task('post:render', ['post:index'], cb => {
         smartypants: false
     });
     const index = loadIndex('posts');
-    fs.mkdirsSync(path.join(conf.paths.dist, 'posts'));
+    fs.mkdirsSync(path.join(conf.paths.tmp, 'posts'));
     Observable.fromArray(index.posts)
         .subscribe(
             post => {
@@ -114,7 +113,7 @@ gulp.task('post:render', ['post:index'], cb => {
                     content: marked(parse.body(text)),
                 });
 
-                fs.writeFileSync(path.join(conf.paths.dist, 'posts', `${path.basename(post.file, '.md')}.html`), rendered);
+                fs.writeFileSync(path.join(conf.paths.tmp, 'posts', `${path.basename(post.file, '.md')}.html`), rendered);
             },
             e => { gutil.log(e); conf.errorHandler(e); cb(); },
             () => cb()
@@ -127,5 +126,18 @@ gulp.task('homepage', ['post'], cb => {
     const rendered = mustache.render(template, {
         posts: index.posts
     });
-    fs.writeFileSync(path.join(conf.paths.dist, 'index.html'), rendered);
+    fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
+});
+
+gulp.task('dist', function () {
+    return gulp.src([path.join(conf.paths.tmp, '/**/*.html')])
+        .pipe($.htmlmin({
+            minifyCSS: true,
+            minifyJS: true,
+            removeComments: true,
+            removeEmptyAttributes: true,
+            removeAttributeQuotes: true,
+            collapseBooleanAttributes: true,
+            collapseWhitespace: true,}))
+        .pipe(gulp.dest(conf.paths.dist));
 });
