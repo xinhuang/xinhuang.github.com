@@ -21,7 +21,7 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('build', ['post'], () => {
+gulp.task('build', ['post', 'homepage'], () => {
     // build page: for each page: create a template copy, then inject content
 });
 
@@ -61,7 +61,9 @@ function buildIndex(type) {
       .map(f => {
           var data = fs.readFileSync(f).toString().split('\n');
           data.unshift(`"file": "${f}"`);
-          return parse.parse(data).header;
+          const header = parse.parse(data).header;
+          header.url = `/posts/${path.basename(header.file, '.md')}.html`;
+          return header;
       })
       .toArray()
       .first()
@@ -96,6 +98,7 @@ gulp.task('post:render', ['post:index'], cb => {
         smartypants: false
     });
     const index = loadIndex('posts');
+    fs.mkdirsSync(path.join(conf.paths.dist, 'posts'));
     Observable.fromArray(index.posts)
         .subscribe(
             post => {
@@ -110,9 +113,18 @@ gulp.task('post:render', ['post:index'], cb => {
                     content: marked(parse.body(text)),
                 });
 
-                fs.writeFileSync(path.join(conf.paths.dist, `${path.basename(post.file, '.md')}.html`), rendered);
+                fs.writeFileSync(path.join(conf.paths.dist, 'posts', `${path.basename(post.file, '.md')}.html`), rendered);
             },
             e => { gutil.log(e); conf.errorHandler(e); cb(); },
             () => cb()
         );
+});
+
+gulp.task('homepage', ['post'], cb => {
+    const index = loadIndex('posts');
+    const template = fs.readFileSync(path.join(conf.paths.src, 'templates', 'index.template.html')).toString();
+    const rendered = mustache.render(template, {
+        posts: index.posts
+    });
+    fs.writeFileSync(path.join(conf.paths.dist, 'index.html'), rendered);
 });

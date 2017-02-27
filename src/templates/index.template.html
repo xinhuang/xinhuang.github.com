@@ -4,12 +4,19 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <title>
+        Life is short,
     </title>
   </head>
   <body>
       <ul>
-          <!-- inject:md -->
-          <!-- endinject -->
+          {{#posts}}
+          <div>
+              <p>{{date}}</p>
+              <a href="{{url}}">
+                <h3>{{title}}</h3>
+              </a>
+          </div>
+          {{/posts}}
       </ul>
   </body>
 </html>
