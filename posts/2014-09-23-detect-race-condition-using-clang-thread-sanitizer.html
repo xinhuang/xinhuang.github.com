@@ -1,60 +1,4 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-
-    <title>Detect Race Condition Using Clang Thread Sanitizer</title>
-    <style>
-    body {
-        margin: 1em auto;
-        max-width: 40em;
-        padding: 0 .62em;
-        font: 1.2em/1.62em sans-serif;
-        background-color: #f0efd1;
-    }
-
-    h1,
-    h2,
-    h3 {
-        line-height: 1.2em;
-    }
-
-    @media print {
-        body {
-            max-width: none;
-        }
-    }
-
-    a {
-        text-decoration: none;
-    }
-
-    li {
-        list-style: none;
-    }
-
-    article {
-        margin: auto;
-        font-size: 14px;
-        padding: 3px 1em
-    }
-
-    .metadata {
-        color: rgba(0, 0, 0, 0.54);
-    }
-    </style>
-</head>
-
-<body>
-    <article id="top" class="anchor">
-        <div layout="row">
-            <div flex="30" flex-xs="0" flex-sm="15"></div>
-            <div flex="40" flex-xs="100" flex-sm="70">
-                <h1>Detect Race Condition Using Clang Thread Sanitizer</h1>
-                <div class="metadata">2014-09-23</div>
-                <!-- htmlmin:ignore -->
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>Detect Race Condition Using Clang Thread Sanitizer</title><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}li{list-style:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}</style></head><body><article id=top class=anchor><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1>Detect Race Condition Using Clang Thread Sanitizer</h1><div class=metadata>2014-09-23</div>
                 <p>To find out where a race condition happens is a big headache, usually it requires good understanding of the program and days of debugging.
 <a href="https://urldefense.proofpoint.com/v1/url?u=https://code.google.com/p/thread-sanitizer/&amp;k=Bmn%2BpBF6%2FxX%2F6xeXViRpFg%3D%3D%0A&amp;r=XKHKqvEQZPfF56uL%2BOZCgw%3D%3D%0A&amp;m=3U5%2BNCJxni%2FCWwoCYzx0v5Pk0RDV8dSjM7rlg2QbtHg%3D%0A&amp;s=0dc51daf68f724ca5ebe3a77b42dcce4bcb1742018cf258627b113c92d3aa113">ThreadSanitizer</a>, one of the many sanitizers shipped with Clang, can be a useful tool to help us find out where the race condition is happening.</p>
 <p>Here is a very simple program:</p>
@@ -213,19 +157,4 @@ ThreadSanitizer: reported 1 warnings
 <p>2nd program example comes from GoingNative 2013 <a href="https://urldefense.proofpoint.com/v1/url?u=http://channel9.msdn.com/Events/GoingNative/2013/The-Care-and-Feeding-of-C-s-Dragons&amp;k=Bmn%2BpBF6%2FxX%2F6xeXViRpFg%3D%3D%0A&amp;r=XKHKqvEQZPfF56uL%2BOZCgw%3D%3D%0A&amp;m=3U5%2BNCJxni%2FCWwoCYzx0v5Pk0RDV8dSjM7rlg2QbtHg%3D%0A&amp;s=ff921eae48afb6b89d67803853eb508c06e9726ab41c5c8c8d4cbaf731429a6e">The Care and Feeding of C++&#39;s Dragons</a></p>
 <p><em>This article is for Sep. 2014 newsletter of SWDEV Sig Schlumberger.</em></p>
 
-                <!-- htmlmin:ignore -->
-            </div>
-        </div>
-    </article>
-</body>
-
-<script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-42274645-1', 'auto');
-  ga('send', 'pageview');
-</script>
-
-</html>
+                </div></div></article></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
