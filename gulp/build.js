@@ -38,8 +38,8 @@ gulp.task('test', () => {
         .pipe(mocha());
 });
 
-function loadIndex() {
-    const indexPath = path.join(conf.paths.tmp, 'index.json');
+function loadIndex(type) {
+    const indexPath = path.join(conf.paths.tmp, type, 'index.json');
     if (!fs.existsSync(indexPath)) {
         return {};
     } else {
@@ -53,8 +53,9 @@ function loadIndex() {
     }
 }
 
-function buildIndex(dir) {
-    const index = loadIndex();
+function buildIndex(type) {
+    const index = loadIndex(type);
+    const dir = path.join(conf.paths.data, type);
     return rxfs.walk(dir)
       .filter(p => p.endsWith('.md'))
       .map(f => {
@@ -67,7 +68,8 @@ function buildIndex(dir) {
       .doOnError(e => { gutil.log(e); conf.errorHandler(err) })
       .map(headers => {
           index.posts = headers;
-          fs.writeFileSync(path.join(conf.paths.tmp, 'index.json'), JSON.stringify(index));
+          fs.mkdirsSync(path.join(conf.paths.tmp, type))
+          fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
           return index;
       });
 }
@@ -75,9 +77,8 @@ function buildIndex(dir) {
 gulp.task('post', ['post:index', 'post:render'], () => {});
 
 gulp.task('post:index', cb => {
-    buildIndex(path.join(conf.paths.data, 'posts')).subscribe(
-        index => {
-        },
+    buildIndex('posts').subscribe(
+        index => {},
         () => cb(),
         () => cb()
     );
@@ -94,7 +95,7 @@ gulp.task('post:render', ['post:index'], cb => {
         smartLists: true,
         smartypants: false
     });
-    const index = loadIndex();
+    const index = loadIndex('posts');
     Observable.fromArray(index.posts)
         .subscribe(
             post => {
