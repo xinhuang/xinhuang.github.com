@@ -2,58 +2,39 @@
 "tags": ["HowTo", "AngularJS"]
 ---
 
-My blog hosted on GitHub page has migrated from Jekyll to AngularJS recently.
-Because Jekyll is designed for GitHub page generation, and AngularJS is only
-a front-end framework, we need some scaffold code to generate website content
-from markdown files. I will brief you about the work needed to host static website
-on GitHub Pages.
+My blog hosted on GitHub page has migrated from Jekyll to AngularJS recently. Because Jekyll is designed for GitHub page generation, and AngularJS is only a front-end framework, we need some scaffold code to generate website content
+from markdown files. I will brief you about the work needed to host static website on GitHub Pages.
 
-*The reader of this tutorial should knows the basic concepts of an AngularJS, e.g.
-layout, `md-list`, modules, directives and routing. If you don't know what the
-meaning of these terms is, you probably should take a look at this [AngularJS tutor].
-Just the first half, it takes 30 min at most.*
+*The reader of this tutorial should knows the basic concepts of an AngularJS, e.g. layout, `md-list`, modules, directives and routing. If you don't know what the meaning of these terms is, you probably should take a look at this [AngularJS tutor]. Just the first half, it takes 30 min at most.*
 
 ## Use Yoeman to Generate Boilerplate Code
 
-Everyone know Javascript is evil. (If you haven't, probably you should watch this: [WAT])
-There are lots of choices that we can make to avoid write Javascript by hand.
-The most popular way is using ES6 (ECMAScript 6) with transpilation help from Babel.
+Everyone know Javascript is evil. (If you haven't, probably you should watch this: [WAT]) There are lots of choices that we can make to avoid write Javascript by hand. The most popular way is using ES6 (ECMAScript 6) with transpilation help from Babel.
 
-When talking "transpilation", there will be a tool will transpile the code from
-one language to another. Here I use Babel to transpile ES6 to Javascript.
+When talking "transpilation", there will be a tool will transpile the code from one language to another. Here I use Babel to transpile ES6 to Javascript.
 
-If we need transpilation, it's better to do it using a build system. Gulp & Grunt
-is now among the most popular choices. <TODO>
+If we need transpilation, it's better to do it using a build system. Gulp & Grunt is now among the most popular choices. <TODO>
 
-There is a NPM package called [Yeoman] will generate the boilerplate code for
-many types of projects. You can find community-provided generator on [Yeoman]
-website.
+There is a NPM package called [Yeoman] will generate the boilerplate code for many types of projects. You can find community-provided generator on [Yeoman] website.
+
 I use Gulp-Angular, and select ES6, SCSS, HTML and UI-Router.
-This generator also gives you ESLint, e2e, mocha, and already support a rich
-set of tasks as build, test and serve. It will meet our needs in this case without
-much modification.
 
-*You might wondering why use Gulp instead of Grunt. It's just a personal flavor.
-I perfer the way Gulp chaining operations using streams, which is easier to read
-and maintain. You can also use [Angular-App] generator which uses Grunt.
-(Another thing is they don't have Babel availible yet.)*
+This generator also gives you ESLint, e2e, mocha, and already support a rich set of tasks as build, test and serve. It will meet our needs in this case without much modification.
+
+*You might wondering why use Gulp instead of Grunt. It's just a personal flavor. I perfer the way Gulp chaining operations using streams, which is easier to read and maintain. You can also use [Angular-App] generator which uses Grunt. (Another thing is they don't have Babel availible yet.)*
 
 Okay. Now we are almost half-way done. Type command `gulp serve`, and browser
 should pop up giving you the default website of Gulp-Angular.
 
 ## Generate & Show The Index
 
-Now we have a website, ready to be feed into our own content. First Let's generate
-the content of main page.
+Now we have a website, ready to be feed into our own content. First Let's generate the content of main page.
 
 ### Generate The Index
 
-First, re-structure the website.
-In Jekyll, all the posts are placed in `/_posts` with names like `<date>-<name.md`.
-To match the AngularJS project structure, move all posts into `/src/assets/posts`.
+First, re-structure the website. In Jekyll, all the posts are placed in `/_posts` with names like `<date>-<name.md`. To match the AngularJS project structure, move all posts into `/src/assets/posts`.
 
-Next, re-format post headers.
-In Jekyll, every post start with a header:
+Next, re-format post headers. In Jekyll, every post start with a header:
 
 ```
 ---
@@ -64,9 +45,7 @@ tags: [tagA, tagB]
 ---
 ```
 
-With this header and file name convention `<date>-<title>`, it won't take to much
-to recreate an index file. But in order to avoid parsing such header by hand, I
-re-format the header into following: (and removed some unused values like `layout`)
+With this header and file name convention `<date>-<title>`, it won't take to much to recreate an index file. But in order to avoid parsing such header by hand, I re-format the header into following: (and removed some unused values like `layout`)
 
 ```
 "title": "My First post"
@@ -74,16 +53,11 @@ re-format the header into following: (and removed some unused values like `layou
 ---
 ```
 
-Everything before the first divider `---` is the metadata. Every line is a well-formed
-JSON expression. The parsing will simply take every line in metadata to `JSON.parse(line)`,
-then merge the JSON object. (Don't forget to parse post date from file name.)
+Everything before the first divider `---` is the metadata. Every line is a well-formed JSON expression. The parsing will simply take every line in metadata to `JSON.parse(line)`, then merge the JSON object. (Don't forget to parse post date from file name.)
 
 Voila! The index file is generated.
 
-Last, automate the index generation.
-The index generation is simple, but it would be better if it's re-generated every time
-we build our website. To achieve this, create a Gulp task and make `build` task depends
-on it:
+Last, automate the index generation. The index generation is simple, but it would be better if it's re-generated every time we build our website. To achieve this, create a Gulp task and make `build` task depends on it:
 
 ```
 gulp.task('blog', function(cb) {
@@ -98,11 +72,9 @@ gulp.task('blog', function(cb) {
 gulp.task('build', ['html', 'fonts', 'blog', 'other']);
 ```
 
-Now when you run `gulp build` or any task depends on `build`, the index file
-will be regenerated.
+Now when you run `gulp build` or any task depends on `build`, the index file will be regenerated.
 
-The index file is placed at `/src/assets/posts/index.json`. So later it can be
-downloaded by accessing `/index.json`.
+The index file is placed at `/src/assets/posts/index.json`. So later it can be downloaded by accessing `/index.json`.
 
 The format of my `index.json` is:
 
@@ -119,16 +91,9 @@ The format of my `index.json` is:
 
 ### Display The Index
 
-First of all, let's make some change to the example website.
-Delete all the components/directives in `index.module.js`;
-clear `main.html`, `main.controller.js`, `main.controller.spec.js` and `main.css`.
-Then by `gulp serve` there should be an empty website without any content or error
-messages in the browser console.
+First of all, let's make some change to the example website. Delete all the components/directives in `index.module.js`; clear `main.html`, `main.controller.js`, `main.controller.spec.js` and `main.css`. Then by `gulp serve` there should be an empty website without any content or error messages in the browser console.
 
-Since the `index.json` can be downloaded using related URL `/index.json`, displaying
-the index only requires load the index object and put each item in a `<li>`.
-If you don't know how to download a JSON file and parse it, please refer to
-[AngularJS tutor: download a JSON file].
+Since the `index.json` can be downloaded using related URL `/index.json`, displaying the index only requires load the index object and put each item in a `<li>`. If you don't know how to download a JSON file and parse it, please refer to [AngularJS tutor: download a JSON file].
 
 Below is how my `main.html` looks like:
 
@@ -180,9 +145,7 @@ export function routerConfig($stateProvider, $urlRouterProvider) {
 }
 ```
 
-To display a post, it has to be downloaded first.
-When a post is visited, the file name will be passed in as `$stateParams['blogFile']` to `BlogController`.
-Then parse out the blog content and feed to [Angular-Marked] to display:
+To display a post, it has to be downloaded first. When a post is visited, the file name will be passed in as `$stateParams['blogFile']` to `BlogController`. Then parse out the blog content and feed to [Angular-Marked] to display:
 
 ```
 <h1>{{blog.title}}</h1>
@@ -198,9 +161,7 @@ There are some mistakes that make me stuck for quite a while.
 
 1. Don't deploy right after running tests.
 
-It's a good habit to run all tests before deploying, but for e2e tests they will modify build-out
-artifacts to inject testing code. If pages with testing code are deployed, web browser will start
-complain `describe is not defined`.
+It's a good habit to run all tests before deploying, but for e2e tests they will modify build-out artifacts to inject testing code. If pages with testing code are deployed, web browser will start complain `describe is not defined`.
 
 # Pitfalls
 
@@ -214,12 +175,9 @@ complain `describe is not defined`.
 
 This is only a simply implementation, and there are lots of places for further improvements.
 
-1. To speed up index page visiting time, the index can be injected into `index.html` rather
-   than downloading on the fly.  
-2. To speed up post visiting time, parsing the post every time it's downloaded can be avoided
-   by deploying parsed document rather than re-parsing at runtime.  
-3. In Jekyll, you can display drafts by `jekyll serve --draft`. This option is very convenient
-   and should be added.  
+1. To speed up index page visiting time, the index can be injected into `index.html` rather than downloading on the fly.  
+2. To speed up post visiting time, parsing the post every time it's downloaded can be avoided by deploying parsed document rather than re-parsing at runtime.  
+3. In Jekyll, you can display drafts by `jekyll serve --draft`. This option is very convenient and should be added.  
 4. Should support commands for creating new posts/drafts and publishing drafts.  
 
 ## Additional References
