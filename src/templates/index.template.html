@@ -7,6 +7,27 @@
     <title>
         Life is short,
     </title>
+</head>
+
+<body>
+    <article>
+        <header>
+            <h1>Life is short,</h1></header>
+        <hr/>
+        <ul class="index">
+            {{#posts}}
+            <li>
+                <span class="metadata">{{date}}</span>
+                <a href="{{url}}">
+                    {{title}}
+                </a>
+            </li>
+            {{/posts}}
+        </ul>
+        <hr/>
+        <a href="/resume.html" class="left">About</a>
+        <a href="https://github.com/xinhuang" class="right">GitHub</a>
+    </article>
     <style>
         body {
             margin: 1em auto;
@@ -68,27 +89,6 @@
             float: right;
         }
     </style>
-</head>
-
-<body>
-    <article>
-        <header>
-            <h1>Life is short,</h1></header>
-        <hr/>
-        <ul class="index">
-            {{#posts}}
-            <li>
-                <span class="metadata">{{date}}</span>
-                <a href="{{url}}">
-                    {{title}}
-                </a>
-            </li>
-            {{/posts}}
-        </ul>
-        <hr/>
-        <a href="/resume.html" class="left">About</a>
-        <a href="https://github.com/xinhuang" class="right">GitHub</a>
-    </article>
 </body>
 
 <script>
