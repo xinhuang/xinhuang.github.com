@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>The PowerShell Gotcha</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+      @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# The Darkest Secret of PowerShell
+
+Things You Never Want Know
+
+---
+
+## Will This Work?
+
+```
+Import-Module Module\MyModule.psm1
+```
+
+## Or Will This Work?
+
+```
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
+Import-Module $here\Bootstrap.psm1
+```
+  
+---
+
+Quiz:
+
+    Import-Module -Force xxx.psm1                   # re-import even if read-only
+    Import-Module -NoClobber xxx.psm1               # don't override existing names
+    
+What if?
+
+    Import-Module -Force -NoClobber xxx.psm1
+
+---
+
+## Inconsistency
+
+To execute a ps1 file:
+
+    Powershell -File a.ps1 -param0 abc -param1 cdf
+
+Or
+
+    PowerShell -File a.ps1 -param0:abc -param1:cdf
+
+What if?
+
+    PowerShell -File:a.ps1 -param0:abc -param1:cdf
+
+-File:a.sp1 is not a proper command!
+
+---
+
+## Array
+    
+    $array = @(0,1,2,3)
+    $array[4]                  # it's $null, instead of exception
+    $array.Get(4)              # exception: Out of bounds.
+  
+FYI, `,` is an operator to make anything following it an array:
+
+  @(1)      # the normal way to make an array
+  @(1,2)    # another array
+  @(,1,2)   # an array
+  @(1,2,)   # syntax error, dangling comma
+  ,1        # => @(1), so foo ,1 will be foo @(1), to avoid foo 1
+  1         # 1
+  
+But
+
+  (1)       # @(1), also an array. WTF!
+  
+---
+
+## Hash table
+Strange behavior of $null
+
+  $null.Keys | % { Write-Host "<$_>" }    # print <> WTF!
+  
+---
+
+## Function
+
+    function mkString($a, $b) { $a $b" }
+    
+    mkString "hello" "world"                 # return "hello world!"
+    mkString "hello", "world"                # syntax error
+    mkString("hello", "world")               # syntax error
+    
+    [CSharp]::mkString("hello", "world")     # "hello world"
+    [CSharp]::mkString "hello" "world"       # syntax error
+    [CSharp]::mkString "hello", "world"      # syntax error
+    
+    "hello world".Trim('!')
+    "hello world" trim '!'
+    
+So, clean up your parentheses:
+
+    (foo "world").Trim('!')
+
+---
+
+### Function Parameters
+
+    function PrintParams {
+        $argstring = $args -join ' ' 
+        Write-Host "$($args.Count): $argstring"
+    }
+    
+    PrintParams -arg0 0 -arg1 1
+    PrintParams -arg0:0 -arg1:1
+
+And the output:
+
+    4: -arg0 0 -arg1 1
+    4: -arg0: 0 -arg1: 1    
+
+---
+
+### Return values
+
+    function foo { 1 }                       # returns 1
+    function foo { "a string"; 1 }           # returns @("a string", 1)
+    
+    # suppose launch 1.exe will print current date: 2013-12-31
+    function foo {
+        1.exe
+        "got time"
+    }
+    foo                                     # You are right, returns @("2013-12-31", "got time")
+    
+You might want:
+
+    function foo {
+        1.exe | Out-Null
+        "got time"
+    }
+  
+---
+
+## Syntax
+I don't want to make it personal, so put `syntax` in the last section.
+
+    @{ k0 = "v0"; k1 = "v1" }               # a hash table with 2 elements
+    @( 1, 2 )                               # an array with 2 elements
+    
+    @{ k0 = "v0"; k1 = "v1"; }              # a hash table with 2 elements
+    @( 1, 2, )                              # syntax error
+    
+    @{ ; k0 = "v0"; k1 = "v1" }             # syntax error
+    @( , 1, 2 )                             # an array with 2 elements
+  
+---
+
+## Exception handling
+  
+Process exit code of PowerShell is always 0, even if an uncaught exception is thrown. Unless use
+
+  Exit 0
+  
+Setting `$ErrorActionPreference` to `"Stop"` will throw exception if built-in commandlet like `get-item` fails. But launch an executable? No way!
+
+    $ErrorActionPreference = "Stop"
+    get-item NoExist:\
+    Write-Host "I will not be executed"
+    
+    $ErrorActionPreference = "Stop"
+    git init NoExist:\
+    Write-Host "Who cares about git?!"
+    
+---
+
+## Not worth mentioning
+
+In command prompt:
+
+    a.bat                          REM run a.bat in currect directory
+    
+In PowerShell:
+
+    a.ps1                          # unrecognized cmdlet or executable or alien "a.ps1"
+    .\a.ps1                        # run a.ps1 in current directory
+
+---
+
+## Returning Array
+
+```
+>> 5:28:51 PM  D:\
+> function f([switch]$more) {
+>>> if ($more) { return ,1,2 }
+>>> else { return ,1 }
+>>>
+>>>
+>>> }
+>> 5:29:34 PM  D:\
+> f
+1
+>> 5:29:36 PM  D:\
+> (f).gettype()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     Int32                                    System.ValueType
+
+
+>> 5:29:42 PM  D:\
+> (f -more).gettype()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     Object[]                                 System.Array
+
+
+>> 5:29:49 PM  D:\
+> $a = f
+>> 5:29:57 PM  D:\
+> $a[0]
+1
+```
+
+---
+
+## Array indexing
+
+```
+$b = 1
+$b[0] = ?
+$b[1] = ?
+```
+
+---
+
+## XML processing
+
+```
+<Nodes>
+    <Node id="123">value</Node>
+    <Node>other value</Node>
+</Nodes>
+```
+
+```
+$doc = [XML] Get-Content …
+$doc.Nodes.Node[0].InnerText => value
+$doc.Nodes.Node[1].InnerText => ???
+```
+
+--
+
+# The WTF
+
+Some people did statistics on how many "WTF" appears in different programming language, but they forgot one thing: count the "WTF"s while learning the language -- because I'm too tired to type "WTF" in PowerShell comment. (It could be a syntax error. Who knows!)
+
+    </textarea>
+    <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
