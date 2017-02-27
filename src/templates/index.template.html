@@ -1,23 +1,72 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <title>
         Life is short,
     </title>
-    <style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;}h1,h2,h3{line-height:1.2em;}@media print{body{max-width:none}}</style>
-  </head>
-  <body>
-      <ul>
-          {{#posts}}
-          <div>
-              <p>{{date}}</p>
-              <a href="{{url}}">
-                <h3>{{title}}</h3>
-              </a>
-          </div>
-          {{/posts}}
-      </ul>
-  </body>
+    <style>
+        body {
+            margin: 1em auto;
+            max-width: 40em;
+            padding: 0 .62em;
+            font: 1.2em/1.62em sans-serif;
+            background-color: #f0efd1;
+        }
+
+        h1,
+        h2,
+        h3 {
+            line-height: 1.2em;
+        }
+
+        @media print {
+            body {
+                max-width: none;
+            }
+        }
+
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        article {
+            margin: auto;
+            font-size: 14px;
+            padding: 3px 1em
+        }
+
+        .metadata {
+            color: rgba(0, 0, 0, 0.54);
+        }
+
+        .index {
+            padding-left: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <article>
+        <header><h1>Life is short,</h1></header>
+        <ul class="index">
+            {{#posts}}
+            <li>
+                <span class="metadata">{{date}}</span>
+                <a href="{{url}}">
+                    {{title}}
+                </a>
+            </li>
+            {{/posts}}
+        </ul>
+    </article>
+</body>
+
 </html>
