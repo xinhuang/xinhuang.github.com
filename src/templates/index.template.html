@@ -27,8 +27,9 @@
             {{/index}}
         </ul>
         <hr/>
-        <a href="/resume.html" class="left">About</a>
-        <a href="https://github.com/xinhuang" class="right">GitHub</a>
+        <a href="{{xref}}" class="left">{{xrefname}}</a>
+        <a href="https://github.com/xinhuang" class="left margin-left">GitHub</a>
+        <a href="/resume.html" class="right">About</a>
     </article>
     <style>
         body {
@@ -85,6 +86,10 @@
 
         .left {
             float: left;
+        }
+
+        .margin-left {
+            margin-left: 1em;
         }
 
         .right {
