@@ -1,0 +1,43 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>The Epic Fail of Enforcing Unit Tests</title></head><body><article id=top class=markdown-body><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1>The Epic Fail of Enforcing Unit Tests</h1><div class=metadata>2017-02-27</div><hr>
+                <p><em>The DIRECT TV &quot;Get Rid Of Cable&quot; commercial is a very interesting commercial. If you haven&#39;t watch it yet, you can watch the full commercial <a href="here">here</a>. It starts by a simple thing, then it leads to complete a different story &quot;<strong>convincingly</strong>&quot; and &quot;<strong>reasonably</strong>&quot;.</em></p>
+<p>Here is what will happen when your developers are forced to reach 100% test coverage:</p>
+<blockquote>
+<p>When developers are forced to write unit tests, they write shit tests which test nothing.</p>
+<p>When people write shit tests, their tests depend on the implementation.</p>
+<p>When the tests depend on the implementation, production code is difficult to change.</p>
+<p>When production code is difficult to change and you change it, you break tests.</p>
+<p>When you break tests, you fix tests.</p>
+<p>When you find the tests are shit tests, you want to delete them.</p>
+<p>If you delete tests, test coverage drops.</p>
+<p>If test coverage drops, everyone is blaming you.</p>
+<p>If you cannot delete broken shit tests and have to fix them, you get pissed off.</p>
+<p>Don&#39;t get pissed off, teach people why and how to write tests from the beginning.</p>
+<p>And most importantly, don&#39;t force people to write unit tests.</p>
+</blockquote>
+<p>You would say: <strong>That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.</strong></p>
+<p>Once I had the same belief, until I came across a code snippet looks like below:</p>
+<pre><code class="lang-C#">[TestMethod]
+public void DrawGauge_Test()
+{
+    using (ShimsContext.Create())
+    {
+        var privateTestObj = SetupTestObject();
+        var e = new PaintEventArgs(g, clipRect);
+
+        privateTestObj.SetField(&quot;m_pDomainIconIsSmall&quot;, BmpIconSmall)
+        DrawGauge();
+    }
+    // If no exception, everything is OK
+}
+</code></pre>
+<p>Let me explain the code:</p>
+<ol>
+<li><code>privateTestObj</code> is the SUT (System Under Test).</li>
+<li><code>privateTestObj</code> is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the <code>DrawGauge()</code>.</li>
+<li>By calling <code>DrawGauge()</code> in the test, the override methods are considered &quot;<strong>covered</strong>&quot;.</li>
+</ol>
+<p>This test brings no value, but only maintenance burden. For a better design, the code should first setting up appropriate condition,  calling the override methods, and asserting correct values are returned (or side effect happened). Calling the <code>DrawGauge()</code> method and assert there is no exception is like cheating. The reason I was tripped over by the test is that I renamed the variable name accessed using reflection, but not because it actually found anything wrong.</p>
+<p>Before your developers are ready, please don&#39;t force them to write tests aiming for N% test coverage. Unless they are willing to write tests - usually that is the time stakeholders start to ask questions like &quot;Do we really have to write tests now? Can we do it later? Maybe tomorrow?&quot; (Teach your stakeholders, too!)</p>
+<p>For the God&#39;s sake, don&#39;t force people to write unit tests.</p>
+
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
