@@ -15,12 +15,14 @@ Then the option left would be extending an existing one, and [googletest] is a g
 First of all, before extending googletest, we need to know what's behind the curtain.  
 A typical unit test would be:
 
-    class Fixture : public ::testing::Test {
-    };
+```C++
+class Fixture : public ::testing::Test {
+};
 
-    TEST_F(Fixture, GIVEN_1_THEN_add_1_SHOULD_return_0) {
-        ASSERT_EQ(0, 1 + 1);
-    }
+TEST_F(Fixture, GIVEN_1_THEN_add_1_SHOULD_return_0) {
+    ASSERT_EQ(0, 1 + 1);
+}
+```
 
 _Sorry for my bad math._
 
@@ -32,26 +34,30 @@ In above code snippet, googletest does 3 things:
 All the magic is done within macro `TEST_F`.  
 If you are familiar with macro, it won't take a minute to figure out `TEST_F` actually expand to:  
 
-    / --------- Expand start -----------> /
-    class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
-        void SomeMethodCalledWhenExecuteTest();
-    };
-    void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
-    / <-------- Expand end -------------- /
-    {
-        ASSERT_EQ(0, 1 + 1);
-    }
+```C++
+/* --------- Expand start -----------> */
+class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+    void SomeMethodCalledWhenExecuteTest();
+};
+void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+/* <-------- Expand end --------------> */
+{
+    ASSERT_EQ(0, 1 + 1);
+}
+```
 
 Now, we've done No. 1 and No. 2. But what about No. 3? How to execute some code outside the `main` function?  
 The answer is simple: _Use global variables_, and perform registration in the construction of the variable:
 
-    / --------- Expand start -----------> /
-    class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
-        void SomeMethodCalledWhenExecuteTest();
-    };
-    prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix instance_GIVEN_1_THEN_add_1_SHOULD_return_0;
-    void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
-    / <-------- Expand end -------------- /
+```C++
+/* --------- Expand start -----------> */
+class prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix {
+    void SomeMethodCalledWhenExecuteTest();
+};
+prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix instance_GIVEN_1_THEN_add_1_SHOULD_return_0;
+void prefixGIVEN_1_THEN_add_1_SHOULD_return_0postfix::SomeMethodCalledWhenExecuteTest()
+/* <-------- Expand end --------------> */
+```
 
 ### The googletest version
 
@@ -59,53 +65,63 @@ This only demonstrate the basic idea of how `TEST_F` works. Knowing this, we can
 
 Watching the macro _TEST\_F_, it does a bit more than our basic version:
 
-    #define GTEST_TEST_(test_case_name, test_name, parent_class, parent_id)\
-    class GTEST_TEST_CLASS_NAME_(test_case_name, test_name) : public parent_class {\
-     public:\
-      GTEST_TEST_CLASS_NAME_(test_case_name, test_name)() {}\
-     private:\
-      virtual void TestBody();\
-      static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;\
-      GTEST_DISALLOW_COPY_AND_ASSIGN_(\
-          GTEST_TEST_CLASS_NAME_(test_case_name, test_name));\
-    };\
+```C++
+#define GTEST_TEST_(test_case_name, test_name, parent_class, parent_id)         \
+class GTEST_TEST_CLASS_NAME_(test_case_name, test_name) : public parent_class { \
+public:                                                                         \
+    GTEST_TEST_CLASS_NAME_(test_case_name, test_name)() {}                      \
+private:                                                                        \
+    virtual void TestBody();                                                    \
+    static ::testing::TestInfo* const test_info_ GTEST_ATTRIBUTE_UNUSED_;       \
+    GTEST_DISALLOW_COPY_AND_ASSIGN_(                                            \
+        GTEST_TEST_CLASS_NAME_(test_case_name, test_name));                     \
+};                                                                              \
+```
 
 Above code defines the test class inherites from test fixture.
 
 First, create the global variable:
 
-    ::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)\
-      ::test_info_ =\
+```C++
+::testing::TestInfo* const GTEST_TEST_CLASS_NAME_(test_case_name, test_name)   \
+  ::test_info_ =                                                               \
+```
 
 Then, initialize the global variable:
 
-        ::testing::internal::MakeAndRegisterTestInfo(\
-            #test_case_name, #test_name, NULL, NULL, \
-            (parent_id), \
-            parent_class::SetUpTestCase, \
-            parent_class::TearDownTestCase, \
-            new ::testing::internal::TestFactoryImpl<\
-                GTEST_TEST_CLASS_NAME_(test_case_name, test_name)>);\
+```C++
+::testing::internal::MakeAndRegisterTestInfo(                                  \
+    #test_case_name, #test_name, NULL, NULL,                                   \
+    (parent_id),                                                               \
+    parent_class::SetUpTestCase,                                               \
+    parent_class::TearDownTestCase,                                            \
+    new ::testing::internal::TestFactoryImpl<                                  \
+        GTEST_TEST_CLASS_NAME_(test_case_name, test_name)>);                   \
+```
 
 Registration is performed inside `::testing::internal::MakeAndRegisterTestInfo`.
 
 At last, is the _TestBody_ stub, which connects real test code:
 
-    void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
+```C++
+void GTEST_TEST_CLASS_NAME_(test_case_name, test_name)::TestBody()
+```
 
 #### Inside RegisterTestInfo
 
 Let's take a closer look at what happened inside `MakeAndRegisterTestInfo`:
 
-    TestInfo* MakeAndRegisterTestInfo(
-        const char* test_case_name,
-        const char* name,
-        const char* type_param,
-        const char* value_param,
-        TypeId fixture_class_id,
-        SetUpTestCaseFunc set_up_tc,                // Set up for the first of fixture class.
-        TearDownTestCaseFunc tear_down_tc,          // Tear down after execute of all tests in a fixture.
-        TestFactoryBase* factory);                  // Factory creates the test class instances.
+```C++
+TestInfo* MakeAndRegisterTestInfo(
+    const char* test_case_name,
+    const char* name,
+    const char* type_param,
+    const char* value_param,
+    TypeId fixture_class_id,
+    SetUpTestCaseFunc set_up_tc,                // Set up for the first of fixture class.
+    TearDownTestCaseFunc tear_down_tc,          // Tear down after execute of all tests in a fixture.
+    TestFactoryBase* factory);                  // Factory creates the test class instances.
+```
 
 First 2 parameters are easy to tell from their name, last 3 are also not difficult.  
 `type_param` and `value_param` are both passed as `NULL` in `TEST_F` macro, so we can ignore them until we really got some problem.
@@ -120,34 +136,36 @@ After all the work, it is clear that all the macro makes googletest "user interf
 
 Now we are ready to let our test sneaks in. Here is the complete code: (C++ 11)
 
-    class NoFixture {};
-    void nop() {}
+```C++
+class NoFixture {};
+void nop() {}
 
-    class FunctionTest : public ::testing::Test {
-    public:
-        FunctionTest(function<void()> function)
-            : function_(function)
-        {}
-    private:
-        const function<void()> function_;
-        void TestBody() override { function_(); }
-    };
+class FunctionTest : public ::testing::Test {
+public:
+    FunctionTest(function<void()> function)
+        : function_(function)
+    {}
+private:
+    const function<void()> function_;
+    void TestBody() override { function_(); }
+};
 
-    class TestFactory : public ::testing::internal::TestFactoryBase {
-    public:
-        TestFactory(function<void()> function)
-            : function_(function) {}
-        ::testing::Test* CreateTest() override {
-            return new FunctionTest(function_);
-        }
-    private:
-        const function<void()> function_;
-    };
-
-    void Register(const string& test_name, const string& case_name, function<void()> test) {
-        static auto fixture_class_id = ::testing::internal::GetTypeId<NoFixture>();
-        ::testing::internal::MakeAndRegisterTestInfo(test_name.c_str(), case_name.c_str(), nullptr, nullptr,
-            fixture_class_id, nop, nop, new TestFactory(test));
+class TestFactory : public ::testing::internal::TestFactoryBase {
+public:
+    TestFactory(function<void()> function)
+        : function_(function) {}
+    ::testing::Test* CreateTest() override {
+        return new FunctionTest(function_);
     }
+private:
+    const function<void()> function_;
+};
+
+void Register(const string& test_name, const string& case_name, function<void()> test) {
+    static auto fixture_class_id = ::testing::internal::GetTypeId<NoFixture>();
+    ::testing::internal::MakeAndRegisterTestInfo(test_name.c_str(), case_name.c_str(), nullptr, nullptr,
+        fixture_class_id, nop, nop, new TestFactory(test));
+}
+```
 
 [googletest]: https://code.google.com/p/googletest/

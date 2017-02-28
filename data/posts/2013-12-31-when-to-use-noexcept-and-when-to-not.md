@@ -10,10 +10,12 @@ In C++ 11, a new keyword `noexcept` is introduced. Being a replacement of deprec
 
 `noexcept` is a function specifier. It is used to specify a function whether will throw exception or not. It can be used as following:
 
-    void foo() noexcept;             // a function specified as will never throw
-    void foo2() noexcept(true);      // same as foo
-    void bar();                      // a function might throw exception
-    void bar2() noexcept(false);     // same as bar
+```C++
+void foo() noexcept;             // a function specified as will never throw
+void foo2() noexcept(true);      // same as foo
+void bar();                      // a function might throw exception
+void bar2() noexcept(false);     // same as bar
+```
 
 However, same as `throw()`, *`noexcept` implies no compile-time check*. What if a function specified with `noexcept` throws an exception?
 

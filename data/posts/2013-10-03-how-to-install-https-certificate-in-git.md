@@ -10,7 +10,9 @@ Suppose you want to push to a repo on GitHub. Before you are using SSH to access
 
 **First of all**, you need to config the repo using HTTPS instead of SSH. Using following command:
 
-    git remote set-url origin https://USERNAME@github.com/USERNAME/REPO-NAME.git
+```bash
+git remote set-url origin https://USERNAME@github.com/USERNAME/REPO-NAME.git
+```
 
 Notice that the URL is not the one GitHub gives to you at project page like `https://github.com/USERNAME/REPO.git`. If you use this URL, push will fail since it's read-only. Add your `username@` between `https://` and `github.com`.
 
@@ -18,7 +20,9 @@ Notice that the URL is not the one GitHub gives to you at project page like `htt
 
 **Next**, is to config your proxy by following command:
 
-    git config --global http.proxy PROXY-ADDRESS
+```bash
+git config --global http.proxy PROXY-ADDRESS
+```
 
 _For GoAgent user, the proxy address is `localhost:8087`._
 

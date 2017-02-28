@@ -9,7 +9,7 @@ To find out where a race condition happens is a big headache, usually it require
 
 Here is a very simple program:
 
-```
+```C++
 #include <thread>
 
 using namespace std;
@@ -37,7 +37,7 @@ In above code example, we created 2 threads: thread `t1` will set global variabl
 
 Let's compile and run it.
 
-```
+```bash
 $ clang++ -std=c++11 -pthread -g write_race.cpp $ ./a.out
 t2 finished
 t1 finished
@@ -45,7 +45,7 @@ t1 finished
 
 It runs without an error. But there is a potential race condition because the `flag` is not guarded by any synchronization method. Let's run it using ThreadSanitizer again:
 
-```
+```bash
 $ clang++ -std=c++11 -pthread -g write_race.cpp -fsanitize=thread $ ./a.out ==================
 WARNING: ThreadSanitizer: data race (pid=3631)
   Write of size 4 at 0x7fdc8845f2f4 by thread T2:
@@ -93,7 +93,7 @@ Data race on global `flag` is caught by thread sanitizer, and it happens at `wri
 
 This is a quite dumb program. Let's have take another example:
 
-```
+```C++
 #include <thread>
 #include <iostream>
 
@@ -117,7 +117,7 @@ int main(int argc, char const *argv[])
 
 Compile and run:
 
-```
+```bash
 $ clang++ -std=c++11 -pthread -g race_2.cpp
 $ ./a.out
 $ ./a.out Segmentation fault (core dumped)
@@ -127,7 +127,7 @@ The first execution is ok, but the second execution yields an segmentation fault
 
 Seems this is a pretty random data race. Let's run it using ThreadSanitizer see if it can be caught:
 
-```
+```bash
 $ clang++ -std=c++11 -pthread -g race_2.cpp -fsanitize=thread $ ./a.out a = 0x7d040000f7f0 ==================
 WARNING: ThreadSanitizer: data race (pid=4106)
   Write of size 8 at 0x7d040000f7f0 by thread T2:

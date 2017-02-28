@@ -10,14 +10,16 @@ One thing impressed me is Tim's Python develop environment. His tests are runnin
 
 The basic idea is quite simple: Use nose API to re-run tests every time a source change is detected.
 
-	while True
-	    while sourceChanged(dirs):
-	        time.sleep(1)
-	    nose.run()
+```python
+while True
+    while sourceChanged(dirs):
+        time.sleep(1)
+    nose.run()
+```
 
 Only thing needs special attention is to isolate test modules by provide option `--with-isolation`, so nose will reload them before each `nose.run`.
 
-{% gist 7280997 %}
+<script src="https://gist.github.com/xinhuang/7280997.js"></script>
 
 There could be more enhancement:
 

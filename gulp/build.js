@@ -13,6 +13,7 @@ import gutil from 'gulp-util';
 import mocha from 'gulp-mocha';
 import marked from 'marked';
 import mustache from 'mustache';
+import hljs from 'highlightjs';
 
 var $ = require('gulp-load-plugins')({
     pattern: ['gulp-*', 'del', 'uglify-save-license']
@@ -87,6 +88,16 @@ gulp.task('index', cb => {
 });
 
 gulp.task('render', ['index'], cb => {
+    const renderer = new marked.Renderer();
+    renderer.code = (code, language) => {
+        // Check whether the given language is valid for highlight.js.
+        const validLang = !!(language && hljs.getLanguage(language));
+        // Highlight only if the language is valid.
+        const highlighted = validLang ? hljs.highlight(language, code).value : code;
+        // Render the highlighted code with `hljs` class.
+        return `<pre class="hljs"><code class="${language}">${highlighted}</code></pre>`;
+    };
+    marked.setOptions({ renderer });
     rxfs.walk(conf.paths.data)
         .filter(f => f.endsWith('.md'))
         .filter(f => path.basename(path.dirname(f)) != 'drafts')
@@ -116,7 +127,6 @@ gulp.task('render', ['index'], cb => {
                     content: marked(parse.body(text)),
                 });
             }
-
             const dir = path.relative(conf.paths.data, path.dirname(file));
             fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(file, '.md')}.html`), rendered);
         })

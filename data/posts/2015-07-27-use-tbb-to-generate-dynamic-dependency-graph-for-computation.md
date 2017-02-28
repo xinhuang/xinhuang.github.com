@@ -13,7 +13,7 @@ cores.
 
 Typical TBB flow graph code looks like below:
 
-```
+```C++
 using namespace tbb::flow;
 
 int main() {
@@ -51,7 +51,7 @@ However in reality, the original graph usually is dynamically created somewhere,
 especially when trying to adapt TBB to a legacy system, and we will need
 to create the flow graph at runtime:
 
-```
+```C++
 using fnode = tbb::flow::function_node<msg_t, msg_t>;
 
 void computeFlowGraph(const std::vector<Node*>& nodes, const msg_t& computationParam) {
@@ -142,7 +142,7 @@ before computation finishes. Take below topology for example:
 
 ![dependency-graph-example]  
 
-```
+```C++
 auto *afnode = new function_node<msg_t, msg_t>(...);
 auto *bfnode = new function_node<msg_t, msg_t>(...);
 auto *cjnode = new join_node<tuple<msg_t, msg_t>>(...);
@@ -166,7 +166,7 @@ Suppose there is a `merge_node` which will wrap a `join_node` and connect it to
 a `function_node`. These nodes above will be:
 (Nodes E & F omitted)
 
-```
+```C++
 auto *A = new function_node<msg_t, msg_t>(...);
 auto *B = new function_node<msg_t, msg_t>(...);
 auto *C = new merge_node(new join_node<tuple<msg_t, msg_t>>(...),
@@ -184,7 +184,7 @@ to the `join_node` as a `void*`. Only convert it to the correct type when needed
 (i.e. making edge and inside destructor) by doing a runtime dispatch based on
 how many parents a node has.
 
-```
+```C++
 template <typename msg_t, typename merge_t>
 class merge_node {
   const int n_parent = 0;

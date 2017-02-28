@@ -17,7 +17,7 @@ source file.
 
 Given source file below:
 
-```
+```C++
 class MyClass {
   int foo;
 public:
@@ -49,14 +49,18 @@ First build clang:
 
 1. Get the source code from svn or git repository:  
 
-        git clone http://llvm.org/git/llvm.git src
-        git clone http://llvm.org/git/clang.git src/tools/clang
+```bash
+git clone http://llvm.org/git/llvm.git src
+git clone http://llvm.org/git/clang.git src/tools/clang
+```
 
 2. Configure and build using _make_:  
 
-        mkdir debug && cd debug
-        ../configure           # add --enable-optimized --disable-assertions for release build
-        make                   # this would take quite some time
+```bash
+mkdir debug && cd debug
+../configure           # add --enable-optimized --disable-assertions for release build
+make                   # this would take quite some time
+```
 
 You can also use `make install` to install your built version to the system.
 
@@ -72,7 +76,7 @@ For our "Hello World" program - finding all declarations, using LibTooling is th
 
 Let's start with the main function first:
 
-```
+```C++
 #include "DeclFindingAction.h"
 #include "clang/Tooling/CommonOptionsParser.h"
 #include "clang/Tooling/Tooling.h"
@@ -84,12 +88,12 @@ llvm::cl::OptionCategory FindDeclCategory("find-decl options");
 static char FindDeclUsage[] = "find-decl <source file>";
 
 int main(int argc, const char **argv) {
-  clang::tooling::CommonOptionsParser option(argc, argv, FindDeclCategory,
-                                             FindDeclUsage);
-  auto files = option.getSourcePathList();
-  clang::tooling::ClangTool tool(option.getCompilations(), files);
+    clang::tooling::CommonOptionsParser option(argc, argv, FindDeclCategory,
+                                               FindDeclUsage);
+    auto files = option.getSourcePathList();
+    clang::tooling::ClangTool tool(option.getCompilations(), files);
 
-  return tool.run(clang::tooling::newFrontendActionFactory<DeclFindingAction>().get());
+    return tool.run(clang::tooling::newFrontendActionFactory<DeclFindingAction>().get());
 }
 ```
 
@@ -108,7 +112,7 @@ _Image from [The Design of LLVM]_
 The frontend will parse the source code, check for syntax error and build the
 abstract syntax tree (AST). Let's create our own [FrontendAction]:
 
-```
+```C++
 #pragma once
 
 #include "DeclFinder.h"
@@ -152,7 +156,7 @@ has been parsed.
 We will override [ASTConsumer::HandleTranslationUnit] to read the AST after we have
 all the information needed of the file.
 
-```
+```C++
 #pragma once
 
 #include "DeclVisitor.h"
@@ -181,7 +185,7 @@ declarations and statements.
 
 ## AST Visitor
 
-```
+```C++
 #pragma once
 
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -229,7 +233,7 @@ _llvm::outs()_ instead of _std::cout_ according to the [LLVM Coding Standard].
 
 Here is our makefile:
 
-```
+```makefile
 CLANG_LEVEL := ../../..
 TOOLNAME = find-decl
 include $(CLANG_LEVEL)/../../Makefile.config
@@ -249,7 +253,7 @@ _${llvm_src}/tools/clang/tools/clang-playground/find-decl/_.
 And put another makefile in
 _${llvm_src}/tools/clang/tools/clang-playground/_:
 
-```
+```makefile
 CLANG_LEVEL := ../..
 
 include $(CLANG_LEVEL)/../../Makefile.config
@@ -273,7 +277,7 @@ print out all the declarations in that included file, because these included fil
 are parsed and consumed as a whole with our source file. To fix this, we need to
 check if the declarations are defined in our source file:
 
-```
+```C++
   void HandleTranslationUnit(clang::ASTContext &Context) final {
     auto Decls = Context.getTranslationUnitDecl()->decls();
     for (auto &Decl : Decls) {

@@ -28,7 +28,7 @@ To avoid such a problem, either use a combination of `std::shared_ptr` and
 
 ## The [GoF Observer Pattern]
 
-```
+```C++
 class IObservable {
 public:
 	virtual ~IObservable() {}
@@ -54,7 +54,7 @@ Before an observer is destroyed, it has to be removed from the observers list.
 Here is our new `AbstractObservable`/`AbstractObserver` with automatic
  un-registration in destructor:
 
-```
+```C++
 class AbstractObservable : public IObservable {
 public:
 	virtual ~AbstractObservable() {}
@@ -91,7 +91,7 @@ private:
 In a multi-threaded environment a race condition can happen when the
  observer list is updated. Simple problem! Only need a lock:
 
-```
+```C++
 // same for add and notify
 void AbstractObservable::remove(AbstractObserver* observer) {
 	std::lock_guard<std::mutex> lock(mutex);
@@ -140,65 +140,69 @@ To avoid this problem, there are several alternatives:
 
     For example:
 
-        // manually unregister observer from observable
-        {
-          ConcreteObserver scopedObserver;
-          observable.add(scopedObserver);
-          // ...
-          observable.remove(scopedObserver);
-        } // scopredObserver is destroyed here
+```C++
+// manually unregister observer from observable
+{
+  ConcreteObserver scopedObserver;
+  observable.add(scopedObserver);
+  // ...
+  observable.remove(scopedObserver);
+} // scopredObserver is destroyed here
 
-        // manually unregister observer from observable using std::shared_ptr
-        std::shared_ptr<Observer> observer(new ConcreteObserver(),
-                                           [&](Observer* o) {
-                                             observable.remove(o);
-                                           });
-        observable.add(observer);
+// manually unregister observer from observable using std::shared_ptr
+std::shared_ptr<Observer> observer(new ConcreteObserver(),
+                                   [&](Observer* o) {
+                                     observable.remove(o);
+                                   });
+observable.add(observer);
+```
 
 3. Use a combination of `std::shared_ptr` and `std::weak_ptr`. In this way the
  race condition can be avoided completely.
 
     For example:
 
-        class IObserver {
-        public:
-          virtual ~IObserver() {}
-          virtual void onNotify() = 0;
-        };
+```C++
+class IObserver {
+public:
+  virtual ~IObserver() {}
+  virtual void onNotify() = 0;
+};
 
-        class Observable {
-          std::mutex mutex;
-          // of course the std::vector can be replace by a concurrent container
-          std::vector<std::weak_ptr<IObserver>> observers;  
+class Observable {
+  std::mutex mutex;
+  // of course the std::vector can be replace by a concurrent container
+  std::vector<std::weak_ptr<IObserver>> observers;  
 
-        public:
-          virtual ~Observable() {}
-          void add(const std::shared_ptr<IObserver>& o) {
-            std::lock_guard<std::mutex> lock(mutex);
-            observers.emplace_back(o);
-          }
-          void remove(const std::shared_ptr<IObserver>& o) {
-            /* here we do nothing, invalid observers will be removed in notify */
-          }
-          void notify() {
-            std::lock_guard<std::mutex> lock(mutex);
-            for (auto& o : observers) {
-              if (auto p = o.lock())
-                p->onNotify();
-            }
-            remove_invalid_observer();
-          }
+public:
+  virtual ~Observable() {}
+  void add(const std::shared_ptr<IObserver>& o) {
+    std::lock_guard<std::mutex> lock(mutex);
+    observers.emplace_back(o);
+  }
+  void remove(const std::shared_ptr<IObserver>& o) {
+    /* here we do nothing, invalid observers will be removed in notify */
+  }
+  void notify() {
+    std::lock_guard<std::mutex> lock(mutex);
+    for (auto& o : observers) {
+      if (auto p = o.lock())
+        p->onNotify();
+    }
+    remove_invalid_observer();
+  }
 
-        private:
-          void remove_invalid_observer() {
-            auto first_invalid = std::remove_if(std::begin(observers),
-                                                std::end(observers),
-                                                [](const std::weak_ptr<IObserver>& o) {
-                                                  return o.expired();
-                                                });
-            observers.erase(last_valid, std::end(observers));
-          }
-        };
+private:
+  void remove_invalid_observer() {
+    auto first_invalid = std::remove_if(std::begin(observers),
+                                        std::end(observers),
+                                        [](const std::weak_ptr<IObserver>& o) {
+                                          return o.expired();
+                                        });
+    observers.erase(last_valid, std::end(observers));
+  }
+};
+```
 
 4. Don't reinvent the wheel, use [Boost.Signals2] instead.
  ["It can be used safely in a multi-threaded environment."]

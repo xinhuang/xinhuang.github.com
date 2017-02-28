@@ -33,7 +33,7 @@ You would say: **That is not true. By forcing people writing tests to reach test
 
 Once I had the same belief, until I came across a code snippet looks like below:
 
-```C#
+```cs
 [TestMethod]
 public void DrawGauge_Test()
 {

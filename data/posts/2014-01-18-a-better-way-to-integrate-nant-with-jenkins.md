@@ -21,9 +21,11 @@ After adding a NAnt build step, click the `Advanced` button, a panel will show u
 
 Jenkins will set environment variable according to given build parameters. So you can query them inside NAnt scripts:
 
-    <if test="${environment::variable-exists('VAR_NAME')}">
-        <property name="var.name" value="${environment::get-variable('VAR_NAME')}"/>
-    </if>
+```XML
+<if test="${environment::variable-exists('VAR_NAME')}">
+    <property name="var.name" value="${environment::get-variable('VAR_NAME')}"/>
+</if>
+```
 
 This is handy. Adding 1 configuration parameter just needs to *copy* above 3 lines.
 
@@ -48,11 +50,13 @@ This gives us opportunities to eliminate those duplications: let NAnt task do th
 
 Here is the [LoadEnvTask] project. To use it, call `load-environment` task in your NAnt script:
 
-    <target name="MyTarget">
-        <load-environment verbose="true"/>
+```XML
+<target name="MyTarget">
+    <load-environment verbose="true"/>
 
-        <echo message="my.var loaded from environment variable: ${my.var}"/>
-    </target>
+    <echo message="my.var loaded from environment variable: ${my.var}"/>
+</target>
+```
 
 And you will see from the log:
 

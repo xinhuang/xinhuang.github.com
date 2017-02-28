@@ -28,11 +28,13 @@ Enable new font
 3. Run command `initexmf --edit-config-file updmap`, then type in following
 commands in poped up editor. (Don't forget to save.)
 
-		Map cwmu.map
-		Map cwku.map
-		Map cwfsu.map
-		Map cwhbu.map
-		Map cwyu.map
+```tex
+Map cwmu.map
+Map cwku.map
+Map cwfsu.map
+Map cwhbu.map
+Map cwyu.map
+```
 
 4. Run command `initexmf --mkmaps`
 
@@ -40,21 +42,23 @@ Choose font in document
 ---
 Try:
 
-	\documentclass{article}
-	\usepackage{CJKutf8}
-	\begin{document}
+```tex
+\documentclass{article}
+\usepackage{CJKutf8}
+\begin{document}
 
-	\begin{CJK}{UTF8}{gkai}
-	这是一个楷体中文测试，处理简体字。
-	\end{CJK}
+\begin{CJK}{UTF8}{gkai}
+这是一个楷体中文测试，处理简体字。
+\end{CJK}
 
-	\begin{CJK}{UTF8}{gbsn}
-	这是一个宋体中文测试，处理简体字。
-	\end{CJK}
+\begin{CJK}{UTF8}{gbsn}
+这是一个宋体中文测试，处理简体字。
+\end{CJK}
 
-	\begin{CJK}{UTF8}{bkai}
-	這是一個big5編碼的楷體中文測試，處理繁體文字。
-	\end{CJK}
+\begin{CJK}{UTF8}{bkai}
+這是一個big5編碼的楷體中文測試，處理繁體文字。
+\end{CJK}
+```
 
 Reference
 ---

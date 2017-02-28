@@ -61,7 +61,7 @@ what we can guess from the crash dump.
 But why `TlsSetValue` will allocate memory? Let's take a look at the disassembled code:  
 (uninteresting details are omited, indentations are added for better formating and understanding)
 
-```
+```x86asm
 KERNELBASE!TlsSetValue:
 // BOOL WINAPI TlsSetValue(_In_ DWORD dwTlsIndex, _In_opt_ LPVOID lpTlsValue)
 ...
@@ -142,7 +142,7 @@ After VLD is enabled, allocate memory in a new thread.
 
 _Minimum reproduce code sample_
 
-```
+```C
 #include <windows.h>
 #include <thread>
 #include <chrono>

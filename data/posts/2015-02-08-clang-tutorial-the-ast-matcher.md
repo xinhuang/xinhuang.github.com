@@ -14,7 +14,7 @@ performance hit.
 
 The example.cpp:
 
-```
+```C++
 #include <vector>
 
 using namespace std;
@@ -58,13 +58,13 @@ node with a name so we can extract it later.
 
 To match a function declaration:
 
-```
+```C++
 DeclarationMatcher Matcher = functionDecl();
 ```
 
 Then let's match its parameter:
 
-```
+```C++
 DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));
 ```
 
@@ -74,7 +74,7 @@ To matcher a parameter, we can use _hasParameter(N, ParamMatcher)_, which will m
 
 Next match the parameter type:
 
-```
+```C++
 DeclarationMatcher Matcher = functionDecl(
   hasAnyParameter(hasType(recordDecl(matchesName("std::vector"))));
 ```
@@ -84,7 +84,7 @@ DeclarationMatcher Matcher = functionDecl(
 When the AST matcher find the right node, the corresponding
 `clang::ast_matchers::MatchFinder::MatchCallback` will be invoked with matched result. By providing a `MatchCallback`, we can print the function declarations/definitions that accept any parameter of type `std::vector` that is passed by value.
 
-```
+```C++
 class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
 public:
   virtual void
