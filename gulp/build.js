@@ -80,8 +80,6 @@ function buildIndex(type) {
         });
 }
 
-gulp.task('post', ['post:index', 'post:render'], () => {});
-
 gulp.task('post:index', cb => {
     buildIndex('posts').subscribe(
         index => {},
@@ -153,6 +151,7 @@ gulp.task('homepage', ['post'], () => {
     renderIndex('posts', true);
 });
 
+gulp.task('post', ['post:index', 'post:render'], () => {});
 gulp.task('page', ['page:index', 'page:render']);
 
 gulp.task('page:index', cb => {
