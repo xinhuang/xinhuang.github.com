@@ -185,6 +185,6 @@ gulp.task('dist', ['content'], () => {
         .pipe(gulp.dest(conf.paths.dist));
 });
 
-gulp.task('content', ['index', 'render', 'resources']);
+gulp.task('content', ['render', 'resources']);
 
-gulp.task('build', ['content', 'dist'], () => {});
+gulp.task('build', ['content', 'dist']);
