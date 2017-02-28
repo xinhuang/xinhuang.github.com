@@ -9,12 +9,13 @@
 </head>
 
 <body>
-    <article id="top" class="anchor">
+    <article id="top" class="markdown-body">
         <div layout="row">
             <div flex="30" flex-xs="0" flex-sm="15"></div>
             <div flex="40" flex-xs="100" flex-sm="70">
                 <h1>{{title}}</h1>
                 <div class="metadata">{{date}}</div>
+                <hr/>
                 <!-- htmlmin:ignore -->
                 {{{content}}}
                 <!-- htmlmin:ignore -->
@@ -49,10 +50,6 @@
         text-decoration: none;
     }
 
-    li {
-        list-style: none;
-    }
-
     article {
         margin: auto;
         font-size: 14px;
@@ -80,6 +77,7 @@
         float: right;
     }
     </style>
+    <link rel=stylesheet href="/github-markdown.css">
 </body>
 
 <script>
