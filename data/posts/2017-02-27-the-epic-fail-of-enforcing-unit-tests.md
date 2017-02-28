@@ -31,7 +31,7 @@ Here is what will happen when your developers are forced to reach 100% test cove
 
 You would say: **That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.**
 
-Once I had the same belief, until I came across a code snippet looks like below:
+Once I had the same belief, until I came across a code snippet looked like below:
 
 ```cs
 [TestMethod]
@@ -49,7 +49,7 @@ public void DrawGauge_Test()
 }
 ```
 
-Let me explain the code:
+Let me explain:
 
 1. `privateTestObj` is the SUT (System Under Test).
 2. `privateTestObj` is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the `DrawGauge()`.
