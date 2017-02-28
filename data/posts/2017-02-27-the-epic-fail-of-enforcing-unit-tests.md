@@ -1,4 +1,7 @@
-# The Epic Fail of Enforcing Unit Tests
+"title": "The Epic Fail of Enforcing Unit Tests"
+"tags": ["unit test"]
+"layout": "post"
+---
 
 _The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial [here](here). It starts by a simple thing, then it leads to complete a different story "**convincingly**" and "**reasonably**"._
 
@@ -19,7 +22,7 @@ Here is what will happen when your developers are forced to reach 100% test cove
 
 > If you delete tests, test coverage drops.
 
-> If test coverage drops, everyone is blaming you. 
+> If test coverage drops, everyone is blaming you.
 
 > If you cannot delete broken shit tests and have to fix them, you get pissed off.
 
@@ -27,7 +30,7 @@ Here is what will happen when your developers are forced to reach 100% test cove
 >
 > And most important, don't force people to write unit tests.
 
-You might say: **That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.**
+You would say: **That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.**
 
 Once I had the same belief, until I came across a code snippet looks like below:
 
@@ -51,7 +54,7 @@ Let me explain the code:
 
 1. `privateTestObj` is the SUT (System Under Test).
 2. `privateTestObj` is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the `DrawGauge()`.
-3. By calling `DrawGauge()` in the test, the override methods are considered "__covered__". 
+3. By calling `DrawGauge()` in the test, the override methods are considered "__covered__".
 
 This test brings no value, but only maintenance burden. For a better design, the code should first setting up appropriate condition,  calling the override methods, and asserting correct values are returned (or side effect happened). Calling the `DrawGauge()` method and assert there is no exception is like cheating. The reason I was tripped over by the test is that I renamed the variable name accessed using reflection, but not because it actually found anything wrong.
 
