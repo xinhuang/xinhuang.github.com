@@ -25,7 +25,9 @@ function parseHeader(lines) {
           header[key] = tmp[key];
         }
       }
-      header.date = path.basename(header.file).substring(0, 10);
+      if (header.file) {
+          header.date = path.basename(header.file).substring(0, 10);
+      }
       return header;
     }
   } catch(e) {
@@ -42,9 +44,15 @@ function parse(lines) {
   };
 }
 
+function header(text) {
+    const p = text.indexOf('---');
+    const headerText = text.substring(0, p);
+    return parseHeader(headerText.split('\n'));
+}
+
 function body(text) {
     const p = text.indexOf('---');
     return text.substring(p + 4);
 }
 
-export default { extractHeader, parseHeader, parse, body };
+export default { extractHeader, parseHeader, parse, header, body };

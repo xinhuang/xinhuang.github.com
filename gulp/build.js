@@ -54,7 +54,6 @@ function loadIndex(type) {
 }
 
 function buildIndex(type) {
-    gutil.log(`build index for ${type}`)
     const index = loadIndex(type);
     const dir = path.join(conf.paths.data, type);
     return rxfs.walk(dir)
@@ -77,7 +76,6 @@ function buildIndex(type) {
             index.posts.reverse();
             fs.mkdirsSync(path.join(conf.paths.tmp, type))
             fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
-            gutil.log(`done for building index for ${type}`)
             return index;
         });
 }
@@ -120,26 +118,10 @@ function render(dir, underRoot = false) {
         });
 }
 
-function renderIndex(dir, underRoot) {
-    const index = loadIndex(dir);
-    const template = fs.readFileSync(path.join(conf.paths.src, 'templates', 'index.template.html')).toString();
-    const rendered = mustache.render(template, {
-        entries: index.posts
-    });
-    if (underRoot) {
-        fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
-    } else {
-        fs.writeFileSync(path.join(conf.paths.tmp, 'dir', 'index.html'), rendered);
-    }
-}
-
-gulp.task('homepage', ['post'], () => {
-    renderIndex('posts', true);
-});
-
 gulp.task('index', cb => {
-    Observable.fromArray(['pages', 'posts', 'fav'])
+    Observable.fromArray(['pages', 'posts'])
         .map(buildIndex)
+        .concatAll()
         .subscribe(
             () => {},
             e => cb(),
@@ -147,28 +129,41 @@ gulp.task('index', cb => {
         );
 });
 
-gulp.task('post', ['index'], cb => {
-    render('posts').subscribe(
-        _ => {},
-        () => cb(),
-        () => cb()
-    )
-});
+gulp.task('render', ['index'], cb => {
+    rxfs.walk(conf.paths.data)
+        .filter(f => f.endsWith('.md'))
+        .filter(f => path.basename(path.dirname(f)) != 'drafts')
+        .map(file => {
+            const text = fs.readFileSync(file).toString();
 
-gulp.task('page', ['index'], cb => {
-    render('pages', true).subscribe(
-        _ => {},
-        () => cb(),
-        () => cb()
-    )
-});
+            const header = parse.header(text);
 
-gulp.task('fav', ['index'], cb => {
-    render('fav').subscribe(
-        _ => {},
-        () => cb(),
-        () => cb()
-    )
+            const layout = header.layout;
+            const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
+            const template = fs.readFileSync(templateFile).toString();
+
+            var rendered;
+            if (header.index) {
+                const index = loadIndex(header.index).posts;
+                rendered = mustache.render(template, {
+                    index: index,
+                });
+            } else {
+                rendered = mustache.render(template, {
+                    title: header.title,
+                    date: header.date,
+                    content: marked(parse.body(text)),
+                });
+            }
+
+            const dir = path.relative(conf.paths.data, path.dirname(file));
+            fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(file, '.md')}.html`), rendered);
+        })
+        .subscribe(
+            () => {},
+            e => { gutil.log(e); conf.errorHandler(e); cb(); },
+            () => cb()
+        );
 });
 
 gulp.task('resources', () => {
@@ -190,6 +185,6 @@ gulp.task('dist', ['content'], () => {
         .pipe(gulp.dest(conf.paths.dist));
 });
 
-gulp.task('content', ['post', 'homepage', 'page', 'resources', 'fav']);
+gulp.task('content', ['index', 'render', 'resources']);
 
 gulp.task('build', ['content', 'dist'], () => {});
