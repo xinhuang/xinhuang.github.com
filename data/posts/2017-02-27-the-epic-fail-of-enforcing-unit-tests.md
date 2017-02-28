@@ -7,8 +7,7 @@ _The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. I
 
 Here is what will happen when your developers are forced to reach 100% test coverage:
 
-> When developers are forced to write unit tests, they write shit tests which
-> test nothing.
+> When developers are forced to write unit tests, they write shit tests which test nothing.
 
 > When people write shit tests, their tests depend on the implementation.
 
@@ -28,7 +27,7 @@ Here is what will happen when your developers are forced to reach 100% test cove
 
 > Don't get pissed off, teach people why and how to write tests from the beginning.
 >
-> And most important, don't force people to write unit tests.
+> And most importantly, don't force people to write unit tests.
 
 You would say: **That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.**
 
