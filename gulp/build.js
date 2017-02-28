@@ -14,20 +14,12 @@ import mocha from 'gulp-mocha';
 import marked from 'marked';
 import mustache from 'mustache';
 
-var wiredep = require('wiredep').stream;
 var $ = require('gulp-load-plugins')({
     pattern: ['gulp-*', 'del', 'uglify-save-license']
 });
 
 gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
-});
-
-gulp.task('inject', () => {
-    return gulp.src([path.join(conf.paths.src, '**/*.html')])
-        .pipe(print())
-        .pipe(wiredep(conf.wiredep))
-        .pipe(gulp.dest(path.join(conf.paths.tmp, 'serve')));
 });
 
 gulp.task('test', () => {
@@ -47,7 +39,7 @@ function loadIndex(type) {
         try {
             return JSON.parse(data);
         } catch (e) {
-            gutil.log(e);
+            conf.errorHandler(e);
             return {};
         }
     }
@@ -58,7 +50,7 @@ function buildIndex(type) {
         fs.mkdirsSync(path.join(conf.paths.tmp, type));
     }
     const dir = path.join(conf.paths.data, type);
-    const index = loadIndex(type);
+    const index = {};
     return rxfs.walk(dir)
         .filter(p => p.endsWith('.md'))
         .filter(p => path.basename(p) != 'index.md')
@@ -72,8 +64,7 @@ function buildIndex(type) {
         .toArray()
         .first()
         .doOnError(e => {
-            gutil.log(e);
-            conf.errorHandler(err);
+            conf.errorHandler(e);
         })
         .map(headers => {
             index.posts = headers;
@@ -81,44 +72,6 @@ function buildIndex(type) {
             fs.mkdirsSync(path.join(conf.paths.tmp, type))
             fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
             return index;
-        });
-}
-
-function render(dir, underRoot = false) {
-    marked.setOptions({
-        renderer: new marked.Renderer(),
-        gfm: true,
-        tables: true,
-        breaks: false,
-        pedantic: false,
-        sanitize: false,
-        smartLists: true,
-        smartypants: false
-    });
-    const index = loadIndex(dir);
-    fs.mkdirsSync(path.join(conf.paths.tmp, dir));
-    return Observable.fromArray(index.posts)
-        .map(post => {
-            const text = fs.readFileSync(post.file).toString();
-
-            const layout = post.layout;
-            const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
-            const template = fs.readFileSync(templateFile).toString();
-            const rendered = mustache.render(template, {
-                title: post.title,
-                date: post.date,
-                content: marked(parse.body(text)),
-            });
-
-            if (underRoot) {
-                fs.writeFileSync(path.join(conf.paths.tmp, `${path.basename(post.file, '.md')}.html`), rendered);
-            } else {
-                fs.writeFileSync(path.join(conf.paths.tmp, dir, `${path.basename(post.file, '.md')}.html`), rendered);
-            }
-        })
-        .doOnError(e => {
-            gutil.log(e);
-            conf.errorHandler(err);
         });
 }
 
@@ -169,7 +122,7 @@ gulp.task('render', ['index'], cb => {
         })
         .subscribe(
             () => {},
-            e => { gutil.log(e); conf.errorHandler(e); cb(); },
+            e => { conf.errorHandler(e); cb(); },
             () => cb()
         );
 });
