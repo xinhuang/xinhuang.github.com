@@ -15,7 +15,7 @@
 <p>And most importantly, don&#39;t force people to write unit tests.</p>
 </blockquote>
 <p>You would say: <strong>That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.</strong></p>
-<p>Once I had the same belief, until I came across a code snippet looks like below:</p>
+<p>Once I had the same belief, until I came across a code snippet looked like below:</p>
 <pre class="hljs"><code class="cs">[TestMethod]
 <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">DrawGauge_Test</span>(<span class="hljs-params"></span>)
 </span>{
@@ -28,7 +28,7 @@
         DrawGauge();
     }
     <span class="hljs-comment">// If no exception, everything is OK</span>
-}</code></pre><p>Let me explain the code:</p>
+}</code></pre><p>Let me explain:</p>
 <ol>
 <li><code>privateTestObj</code> is the SUT (System Under Test).</li>
 <li><code>privateTestObj</code> is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the <code>DrawGauge()</code>.</li>
