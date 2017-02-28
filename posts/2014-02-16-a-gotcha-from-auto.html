@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>A Gotcha From auto</title></head><body><article id=top class=markdown-body><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1>A Gotcha From auto</h1><div class=metadata>2014-02-16</div><hr>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>A Gotcha From auto</title></head><body><article id=top class=markdown-body><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1>A Gotcha From auto</h1><div class=metadata></div><hr>
                 <p>Recently, I found my random generator doesn&#39;t work. Which is:</p>
 <pre><code>auto engine = mt19937{ random_device()() };
 auto rand = [=](int range) mutable {
