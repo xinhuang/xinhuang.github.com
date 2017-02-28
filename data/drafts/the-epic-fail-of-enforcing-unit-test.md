@@ -1,34 +1,62 @@
-# The Epic Fail of Enforcing Unit Test
+# The Epic Fail of Enforcing Unit Tests
 
-The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial.
-If you haven't watch it yet, you can watch the full commercial [here].
-It starts by a simple thing, then it suddenly leads to complete a different
-story "reasonably".
+_The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial [here](here). It starts by a simple thing, then it leads to complete a different story "**convincingly**" and "**reasonably**"._
 
-I follow the way "Get Rid Of Cable" commercial, but you can see the story behind:
+Here is what will happen when your developers are forced to reach 100% test coverage:
 
-> When you enforcing people to write unit tests, they write sh*t tests which
-test nothing.
+> When developers are forced to write unit tests, they write shit tests which
+> test nothing.
 
-> When people write sh*t tests, their tests depend on the implementation.
+> When people write shit tests, their tests depend on the implementation.
 
 > When the tests depend on the implementation, production code is difficult to change.
 
 > When production code is difficult to change and you change it, you break tests.
 
-> When you break tests in a test-enforcing culture, you fix tests.
+> When you break tests, you fix tests.
 
-> When you find the tests are shit tests which test nothing, you want to delete them.
+> When you find the tests are shit tests, you want to delete them.
 
-> But you cannot delete tests in a test-enforcing culture, you get pissed off.
+> If you delete tests, test coverage drops.
+
+> If test coverage drops, everyone is blaming you. 
+
+> If you cannot delete broken shit tests and have to fix them, you get pissed off.
 
 > Don't get pissed off, teach people why and how to write tests from the beginning.
+>
+> And most important, don't force people to write unit tests.
 
-I am working on a large-scale legacy software. Recently I am moving on to a
-internal team involves a lot of refactoring, which in general is to separate business
-logic from UI logic so we can move it onto the Web.
+You might say: **That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.**
 
-In the meeting, people are saying that we should add unit tests to the business logic
-that we separated.
+Once I had the same belief, until I came across a code snippet looks like below:
+
+```C#
+[TestMethod]
+public void DrawGauge_Test()
+{
+	using (ShimsContext.Create())
+	{
+        var privateTestObj = SetupTestObject();
+        var e = new PaintEventArgs(g, clipRect);
+
+        privateTestObj.SetField("m_pDomainIconIsSmall", BmpIconSmall)
+        DrawGauge();
+    }
+    // If no exception, everything is OK
+}
+```
+
+Let me explain the code:
+
+1. `privateTestObj` is the SUT (System Under Test).
+2. `privateTestObj` is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the `DrawGauge()`.
+3. By calling `DrawGauge()` in the test, the override methods are considered "__covered__". 
+
+This test brings no value, but only maintenance burden. For a better design, the code should first setting up appropriate condition,  calling the override methods, and asserting correct values are returned (or side effect happened). Calling the `DrawGauge()` method and assert there is no exception is like cheating. The reason I was tripped over by the test is that I renamed the variable name accessed using reflection, but not because it actually found anything wrong.
+
+Before your developers are ready, please don't force them to write tests aiming for N% test coverage. Unless they are willing to write tests - usually that is the time stakeholders start to ask questions like "Do we really have to write tests now? Can we do it later? Maybe tomorrow?" (Teach your stakeholders, too!)
+
+For the God's sake, don't force people to write unit tests.
 
 [here]: https://www.youtube.com/watch?v=NZ80SVOHKoo
