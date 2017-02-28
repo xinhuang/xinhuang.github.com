@@ -54,10 +54,14 @@ function loadIndex(type) {
 }
 
 function buildIndex(type) {
-    const index = loadIndex(type);
+    if (!fs.existsSync(path.join(conf.paths.tmp, type))) {
+        fs.mkdirsSync(path.join(conf.paths.tmp, type));
+    }
     const dir = path.join(conf.paths.data, type);
+    const index = loadIndex(type);
     return rxfs.walk(dir)
         .filter(p => p.endsWith('.md'))
+        .filter(p => path.basename(p) != 'index.md')
         .map(f => {
             var data = fs.readFileSync(f).toString().split('\n');
             data.unshift(`"file": "${f}"`);
@@ -119,7 +123,7 @@ function render(dir, underRoot = false) {
 }
 
 gulp.task('index', cb => {
-    Observable.fromArray(['pages', 'posts'])
+    Observable.fromArray(['pages', 'posts', 'fav'])
         .map(buildIndex)
         .concatAll()
         .subscribe(
@@ -146,6 +150,8 @@ gulp.task('render', ['index'], cb => {
             if (header.index) {
                 const index = loadIndex(header.index).posts;
                 rendered = mustache.render(template, {
+                    pagetitle: header.title,
+                    content: marked(parse.body(text)),
                     index: index,
                 });
             } else {
