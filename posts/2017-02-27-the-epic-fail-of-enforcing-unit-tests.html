@@ -16,21 +16,19 @@
 </blockquote>
 <p>You would say: <strong>That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.</strong></p>
 <p>Once I had the same belief, until I came across a code snippet looks like below:</p>
-<pre><code class="lang-C#">[TestMethod]
-public void DrawGauge_Test()
-{
-    using (ShimsContext.Create())
+<pre class="hljs"><code class="cs">[TestMethod]
+<span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">DrawGauge_Test</span>(<span class="hljs-params"></span>)
+</span>{
+    <span class="hljs-keyword">using</span> (ShimsContext.Create())
     {
-        var privateTestObj = SetupTestObject();
-        var e = new PaintEventArgs(g, clipRect);
+        <span class="hljs-keyword">var</span> privateTestObj = SetupTestObject();
+        <span class="hljs-keyword">var</span> e = <span class="hljs-keyword">new</span> PaintEventArgs(g, clipRect);
 
-        privateTestObj.SetField(&quot;m_pDomainIconIsSmall&quot;, BmpIconSmall)
+        privateTestObj.SetField(<span class="hljs-string">"m_pDomainIconIsSmall"</span>, BmpIconSmall)
         DrawGauge();
     }
-    // If no exception, everything is OK
-}
-</code></pre>
-<p>Let me explain the code:</p>
+    <span class="hljs-comment">// If no exception, everything is OK</span>
+}</code></pre><p>Let me explain the code:</p>
 <ol>
 <li><code>privateTestObj</code> is the SUT (System Under Test).</li>
 <li><code>privateTestObj</code> is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the <code>DrawGauge()</code>.</li>
@@ -40,4 +38,4 @@ public void DrawGauge_Test()
 <p>Before your developers are ready, please don&#39;t force them to write tests aiming for N% test coverage. Unless they are willing to write tests - usually that is the time stakeholders start to ask questions like &quot;Do we really have to write tests now? Can we do it later? Maybe tomorrow?&quot; (Teach your stakeholders, too!)</p>
 <p>For the God&#39;s sake, don&#39;t force people to write unit tests.</p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>

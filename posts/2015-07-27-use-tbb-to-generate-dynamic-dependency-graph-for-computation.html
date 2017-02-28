@@ -5,72 +5,70 @@ which can be described as a dependency graph, a flow graph provides a clear inte
 describe the problem, with good performance and scalability across multiple CPU
 cores.</p>
 <p>Typical TBB flow graph code looks like below:</p>
-<pre><code>using namespace tbb::flow;
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> tbb::flow;
 
-int main() {
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
    graph g;
-   function_node&lt;int,int&gt;
-       f1( g, unlimited, [](const int &amp;i) { return 2*i; } );
-   function_node&lt;float,float&gt;
-       f2( g, unlimited, [](const float &amp;f) { return f/2; } );
+   function_node&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">int</span>&gt;
+       f1( g, unlimited, [](<span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> &amp;i) { <span class="hljs-keyword">return</span> <span class="hljs-number">2</span>*i; } );
+   function_node&lt;<span class="hljs-keyword">float</span>,<span class="hljs-keyword">float</span>&gt;
+       f2( g, unlimited, [](<span class="hljs-keyword">const</span> <span class="hljs-keyword">float</span> &amp;f) { <span class="hljs-keyword">return</span> f/<span class="hljs-number">2</span>; } );
 
-   join_node&lt; flow::tuple&lt;int,float&gt; &gt; j(g);
+   join_node&lt; flow::tuple&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">float</span>&gt; &gt; j(g);
 
-   function_node&lt; flow::tuple&lt;int,float&gt; &gt;
+   function_node&lt; flow::tuple&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">float</span>&gt; &gt;
        f3( g, unlimited,
-           []( const flow::tuple&lt;int,float&gt; &amp;t ) {
-               printf( &quot;Result is %f\n&quot;,
-                       std::get&lt;0&gt;(t) + std::get&lt;1&gt;(t));
+           []( <span class="hljs-keyword">const</span> flow::tuple&lt;<span class="hljs-keyword">int</span>,<span class="hljs-keyword">float</span>&gt; &amp;t ) {
+               <span class="hljs-built_in">printf</span>( <span class="hljs-string">"Result is %f\n"</span>,
+                       <span class="hljs-built_in">std</span>::get&lt;<span class="hljs-number">0</span>&gt;(t) + <span class="hljs-built_in">std</span>::get&lt;<span class="hljs-number">1</span>&gt;(t));
            } );
 
-   make_edge( f1, input_port&lt;0&gt;( j ) );
-   make_edge( f2, input_port&lt;1&gt;( j ) ;
+   make_edge( f1, input_port&lt;<span class="hljs-number">0</span>&gt;( j ) );
+   make_edge( f2, input_port&lt;<span class="hljs-number">1</span>&gt;( j ) ;
    make_edge( j, f3 );
 
-   f1.try_put( 3 );
-   f2.try_put( 3 );
+   f1.try_put( <span class="hljs-number">3</span> );
+   f2.try_put( <span class="hljs-number">3</span> );
    g.wait_for_all( );
-   return 0;
-}
-</code></pre><p><em>Example taken from <a href="https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm">tbb::flow::join_node documentation</a>.</em></p>
+   <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre><p><em>Example taken from <a href="https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm">tbb::flow::join_node documentation</a>.</em></p>
 <h1 id="dynamic-graph">Dynamic Graph</h1>
 <p>The example above is quite simple, using a predefined computation flow graph.
 However in reality, the original graph usually is dynamically created somewhere,
 especially when trying to adapt TBB to a legacy system, and we will need
 to create the flow graph at runtime:</p>
-<pre><code>using fnode = tbb::flow::function_node&lt;msg_t, msg_t&gt;;
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">using</span> fnode = tbb::flow::function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;;
 
-void computeFlowGraph(const std::vector&lt;Node*&gt;&amp; nodes, const msg_t&amp; computationParam) {
-  std::vector&lt;fnode*&gt; fnodes;
-  std::unordered_map&lt;Node*, fnode*&gt; nfmap;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">computeFlowGraph</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&lt;Node*&gt;&amp; nodes, <span class="hljs-keyword">const</span> <span class="hljs-keyword">msg_t</span>&amp; computationParam)</span> </span>{
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&lt;fnode*&gt; fnodes;
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">unordered_map</span>&lt;Node*, fnode*&gt; nfmap;
 
   tbb::flow::graph g;
 
-  for (auto n : nodes) {
-    // not capturing *n directly to avoid copying
-    auto f = new fnode(g, n-&gt;getConcurrentCount(),
-                       [=](const msg_t&amp; p) { return (*n)(p); } ));
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> n : nodes) {
+    <span class="hljs-comment">// not capturing *n directly to avoid copying</span>
+    <span class="hljs-keyword">auto</span> f = <span class="hljs-keyword">new</span> fnode(g, n-&gt;getConcurrentCount(),
+                       [=](<span class="hljs-keyword">const</span> <span class="hljs-keyword">msg_t</span>&amp; p) { <span class="hljs-keyword">return</span> (*n)(p); } ));
     fnodes.push_back(f);
     nfmap[n] = f;
   }
 
-  for (auto n : nodes) {
-    for (auto p : n-&gt;getParents()) {
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> n : nodes) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> p : n-&gt;getParents()) {
       tbb::flow::make_edge(*nfmap[p], *nfmap[n]);
     }
   }
 
-  // get all the initial function nodes and start computation
-  std::vector&lt;fnode&gt; initials = getInitialNodes(nfmap);
-  for (auto fn: initials) {
+  <span class="hljs-comment">// get all the initial function nodes and start computation</span>
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&lt;fnode&gt; initials = getInitialNodes(nfmap);
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> fn: initials) {
     fn-&gt;try_put(computationParam);
   }
 
   g.wait_for_all();
 
   deletePointerVector(fnodes);
-}
-</code></pre><p>Because the topology is not known until we create the graph, the TBB flow graph
+}</code></pre><p>Because the topology is not known until we create the graph, the TBB flow graph
 nodes can only be placed on the heap so they will remain valid till the end of
 the computation.</p>
 <h1 id="message-aggregation">Message Aggregation</h1>
@@ -112,15 +110,14 @@ If we chain the <code>join_node</code> with a <code>function_node</code>, there 
 The entire graph is created dynamically, and all nodes need to be kept alive
 before computation finishes. Take below topology for example:</p>
 <p><img src="/images/posts/use-tbb-to-generate-dynamic-dependency-graph-for-computation/dependency-graph-example.png" alt="dependency-graph-example">  </p>
-<pre><code>auto *afnode = new function_node&lt;msg_t, msg_t&gt;(...);
-auto *bfnode = new function_node&lt;msg_t, msg_t&gt;(...);
-auto *cjnode = new join_node&lt;tuple&lt;msg_t, msg_t&gt;&gt;(...);
-auto *cfnode = new function_node&lt;msg_t, msg_t&gt;(...);
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">auto</span> *afnode = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
+<span class="hljs-keyword">auto</span> *bfnode = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
+<span class="hljs-keyword">auto</span> *cjnode = <span class="hljs-keyword">new</span> join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;(...);
+<span class="hljs-keyword">auto</span> *cfnode = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
 make_edge(*cjnode, cfnode);
-auto *djnode = new new join_node&lt;tuple&lt;msg_t, msg_t, msg_t&gt;&gt;(...);
-auto *dfnode = new function_node&lt;msg_t, msg_t&gt;(...);
-make_edge(*djnode, dfnode);
-</code></pre><p>As we can see from above code, <code>join_node</code>s which join different number of nodes
+<span class="hljs-keyword">auto</span> *djnode = <span class="hljs-keyword">new</span> <span class="hljs-keyword">new</span> join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;(...);
+<span class="hljs-keyword">auto</span> *dfnode = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
+make_edge(*djnode, dfnode);</code></pre><p>As we can see from above code, <code>join_node</code>s which join different number of nodes
 are of different types. We cannot put them into a <code>std::vector&lt;join_node&lt;...&gt;*&gt;</code>
 to keep them alive until the end of computation.</p>
 <p>Imagine the graph can be rather complicated where a node can have at most 10
@@ -130,77 +127,75 @@ restore the type information later for making edges and destruction.</p>
 <p>Suppose there is a <code>merge_node</code> which will wrap a <code>join_node</code> and connect it to
 a <code>function_node</code>. These nodes above will be:
 (Nodes E &amp; F omitted)</p>
-<pre><code>auto *A = new function_node&lt;msg_t, msg_t&gt;(...);
-auto *B = new function_node&lt;msg_t, msg_t&gt;(...);
-auto *C = new merge_node(new join_node&lt;tuple&lt;msg_t, msg_t&gt;&gt;(...),
-                         new function_node&lt;msg_t, msg_t&gt;(...));
-auto *D = new merge_node(new join_node&lt;tuple&lt;msg_t, msg_t, msg_t&gt;&gt;(...),
-                         new function_node&lt;msg_t, msg_t&gt;(...));
-</code></pre><h1 id="erase-restore-type-information">Erase/Restore Type Information</h1>
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">auto</span> *A = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
+<span class="hljs-keyword">auto</span> *B = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...);
+<span class="hljs-keyword">auto</span> *C = <span class="hljs-keyword">new</span> merge_node(<span class="hljs-keyword">new</span> join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;(...),
+                         <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...));
+<span class="hljs-keyword">auto</span> *D = <span class="hljs-keyword">new</span> merge_node(<span class="hljs-keyword">new</span> join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;(...),
+                         <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(...));</code></pre><h1 id="erase-restore-type-information">Erase/Restore Type Information</h1>
 <p>In above example, the type of a node is related to how many parents it has.
 If you remember the old C trick: every pointer can be converted to a <code>void*</code>,
 and convert back to a proper type. Using this trick, we can keep the pointer
 to the <code>join_node</code> as a <code>void*</code>. Only convert it to the correct type when needed
 (i.e. making edge and inside destructor) by doing a runtime dispatch based on
 how many parents a node has.</p>
-<pre><code>template &lt;typename msg_t, typename merge_t&gt;
-class merge_node {
-  const int n_parent = 0;
-  void* jnode = nullptr;
-  void* fnode = nullptr;
-  merge_t merge;
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> <span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">typename</span> <span class="hljs-keyword">merge_t</span>&gt;
+<span class="hljs-keyword">class</span> merge_node {
+  <span class="hljs-keyword">const</span> <span class="hljs-keyword">int</span> n_parent = <span class="hljs-number">0</span>;
+  <span class="hljs-keyword">void</span>* jnode = <span class="hljs-literal">nullptr</span>;
+  <span class="hljs-keyword">void</span>* fnode = <span class="hljs-literal">nullptr</span>;
+  <span class="hljs-keyword">merge_t</span> merge;
 
-public:
-  template &lt;typename Body&gt;
-  merge_node(tbb::flow::gaph&amp; g, const Body&amp; body, int n_parent);
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Body&gt;
+  merge_node(tbb::flow::gaph&amp; g, <span class="hljs-keyword">const</span> Body&amp; body, <span class="hljs-keyword">int</span> n_parent);
 
   ~merge_node();
 };
 
-template &lt;typename msg_t, typename merge_t&gt;
-template &lt;typename Body&gt;
-merge_node&lt;msg_t, merge_t&gt;::merge_node(tbb::flow::graph&amp; g, size_t concurrency,
-                                       const Body&amp; body, int n_parent)
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> <span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">typename</span> <span class="hljs-keyword">merge_t</span>&gt;
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> Body&gt;
+merge_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">merge_t</span>&gt;::merge_node(tbb::flow::graph&amp; g, <span class="hljs-keyword">size_t</span> concurrency,
+                                       <span class="hljs-keyword">const</span> Body&amp; body, <span class="hljs-keyword">int</span> n_parent)
   : n_parent(n_parent) {
-  if (n_parent &lt;= 1) {
-    fnode = new function_node&lt;msg_t, msg_t&gt;(g, body);
-  } else {
-    switch (n_parent) {
-    case 2: {
-      auto* jn = new join_node&lt;tuple&lt;msg_t, msg_t&gt;&gt;(g);
-      auto* fn = new function_node&lt;tuple&lt;msg_t, msg_t&gt;, msg_t&gt;(g, concurrency,
-                    [=](const tuple&lt;msg_t, msg_t&gt;&amp; msgs) {
-                      return body(merge(msgs));
+  <span class="hljs-keyword">if</span> (n_parent &lt;= <span class="hljs-number">1</span>) {
+    fnode = <span class="hljs-keyword">new</span> function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;(g, body);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-keyword">switch</span> (n_parent) {
+    <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>: {
+      <span class="hljs-keyword">auto</span>* jn = <span class="hljs-keyword">new</span> join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;(g);
+      <span class="hljs-keyword">auto</span>* fn = <span class="hljs-keyword">new</span> function_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;, <span class="hljs-keyword">msg_t</span>&gt;(g, concurrency,
+                    [=](<span class="hljs-keyword">const</span> tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&amp; msgs) {
+                      <span class="hljs-keyword">return</span> body(merge(msgs));
                     });
       make_edge(*jn, *fnode);
       jnode = jn;
       fnode = fn;
-      break;
+      <span class="hljs-keyword">break</span>;
       }
-    // case 3 and the rest is similar to case 2
+    <span class="hljs-comment">// case 3 and the rest is similar to case 2</span>
     }
   }
 }
 
-template &lt;typename msg_t, typename merge_t&gt;
-merge_node&lt;msg_t, merge_t&gt;::~merge_node() {
+<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> <span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">typename</span> <span class="hljs-keyword">merge_t</span>&gt;
+merge_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">merge_t</span>&gt;::~merge_node() {
   assert(jnode);
-  switch (n_parent) {
-  case 0:
-  case 1:
+  <span class="hljs-keyword">switch</span> (n_parent) {
+  <span class="hljs-keyword">case</span> <span class="hljs-number">0</span>:
+  <span class="hljs-keyword">case</span> <span class="hljs-number">1</span>:
     assert(fnode &amp;&amp; !jnode);
-    delete reinterpret_cast&lt;function_node&lt;msg_t, msg_t&gt;*&gt;(fnode);
-    return;
+    <span class="hljs-keyword">delete</span> <span class="hljs-keyword">reinterpret_cast</span>&lt;function_node&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;*&gt;(fnode);
+    <span class="hljs-keyword">return</span>;
 
-  case 2:
+  <span class="hljs-keyword">case</span> <span class="hljs-number">2</span>:
     assert(fnode &amp;&amp; jnode);
-    delete reinterpret_cast&lt;function_node&lt;tuple&lt;msg_t, msg_t&gt;, msg_t&gt;*&gt;(fnode);
-    delete reinterpret_cast&lt;join_node&lt;tuple&lt;msg_t, msg_t&gt;&gt;*&gt;(jnode);
-    return;
-  // case 3 and the rest is similar to case 2
+    <span class="hljs-keyword">delete</span> <span class="hljs-keyword">reinterpret_cast</span>&lt;function_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;, <span class="hljs-keyword">msg_t</span>&gt;*&gt;(fnode);
+    <span class="hljs-keyword">delete</span> <span class="hljs-keyword">reinterpret_cast</span>&lt;join_node&lt;tuple&lt;<span class="hljs-keyword">msg_t</span>, <span class="hljs-keyword">msg_t</span>&gt;&gt;*&gt;(jnode);
+    <span class="hljs-keyword">return</span>;
+  <span class="hljs-comment">// case 3 and the rest is similar to case 2</span>
   }
-}
-</code></pre><p>Of course you can use macros to remove the many duplications here.
+}</code></pre><p>Of course you can use macros to remove the many duplications here.
 For a full implementation, please refer to <a href="https://gist.github.com/xinhuang/16e03ec6d560df5ca03c">merge_node sources</a>.</p>
 <h1 id="known-limitations">Known Limitations</h1>
 <p>Because TBB doesn&#39;t support <code>join_node</code> with more than 10 parents, <code>merge_node</code>
@@ -215,4 +210,4 @@ Then you probably want to use the <a href="https://www.threadingbuildingblocks.o
 a message to child nodes can be controlled. The implementation is pretty much the
 same with a few tweaks.</p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>

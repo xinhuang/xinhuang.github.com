@@ -17,64 +17,61 @@
 <p>To avoid such a problem, either use a combination of <code>std::shared_ptr</code> and
  <code>std::weak_ptr</code>, or use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead of reinventing the wheel.</p>
 <h2 id="the-gof-observer-pattern-">The <a href="http://en.wikipedia.org/wiki/Observer_pattern">GoF Observer Pattern</a></h2>
-<pre><code>class IObservable {
-public:
-    virtual ~IObservable() {}
-    virtual void add(IObserver* observer) = 0;
-    virtual void remove(IObserver* observer) = 0;
-    virtual void notify() = 0;
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">class</span> IObservable {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~IObservable() {}
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">add</span><span class="hljs-params">(IObserver* observer)</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">remove</span><span class="hljs-params">(IObserver* observer)</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">notify</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
 };
 
-class IObserver {
-public:
-    virtual ~IObserver() {}
-    virtual void onNotify() = 0;
-};
-</code></pre><h2 id="what-happens-when-an-observer-is-going-to-be-destroyed-">What happens when an observer is going to be destroyed?</h2>
+<span class="hljs-keyword">class</span> IObserver {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~IObserver() {}
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onNotify</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+};</code></pre><h2 id="what-happens-when-an-observer-is-going-to-be-destroyed-">What happens when an observer is going to be destroyed?</h2>
 <p>Before an observer is destroyed, it has to be removed from the observers list.
  Explicit removal of the observer before each destruction is too much work
  and duplicate code, it is convenient, therefore, to automate observer
  un-registration.</p>
 <p>Here is our new <code>AbstractObservable</code>/<code>AbstractObserver</code> with automatic
  un-registration in destructor:</p>
-<pre><code>class AbstractObservable : public IObservable {
-public:
-    virtual ~AbstractObservable() {}
-    void add(AbstractObserver* observer) {
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">class</span> AbstractObservable : <span class="hljs-keyword">public</span> IObservable {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~AbstractObservable() {}
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">add</span><span class="hljs-params">(AbstractObserver* observer)</span> </span>{
         observers.insert(observer);
-        observer.setObservable(this);
+        observer.setObservable(<span class="hljs-keyword">this</span>);
     }
-    void remove(AbstractObserver* observer) {
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">remove</span><span class="hljs-params">(AbstractObserver* observer)</span> </span>{
         observers.erase(observer);
     }
-    void notify() {
-        for (auto&amp; o : observers) {
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">notify</span><span class="hljs-params">()</span> </span>{
+        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>&amp; o : observers) {
             o-&gt;notify();
         }
     }
 
-private:
-  std::unordered_set&lt;AbstractObserver*&gt; observers;
+<span class="hljs-keyword">private</span>:
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">unordered_set</span>&lt;AbstractObserver*&gt; observers;
 };
 
-class AbstractObserver : public IObserver {
-public:
-    virtual ~AbstractObserver() { observable.remove(this); }
-    virtual void notify() = 0;
-    void setObservable(AbstractObservable* observable) { this-&gt;observable = observable; }
+<span class="hljs-keyword">class</span> AbstractObserver : <span class="hljs-keyword">public</span> IObserver {
+<span class="hljs-keyword">public</span>:
+    <span class="hljs-keyword">virtual</span> ~AbstractObserver() { observable.remove(<span class="hljs-keyword">this</span>); }
+    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">notify</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">setObservable</span><span class="hljs-params">(AbstractObservable* observable)</span> </span>{ <span class="hljs-keyword">this</span>-&gt;observable = observable; }
 
-private:
+<span class="hljs-keyword">private</span>:
     AbstractObservable* observable;
-};
-</code></pre><h2 id="but-what-will-happen-in-a-multi-threaded-environment-">But what will happen in a multi-threaded environment?</h2>
+};</code></pre><h2 id="but-what-will-happen-in-a-multi-threaded-environment-">But what will happen in a multi-threaded environment?</h2>
 <p>In a multi-threaded environment a race condition can happen when the
  observer list is updated. Simple problem! Only need a lock:</p>
-<pre><code>// same for add and notify
-void AbstractObservable::remove(AbstractObserver* observer) {
-    std::lock_guard&lt;std::mutex&gt; lock(mutex);
+<pre class="hljs"><code class="C++"><span class="hljs-comment">// same for add and notify</span>
+<span class="hljs-keyword">void</span> AbstractObservable::remove(AbstractObserver* observer) {
+    <span class="hljs-built_in">std</span>::lock_guard&lt;<span class="hljs-built_in">std</span>::mutex&gt; lock(mutex);
     observers.erase(observer);
-}
-</code></pre><p>But think again about the runtime behavior. Is it really thread-safe?</p>
+}</code></pre><p>But think again about the runtime behavior. Is it really thread-safe?</p>
 <p>Here is the normal destruction order of an observer:</p>
 <ol>
 <li><p><code>ConcreteObserver::~ConcreteObserver()</code></p>
@@ -112,67 +109,68 @@ a customized deleter to call an unregister function if you use <code>std::shared
 or having to be careful if the observer&#39;s life span is managed manually - with a
 lot of repeated code to remove observers to boot.</p>
 <p> For example:</p>
-<pre><code> // manually unregister observer from observable
- {
-   ConcreteObserver scopedObserver;
-   observable.add(scopedObserver);
-   // ...
-   observable.remove(scopedObserver);
- } // scopredObserver is destroyed here
+</li>
+</ol>
+<pre class="hljs"><code class="C++"><span class="hljs-comment">// manually unregister observer from observable</span>
+{
+  ConcreteObserver scopedObserver;
+  observable.add(scopedObserver);
+  <span class="hljs-comment">// ...</span>
+  observable.remove(scopedObserver);
+} <span class="hljs-comment">// scopredObserver is destroyed here</span>
 
- // manually unregister observer from observable using std::shared_ptr
- std::shared_ptr&lt;Observer&gt; observer(new ConcreteObserver(),
-                                    [&amp;](Observer* o) {
-                                      observable.remove(o);
-                                    });
- observable.add(observer);
-</code></pre></li>
+<span class="hljs-comment">// manually unregister observer from observable using std::shared_ptr</span>
+<span class="hljs-built_in">std</span>::<span class="hljs-built_in">shared_ptr</span>&lt;Observer&gt; observer(<span class="hljs-keyword">new</span> ConcreteObserver(),
+                                   [&amp;](Observer* o) {
+                                     observable.remove(o);
+                                   });
+observable.add(observer);</code></pre><ol>
 <li><p>Use a combination of <code>std::shared_ptr</code> and <code>std::weak_ptr</code>. In this way the
 race condition can be avoided completely.</p>
 <p> For example:</p>
-<pre><code> class IObserver {
- public:
-   virtual ~IObserver() {}
-   virtual void onNotify() = 0;
- };
-
- class Observable {
-   std::mutex mutex;
-   // of course the std::vector can be replace by a concurrent container
-   std::vector&lt;std::weak_ptr&lt;IObserver&gt;&gt; observers;  
-
- public:
-   virtual ~Observable() {}
-   void add(const std::shared_ptr&lt;IObserver&gt;&amp; o) {
-     std::lock_guard&lt;std::mutex&gt; lock(mutex);
-     observers.emplace_back(o);
-   }
-   void remove(const std::shared_ptr&lt;IObserver&gt;&amp; o) {
-     /* here we do nothing, invalid observers will be removed in notify */
-   }
-   void notify() {
-     std::lock_guard&lt;std::mutex&gt; lock(mutex);
-     for (auto&amp; o : observers) {
-       if (auto p = o.lock())
-         p-&gt;onNotify();
-     }
-     remove_invalid_observer();
-   }
-
- private:
-   void remove_invalid_observer() {
-     auto first_invalid = std::remove_if(std::begin(observers),
-                                         std::end(observers),
-                                         [](const std::weak_ptr&lt;IObserver&gt;&amp; o) {
-                                           return o.expired();
-                                         });
-     observers.erase(last_valid, std::end(observers));
-   }
- };
-</code></pre></li>
-<li><p>Don&#39;t reinvent the wheel, use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead.
-<a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2/thread-safety.html#idp430084640">&quot;It can be used safely in a multi-threaded environment.&quot;</a></p>
 </li>
+</ol>
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">class</span> IObserver {
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-keyword">virtual</span> ~IObserver() {}
+  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">onNotify</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+};
+
+<span class="hljs-keyword">class</span> Observable {
+  <span class="hljs-built_in">std</span>::mutex mutex;
+  <span class="hljs-comment">// of course the std::vector can be replace by a concurrent container</span>
+  <span class="hljs-built_in">std</span>::<span class="hljs-built_in">vector</span>&lt;<span class="hljs-built_in">std</span>::weak_ptr&lt;IObserver&gt;&gt; observers;  
+
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-keyword">virtual</span> ~Observable() {}
+  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">add</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">shared_ptr</span>&lt;IObserver&gt;&amp; o)</span> </span>{
+    <span class="hljs-built_in">std</span>::lock_guard&lt;<span class="hljs-built_in">std</span>::mutex&gt; lock(mutex);
+    observers.emplace_back(o);
+  }
+  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">remove</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::<span class="hljs-built_in">shared_ptr</span>&lt;IObserver&gt;&amp; o)</span> </span>{
+    <span class="hljs-comment">/* here we do nothing, invalid observers will be removed in notify */</span>
+  }
+  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">notify</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-built_in">std</span>::lock_guard&lt;<span class="hljs-built_in">std</span>::mutex&gt; lock(mutex);
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span>&amp; o : observers) {
+      <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> p = o.lock())
+        p-&gt;onNotify();
+    }
+    remove_invalid_observer();
+  }
+
+<span class="hljs-keyword">private</span>:
+  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">remove_invalid_observer</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">auto</span> first_invalid = <span class="hljs-built_in">std</span>::remove_if(<span class="hljs-built_in">std</span>::begin(observers),
+                                        <span class="hljs-built_in">std</span>::end(observers),
+                                        [](<span class="hljs-keyword">const</span> <span class="hljs-built_in">std</span>::weak_ptr&lt;IObserver&gt;&amp; o) {
+                                          <span class="hljs-keyword">return</span> o.expired();
+                                        });
+    observers.erase(last_valid, <span class="hljs-built_in">std</span>::end(observers));
+  }
+};</code></pre><ol>
+<li>Don&#39;t reinvent the wheel, use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead.
+<a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2/thread-safety.html#idp430084640">&quot;It can be used safely in a multi-threaded environment.&quot;</a></li>
 </ol>
 <h2 id="so-what-is-the-real-problem-">So what is the real problem?</h2>
 <p>The moral of this tale is that inheritance isn&#39;t always as harmless as it might
@@ -184,4 +182,4 @@ race condition can be avoided completely.</p>
 <hr>
 <p> <em>Many thanks to David Wales who helped review this post.</em></p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>

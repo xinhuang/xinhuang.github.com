@@ -5,15 +5,14 @@ detect when a <em>std::vector</em> is passed by value - which usually causes a
 performance hit.</p>
 <h2 id="the-pass-by-value-std-vector-finding-program">The Pass-by-Value std::vector Finding Program</h2>
 <p>The example.cpp:</p>
-<pre><code>#include &lt;vector&gt;
+<pre class="hljs"><code class="C++"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;vector&gt;</span></span>
 
-using namespace std;
+<span class="hljs-keyword">using</span> <span class="hljs-keyword">namespace</span> <span class="hljs-built_in">std</span>;
 
-void foo(vector&lt;int&gt; is);
-void bar(const vector&lt;int&gt; is);
-void foobar(const vector&lt;int&gt;&amp; cis);
-void fooboo(vector&lt;int&gt;&amp; cis);
-</code></pre><p>Let&#39;s feed it to our <em>find-vec</em> program:</p>
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">foo</span><span class="hljs-params">(<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt; is)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">bar</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt; is)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">foobar</span><span class="hljs-params">(<span class="hljs-keyword">const</span> <span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;&amp; cis)</span></span>;
+<span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">fooboo</span><span class="hljs-params">(<span class="hljs-built_in">vector</span>&lt;<span class="hljs-keyword">int</span>&gt;&amp; cis)</span></span>;</code></pre><p>Let&#39;s feed it to our <em>find-vec</em> program:</p>
 <blockquote>
 <p>$ ./find-vec example.cpp -- -std=c++11<br>example.cpp:5:6<br>example.cpp:6:6  </p>
 </blockquote>
@@ -37,36 +36,32 @@ extract its attributes.</p>
 function, chain them together to compose the matcher we need, and/or bind the target
 node with a name so we can extract it later.</p>
 <p>To match a function declaration:</p>
-<pre><code>DeclarationMatcher Matcher = functionDecl();
-</code></pre><p>Then let&#39;s match its parameter:</p>
-<pre><code>DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));
-</code></pre><p>To matcher a parameter, we can use <em>hasParameter(N, ParamMatcher)</em>, which will match
+<pre class="hljs"><code class="C++">DeclarationMatcher Matcher = functionDecl();</code></pre><p>Then let&#39;s match its parameter:</p>
+<pre class="hljs"><code class="C++">DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));</code></pre><p>To matcher a parameter, we can use <em>hasParameter(N, ParamMatcher)</em>, which will match
  the N&#39;th of parameter with given parameter matcher. Here we will need to match any
  parameter that of type <em>std::vector</em>, so we will use <em>hasAnyParameter</em>.</p>
 <p>Next match the parameter type:</p>
-<pre><code>DeclarationMatcher Matcher = functionDecl(
-  hasAnyParameter(hasType(recordDecl(matchesName(&quot;std::vector&quot;))));
-</code></pre><h2 id="the-matchcallback">The MatchCallback</h2>
+<pre class="hljs"><code class="C++">DeclarationMatcher Matcher = functionDecl(
+  hasAnyParameter(hasType(recordDecl(matchesName(<span class="hljs-string">"std::vector"</span>))));</code></pre><h2 id="the-matchcallback">The MatchCallback</h2>
 <p>When the AST matcher find the right node, the corresponding
 <code>clang::ast_matchers::MatchFinder::MatchCallback</code> will be invoked with matched result. By providing a <code>MatchCallback</code>, we can print the function declarations/definitions that accept any parameter of type <code>std::vector</code> that is passed by value.</p>
-<pre><code>class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
-public:
-  virtual void
-  run(const clang::ast_matchers::MatchFinder::MatchResult &amp;Result) final {
-    llvm::outs() &lt;&lt; &quot;.&quot;;
-    if (const auto *F =
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">class</span> VecCallback : <span class="hljs-keyword">public</span> clang::ast_matchers::MatchFinder::MatchCallback {
+<span class="hljs-keyword">public</span>:
+  <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span>
+  <span class="hljs-title">run</span><span class="hljs-params">(<span class="hljs-keyword">const</span> clang::ast_matchers::MatchFinder::MatchResult &amp;Result)</span> final </span>{
+    llvm::outs() &lt;&lt; <span class="hljs-string">"."</span>;
+    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span> *F =
             Result.Nodes.getDeclAs&lt;clang::FunctionDecl&gt;(FunctionID)) {
-      const auto&amp; SM = *Result.SourceManager;
-      const auto&amp; Loc = F-&gt;getLocation();
-      llvm::outs() &lt;&lt; SM.getFilename(Loc) &lt;&lt; &quot;:&quot;
-                   &lt;&lt; SM.getSpellingLineNumber(Loc) &lt;&lt; &quot;:&quot;
-                   &lt;&lt; SM.getSpellingColumnNumber(Loc) &lt;&lt; &quot;\n&quot;;
+      <span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span>&amp; SM = *Result.SourceManager;
+      <span class="hljs-keyword">const</span> <span class="hljs-keyword">auto</span>&amp; Loc = F-&gt;getLocation();
+      llvm::outs() &lt;&lt; SM.getFilename(Loc) &lt;&lt; <span class="hljs-string">":"</span>
+                   &lt;&lt; SM.getSpellingLineNumber(Loc) &lt;&lt; <span class="hljs-string">":"</span>
+                   &lt;&lt; SM.getSpellingColumnNumber(Loc) &lt;&lt; <span class="hljs-string">"\n"</span>;
     }
   }
-};
-</code></pre><h2 id="references">References</h2>
+};</code></pre><h2 id="references">References</h2>
 <p>Clang also provides a simple document of AST matchers: <a href="http://clang.llvm.org/docs/LibASTMatchers.html">Matching the Clang AST</a>.
 For a complete reference of AST matchers, you can find it in <a href="http://clang.llvm.org/docs/LibASTMatchersReference.html">AST Matcher Reference</a>.</p>
 <p><em>All the source code in this post can be found at <a href="https://github.com/xinhuang/clang-playground.git">clang-playground</a>.</em></p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>

@@ -1,8 +1,7 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>Why IOString !&#x3D; String In Haskell</title></head><body><article id=top class=markdown-body><div layout=row><div flex=30 flex-xs=0 flex-sm=15></div><div flex=40 flex-xs=100 flex-sm=70><h1>Why IOString !&#x3D; String In Haskell</h1><div class=metadata></div><hr>
                 <p>In GHCi, I want to test my <code>headRev</code> function, while loading Mercurial log from a file and pass the content to headRev function:</p>
-<pre><code>log = readFile &quot;hg.log&quot;
-headRev log
-</code></pre><p>I get a error message complaining <code>IO String is not [Char]</code>:</p>
+<pre class="hljs"><code class="haskell"><span class="hljs-title">log</span> = readFile <span class="hljs-string">"hg.log"</span>
+<span class="hljs-title">headRev</span> log</code></pre><p>I get a error message complaining <code>IO String is not [Char]</code>:</p>
 <blockquote>
 <p>Couldn&#39;t match expected type <code>[Char]</code> with actual type <code>IO String</code> In
 the first argument of <code>headRev</code>, namely <code>log</code> In the expression:
@@ -19,11 +18,9 @@ parameters. The only place where IO is allowed is inside the IO Monad.</p>
 <p><a href="http://stackoverflow.com/a/1676052/2190129">The Answer @StackOverflow</a></p>
 <p>And BTW how to &quot;walk&quot; around it while you want to test in GHCi? I&#39;m doing this way:</p>
 <p>Define <code>interactWith</code> function in source code, compile, and load via <code>:l *hgrev</code></p>
-<pre><code>interactWith function [inputFile] = do
+<pre class="hljs"><code class="haskell"><span class="hljs-title">interactWith</span> function [inputFile] = <span class="hljs-keyword">do</span>
     input &lt;- readFile inputFile
-    putStrLn (function input)
-</code></pre><p>Then in GHCi:</p>
-<pre><code>let f log = headRev (lines log)
-interactWith f &quot;hg.log&quot;
-</code></pre>
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+    putStrLn (function input)</code></pre><p>Then in GHCi:</p>
+<pre class="hljs"><code class="haskell"><span class="hljs-title">let</span> f log = headRev (lines log)
+<span class="hljs-title">interactWith</span> f <span class="hljs-string">"hg.log"</span></code></pre>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>

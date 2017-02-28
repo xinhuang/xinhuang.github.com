@@ -20,7 +20,7 @@ It appears to be somehow VLD enters an infinite recursion when calling <code>Vis
 What&#39;s more interesting is despite the fact that this crash is repeatable, VLD has been enabled in our product for long.</p>
 <p>Why it happens now?</p>
 <p>The call stack looks like below:</p>
-<pre><code>...
+<pre class="hljs"><code class="undefined">...
 6dc9 0759f314 09ddbfcc 00000042 0a16b870 09defbd0 KERNELBASE!TlsSetValue+0x4f
 6dca 0759f360 09ddc1a3 09defbd0 00490000 0759f38c vld!VisualLeakDetector::getTls+0xfc [c:\build\vld\v24c\src\vld.cpp @ 1075]
 6dcb 0759f370 09dda74b 0baa5930 00000008 0759f69c vld!VisualLeakDetector::enabled+0x23 [c:\build\vld\v24c\src\vld.cpp @ 982]
@@ -33,68 +33,66 @@ What&#39;s more interesting is despite the fact that this crash is repeatable, V
 ...
 6dec 0759fde0 77419882 0546b610 718c8e2a 00000000 kernel32!BaseThreadInitThunk+0xe
 6ded 0759fe20 77419855 7612d854 0546b610 00000000 ntdll!__RtlUserThreadStart+0x70
-6dee 0759fe38 00000000 7612d854 0546b610 00000000 ntdll!_RtlUserThreadStart+0x1b
-</code></pre><p>When a thread starts and tries to allocate memory, VLD will trace all memory
+6dee 0759fe38 00000000 7612d854 0546b610 00000000 ntdll!_RtlUserThreadStart+0x1b</code></pre><p>When a thread starts and tries to allocate memory, VLD will trace all memory
 allocations. VLD records allocation information in a TLS slot to avoid
 contention and reduce performance impact. When VLD tries to
 initialize the TLS slot, Windows API <code>TlsSetValue</code> allocates memory,
 and VLD traces the allocation by saving it into TLS. This is
 what we can guess from the crash dump.</p>
 <p>But why <code>TlsSetValue</code> will allocate memory? Let&#39;s take a look at the disassembled code:<br>(uninteresting details are omited, indentations are added for better formating and understanding)</p>
-<pre><code>KERNELBASE!TlsSetValue:
-// BOOL WINAPI TlsSetValue(_In_ DWORD dwTlsIndex, _In_opt_ LPVOID lpTlsValue)
+<pre class="hljs"><code class="x86asm">KERNELBASE!TlsSetValue:
+// BOOL WINAPI TlsSetValue(_In_ <span class="hljs-built_in">DWORD</span> dwTlsIndex, _In_opt_ LPVOID lpTlsValue)
 ...
-75c44585 56              push    esi
-75c44586 648b3518000000  mov     esi,dword ptr fs:[18h]
-// ESI points to Thread Environment Block (TEB)
-75c4458d 57              push    edi
-75c4458e 8b7d08          mov     edi,dword ptr [ebp+8]
-75c44591 83ff40          cmp     edi,40h
-75c44594 7260            jb      KERNELBASE!TlsSetValue+0x76 (75c445f6)  Branch
+75c44585 <span class="hljs-number">56</span>              <span class="hljs-keyword">push</span>    <span class="hljs-built_in">esi</span>
+75c44586 648b3518000000  <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">esi</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> <span class="hljs-built_in">fs</span>:[<span class="hljs-number">18h</span>]
+// <span class="hljs-built_in">ESI</span> points to Thread Environment Block (TEB)
+75c4458d <span class="hljs-number">57</span>              <span class="hljs-keyword">push</span>    <span class="hljs-built_in">edi</span>
+75c4458e 8b7d08          <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">edi</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">8</span>]
+75c44591 83ff40          <span class="hljs-keyword">cmp</span>     <span class="hljs-built_in">edi</span>,<span class="hljs-number">40h</span>
+75c44594 <span class="hljs-number">7260</span>            <span class="hljs-keyword">jb</span>      KERNELBASE!TlsSetValue+<span class="hljs-number">0x76</span> (75c445f6)  Branch
 
-// if (dwTlsIndex &gt;= 0x40) {
+// if (dwTlsIndex &gt;= <span class="hljs-number">0x40</span>) {
 
-  KERNELBASE!TlsSetValue+0x16:
-  75c44596 83ef40          sub     edi,40h
-  75c44599 81ff00040000    cmp     edi,400h
-  75c4459f 734e            jae     KERNELBASE!TlsSetValue+0x6f (75c445ef)  Branch
+  KERNELBASE!TlsSetValue+<span class="hljs-number">0x16</span>:
+  75c44596 83ef40          <span class="hljs-keyword">sub</span>     <span class="hljs-built_in">edi</span>,<span class="hljs-number">40h</span>
+  75c44599 81ff00040000    <span class="hljs-keyword">cmp</span>     <span class="hljs-built_in">edi</span>,<span class="hljs-number">400h</span>
+  75c4459f 734e            <span class="hljs-keyword">jae</span>     KERNELBASE!TlsSetValue+<span class="hljs-number">0x6f</span> (75c445ef)  Branch
 
-  // if (dwTlsIndex &lt; 0x440) {
+  // if (dwTlsIndex &lt; <span class="hljs-number">0x440</span>) {
 
-    KERNELBASE!TlsSetValue+0x21:
-    75c445a1 8b86940f0000    mov     eax,dword ptr [esi+0F94h]
-    75c445a7 85c0            test    eax,eax
-    75c445a9 753c            jne     KERNELBASE!TlsSetValue+0x67 (75c445e7)  Branch
+    KERNELBASE!TlsSetValue+<span class="hljs-number">0x21</span>:
+    75c445a1 8b86940f0000    <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">eax</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">esi</span>+<span class="hljs-number">0F94h</span>]
+    75c445a7 85c0            <span class="hljs-keyword">test</span>    <span class="hljs-built_in">eax</span>,<span class="hljs-built_in">eax</span>
+    75c445a9 753c            <span class="hljs-keyword">jne</span>     KERNELBASE!TlsSetValue+<span class="hljs-number">0x67</span> (75c445e7)  Branch
 
     // if (pTeb-&gt;TlsExpansionSlots == NULL)
 
-      KERNELBASE!TlsSetValue+0x2b:
-      75c445ab e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
-      75c445b0 8b402c          mov     eax,dword ptr [eax+2Ch]
-      75c445b3 648b0d18000000  mov     ecx,dword ptr fs:[18h]
-      75c445ba 6800100000      push    1000h
-      75c445bf 83c808          or      eax,8
-      75c445c2 50              push    eax
-      75c445c3 8b4130          mov     eax,dword ptr [ecx+30h]
-      75c445c6 ff7018          push    dword ptr [eax+18h]
-      75c445c9 ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
-      75c445cf 85c0            test    eax,eax
-      75c445d1 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
+      KERNELBASE!TlsSetValue+<span class="hljs-number">0x2b</span>:
+      75c445ab e88126ffff      <span class="hljs-keyword">call</span>    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
+      75c445b0 8b402c          <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">eax</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">eax</span>+<span class="hljs-number">2Ch</span>]
+      75c445b3 648b0d18000000  <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">ecx</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> <span class="hljs-built_in">fs</span>:[<span class="hljs-number">18h</span>]
+      75c445ba <span class="hljs-number">6800100000</span>      <span class="hljs-keyword">push</span>    <span class="hljs-number">1000h</span>
+      75c445bf 83c808          <span class="hljs-keyword">or</span>      <span class="hljs-built_in">eax</span>,<span class="hljs-number">8</span>
+      75c445c2 <span class="hljs-number">50</span>              <span class="hljs-keyword">push</span>    <span class="hljs-built_in">eax</span>
+      75c445c3 8b4130          <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">eax</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">ecx</span>+<span class="hljs-number">30h</span>]
+      75c445c6 ff7018          <span class="hljs-keyword">push</span>    <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">eax</span>+<span class="hljs-number">18h</span>]
+      75c445c9 ff151810c375    <span class="hljs-keyword">call</span>    <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
+      75c445cf 85c0            <span class="hljs-keyword">test</span>    <span class="hljs-built_in">eax</span>,<span class="hljs-built_in">eax</span>
+      75c445d1 750e            <span class="hljs-keyword">jne</span>     KERNELBASE!TlsSetValue+<span class="hljs-number">0x61</span> (75c445e1)  Branch
       ...
-      KERNELBASE!TlsSetValue+0x61:
-      75c445e1 8986940f0000    mov     dword ptr [esi+0F94h],eax
+      KERNELBASE!TlsSetValue+<span class="hljs-number">0x61</span>:
+      75c445e1 8986940f0000    <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">esi</span>+<span class="hljs-number">0F94h</span>],<span class="hljs-built_in">eax</span>
 
       // pTeb-&gt;TlsExpansionSlots = RtlAllocateHeap(...)
 
-    KERNELBASE!TlsSetValue+0x67:
-    75c445e7 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
-    75c445ea 890cb8          mov     dword ptr [eax+edi*4],ecx
-    75c445ed eb11            jmp     KERNELBASE!TlsSetValue+0x80 (75c44600)  Branch
+    KERNELBASE!TlsSetValue+<span class="hljs-number">0x67</span>:
+    75c445e7 8b4d0c          <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">ecx</span>,<span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">ebp</span>+<span class="hljs-number">0Ch</span>]
+    75c445ea 890cb8          <span class="hljs-keyword">mov</span>     <span class="hljs-built_in">dword</span> <span class="hljs-built_in">ptr</span> [<span class="hljs-built_in">eax</span>+<span class="hljs-built_in">edi</span>*<span class="hljs-number">4</span>],<span class="hljs-built_in">ecx</span>
+    75c445ed eb11            <span class="hljs-keyword">jmp</span>     KERNELBASE!TlsSetValue+<span class="hljs-number">0x80</span> (75c44600)  Branch
 
     // Set value to TLS slot
-  }  else { // ERROR if (dwTlsIndex &gt;= 0x440) }
-} // if (dwTlsIndex &gt;= 0x40)
-</code></pre><p>From the disassembled code we can find that the expansion occurs when the passed-in
+  }  else { // ERROR if (dwTlsIndex &gt;= <span class="hljs-number">0x440</span>) }
+} // if (dwTlsIndex &gt;= <span class="hljs-number">0x40</span>)</code></pre><p>From the disassembled code we can find that the expansion occurs when the passed-in
 slot &gt;= 0x40. This confirmed our guess.
 But since VLD will enter infinite recursion when it sees a TLS slot &gt;= 0x40,
 why the stack overflow is never observed before?</p>
@@ -111,23 +109,22 @@ conclusion is correct.</p>
 To do this, first increase TLS slot number, then load and enable VLD dynamically using <code>LoadLibrary</code> &amp; <code>GetProcAddress</code>.
 After VLD is enabled, allocate memory in a new thread.</p>
 <p><em>Minimum reproduce code sample</em></p>
-<pre><code>#include &lt;windows.h&gt;
-#include &lt;thread&gt;
-#include &lt;chrono&gt;
-#include &lt;memory&gt;
+<pre class="hljs"><code class="C"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;windows.h&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;thread&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;chrono&gt;</span></span>
+<span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;memory&gt;</span></span>
 
-int main(int argc, wchar_t *argv[]) {
-  for (int i = 0; i &lt; 0x40; ++i)
+<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-keyword">int</span> argc, <span class="hljs-keyword">wchar_t</span> *argv[])</span> </span>{
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">int</span> i = <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">0x40</span>; ++i)
     TlsAlloc();
 
-  HMODULE h_vld = LoadLibraryA(&quot;vld.dll&quot;);
-  typedef void(*vld_enable_t)(void);
-  auto vld_enable = (vld_enable_t)::GetProcAddress(h_vld, &quot;VLDGlobalEnable&quot;);
+  HMODULE h_vld = LoadLibraryA(<span class="hljs-string">"vld.dll"</span>);
+  <span class="hljs-function"><span class="hljs-keyword">typedef</span> <span class="hljs-title">void</span><span class="hljs-params">(*<span class="hljs-keyword">vld_enable_t</span>)</span><span class="hljs-params">(<span class="hljs-keyword">void</span>)</span></span>;
+  <span class="hljs-keyword">auto</span> vld_enable = (<span class="hljs-keyword">vld_enable_t</span>)::GetProcAddress(h_vld, <span class="hljs-string">"VLDGlobalEnable"</span>);
   vld_enable();
-  std::thread([]() {std::make_shared&lt;int&gt;(); }).join();
-  return 0;
-}
-</code></pre><p>Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
+  <span class="hljs-built_in">std</span>::thread([]() {<span class="hljs-built_in">std</span>::make_shared&lt;<span class="hljs-keyword">int</span>&gt;(); }).join();
+  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
+}</code></pre><p>Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
 from our product crash dump. (Except for the first several lines which intializes CLR)
 Our theory about VLD and TLS expansion is correct.</p>
 <h2 id="conclusion">Conclusion</h2>
@@ -147,4 +144,4 @@ when I am wondering why this issue still happens when TLS expansion is checked i
 <p>Thanks to my smart &amp; beautiful scientist girlfriend Z for her patience and time to review
 this post and give insightful comments.</p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css></body><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></html>
