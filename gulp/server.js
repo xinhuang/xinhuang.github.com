@@ -11,7 +11,8 @@ gulp.task('serve', () => {
       server: { baseDir: conf.paths.dist },
     });
 
-    gulp.watch([path.join(conf.paths.src, '/**/*'),
+    gulp.watch([path.join('gulp', '/**/*'),
+                path.join(conf.paths.src, '/**/*'),
                 path.join(conf.paths.data, '/**/*')], ['serve:reload'])
 });
 
