@@ -54,6 +54,7 @@ function loadIndex(type) {
 }
 
 function buildIndex(type) {
+    gutil.log(`build index for ${type}`)
     const index = loadIndex(type);
     const dir = path.join(conf.paths.data, type);
     return rxfs.walk(dir)
@@ -76,17 +77,10 @@ function buildIndex(type) {
             index.posts.reverse();
             fs.mkdirsSync(path.join(conf.paths.tmp, type))
             fs.writeFileSync(path.join(conf.paths.tmp, type, 'index.json'), JSON.stringify(index));
+            gutil.log(`done for building index for ${type}`)
             return index;
         });
 }
-
-gulp.task('post:index', cb => {
-    buildIndex('posts').subscribe(
-        index => {},
-        () => cb(),
-        () => cb()
-    );
-});
 
 function render(dir, underRoot = false) {
     marked.setOptions({
@@ -126,14 +120,6 @@ function render(dir, underRoot = false) {
         });
 }
 
-gulp.task('post:render', ['post:index'], cb => {
-    render('posts').subscribe(
-        _ => {},
-        () => cb(),
-        () => cb()
-    )
-});
-
 function renderIndex(dir, underRoot) {
     const index = loadIndex(dir);
     const template = fs.readFileSync(path.join(conf.paths.src, 'templates', 'index.template.html')).toString();
@@ -151,18 +137,25 @@ gulp.task('homepage', ['post'], () => {
     renderIndex('posts', true);
 });
 
-gulp.task('post', ['post:index', 'post:render'], () => {});
-gulp.task('page', ['page:index', 'page:render']);
-
-gulp.task('page:index', cb => {
-    buildIndex('pages').subscribe(
-        index => {},
-        () => cb(),
-        () => cb()
-    );
+gulp.task('index', cb => {
+    Observable.fromArray(['pages', 'posts', 'fav'])
+        .map(buildIndex)
+        .subscribe(
+            () => {},
+            e => cb(),
+            () => cb()
+        );
 });
 
-gulp.task('page:render', ['page:index'], cb => {
+gulp.task('post', ['index'], cb => {
+    render('posts').subscribe(
+        _ => {},
+        () => cb(),
+        () => cb()
+    )
+});
+
+gulp.task('page', ['index'], cb => {
     render('pages', true).subscribe(
         _ => {},
         () => cb(),
@@ -170,17 +163,7 @@ gulp.task('page:render', ['page:index'], cb => {
     )
 });
 
-gulp.task('fav', ['fav:index', 'fav:render']);
-
-gulp.task('fav:index', cb => {
-    buildIndex('fav').subscribe(
-        index => {},
-        () => cb(),
-        () => cb()
-    );
-});
-
-gulp.task('fav:render', ['fav:index'], cb => {
+gulp.task('fav', ['index'], cb => {
     render('fav').subscribe(
         _ => {},
         () => cb(),
