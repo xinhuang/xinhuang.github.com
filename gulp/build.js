@@ -23,8 +23,6 @@ gulp.task('clean', () => {
     return $.del([conf.paths.dist, conf.paths.tmp]);
 });
 
-gulp.task('content', ['post', 'homepage', 'page', 'resources']);
-
 gulp.task('inject', () => {
     return gulp.src([path.join(conf.paths.src, '**/*.html')])
         .pipe(print())
@@ -64,7 +62,7 @@ function buildIndex(type) {
             var data = fs.readFileSync(f).toString().split('\n');
             data.unshift(`"file": "${f}"`);
             const header = parse.parse(data).header;
-            header.url = `/posts/${path.basename(header.file, '.md')}.html`;
+            header.url = `/${type}/${path.basename(header.file, '.md')}.html`;
             return header;
         })
         .toArray()
@@ -138,13 +136,21 @@ gulp.task('post:render', ['post:index'], cb => {
     )
 });
 
-gulp.task('homepage', ['post'], () => {
-    const index = loadIndex('posts');
+function renderIndex(dir, underRoot) {
+    const index = loadIndex(dir);
     const template = fs.readFileSync(path.join(conf.paths.src, 'templates', 'index.template.html')).toString();
     const rendered = mustache.render(template, {
-        posts: index.posts
+        entries: index.posts
     });
-    fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
+    if (underRoot) {
+        fs.writeFileSync(path.join(conf.paths.tmp, 'index.html'), rendered);
+    } else {
+        fs.writeFileSync(path.join(conf.paths.tmp, 'dir', 'index.html'), rendered);
+    }
+}
+
+gulp.task('homepage', ['post'], () => {
+    renderIndex('posts', true);
 });
 
 gulp.task('page', ['page:index', 'page:render']);
@@ -159,6 +165,24 @@ gulp.task('page:index', cb => {
 
 gulp.task('page:render', ['page:index'], cb => {
     render('pages', true).subscribe(
+        _ => {},
+        () => cb(),
+        () => cb()
+    )
+});
+
+gulp.task('fav', ['fav:index', 'fav:render']);
+
+gulp.task('fav:index', cb => {
+    buildIndex('fav').subscribe(
+        index => {},
+        () => cb(),
+        () => cb()
+    );
+});
+
+gulp.task('fav:render', ['fav:index'], cb => {
+    render('fav').subscribe(
         _ => {},
         () => cb(),
         () => cb()
@@ -183,5 +207,7 @@ gulp.task('dist', ['content'], () => {
         }))
         .pipe(gulp.dest(conf.paths.dist));
 });
+
+gulp.task('content', ['post', 'homepage', 'page', 'resources', 'fav']);
 
 gulp.task('build', ['content', 'dist'], () => {});
