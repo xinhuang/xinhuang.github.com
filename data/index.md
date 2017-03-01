@@ -3,5 +3,5 @@
 "index": "posts"
 "xref": "/fav/"
 "xrefname": "delicio.us"
-"links": [["delicio.us", "/fav/"], ["twitter", "https://twitter.com/xin_abc"]]
+"links": [["delicio.us", "/fav/"], ["Twitter", "https://twitter.com/xin_abc"], ["GitHub", "https://github.com/xinhuang"]]
 ---
