@@ -15,7 +15,7 @@ So, you are a web developer. You would like your website to be:
 You probably won't miss this.
 
 
-### Link
+### Links
 
 [The Mother-Fucking-Website](http://motherfuckingwebsite.com/)  
 [The Better-Mother-Fucking Website](http://bettermotherfuckingwebsite.com/)  
