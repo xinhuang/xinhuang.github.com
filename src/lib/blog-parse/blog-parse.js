@@ -30,7 +30,7 @@ function parseHeader(lines) {
         }
       }
       if (header.file) {
-          header.date = path.basename(header.file).substring(0, 10);
+          header.date = postdate(header.file);
       }
       return header;
     }
@@ -59,4 +59,8 @@ function body(text) {
     return text.substring(p + 4);
 }
 
-export default { extractHeader, parseHeader, parse, header, body };
+function postdate(filename) {
+    return path.basename(filename).substring(0, 10);
+}
+
+export default { extractHeader, parseHeader, parse, header, body, postdate };

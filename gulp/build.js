@@ -128,7 +128,7 @@ gulp.task('render', ['index'], cb => {
             } else {
                 rendered = mustache.render(template, {
                     title: header.title,
-                    date: header.date,
+                    date: parse.postdate(file),
                     content: marked(parse.body(text)),
                 });
             }
