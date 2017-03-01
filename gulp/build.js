@@ -40,7 +40,7 @@ function loadIndex(type) {
         try {
             return JSON.parse(data);
         } catch (e) {
-            conf.errorHandler(e);
+            conf.onError(e);
             return {};
         }
     }
@@ -65,7 +65,7 @@ function buildIndex(type) {
         .toArray()
         .first()
         .doOnError(e => {
-            conf.errorHandler(e);
+            conf.onError(e);
         })
         .map(headers => {
             index.posts = headers;
@@ -112,6 +112,10 @@ gulp.task('render', ['index'], cb => {
 
             var rendered;
             if (header.index) {
+                const links = [];
+                for (var i = 0; i < header.links.length; i++) {
+                    links.push({name: header.links[i][0], link: header.links[i][1]});
+                }
                 const index = loadIndex(header.index).posts;
                 rendered = mustache.render(template, {
                     pagetitle: header.title,
@@ -119,6 +123,7 @@ gulp.task('render', ['index'], cb => {
                     index: index,
                     xref: header.xref,
                     xrefname: header.xrefname,
+                    links: links,
                 });
             } else {
                 rendered = mustache.render(template, {
@@ -132,7 +137,7 @@ gulp.task('render', ['index'], cb => {
         })
         .subscribe(
             () => {},
-            e => { conf.errorHandler(e); cb(); },
+            e => { conf.onError(e); cb(); },
             () => cb()
         );
 });

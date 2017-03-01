@@ -20,9 +20,13 @@ function parseHeader(lines) {
     } else {
       let header = {};
       for (let i = 0; i < lines.length; ++i) {
-        const tmp = JSON.parse(`{${lines[i]}}`);  // eslint-disable-line angular/json-functions
-        for (let key in tmp) {
-          header[key] = tmp[key];
+        try {
+          const tmp = JSON.parse(`{${lines[i]}}`);  // eslint-disable-line angular/json-functions
+          for (let key in tmp) {
+            header[key] = tmp[key];
+          }
+        } catch(e) {
+          throw new Error(`JSON.parse failed at line ${lines[i]}\n${e}\n${e.stack}`)
         }
       }
       if (header.file) {

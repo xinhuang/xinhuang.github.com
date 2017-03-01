@@ -27,9 +27,12 @@
             {{/index}}
         </ul>
         <hr/>
-        <a href="{{xref}}" class="left">{{xrefname}}</a>
-        <a href="https://github.com/xinhuang" class="left margin-left">GitHub</a>
-        <a href="/resume.html" class="right">About</a>
+        <div>
+            {{#links}}
+            <a href="{{link}}" class="horizontal-link">{{name}}</a>
+            {{/links}}
+            <a href="/resume.html" class="horizontal-link">About</a>
+        </div>
     </article>
     <style>
         body {
@@ -88,8 +91,16 @@
             float: left;
         }
 
-        .margin-left {
+        .horizontal-link {
             margin-left: 1em;
+        }
+
+        .horizontal-link:first-child {
+            margin-left: 0;
+        }
+
+        .horizontal-link:last-child {
+            float: right;
         }
 
         .right {

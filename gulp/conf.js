@@ -36,3 +36,7 @@ exports.errorHandler = function(title) {
     this.emit('end');
   };
 };
+
+exports.onError = err => {
+    gutil.log(gutil.colors.red('[ERROR]'), err.toString());
+}
