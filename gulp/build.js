@@ -121,8 +121,6 @@ gulp.task('render', ['index'], cb => {
                     pagetitle: header.title,
                     content: marked(parse.body(text)),
                     index: index,
-                    xref: header.xref,
-                    xrefname: header.xrefname,
                     links: links,
                 });
             } else {
