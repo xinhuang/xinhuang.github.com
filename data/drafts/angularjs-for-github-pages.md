@@ -1,5 +1,5 @@
-"title": "AngularJS For GitHub Pages"
-"tags": ["HowTo", "AngularJS"]
+title = "AngularJS For GitHub Pages"
+tags = ["HowTo", "AngularJS"]
 ---
 
 My blog hosted on GitHub page has migrated from Jekyll to AngularJS recently. Because Jekyll is designed for GitHub page generation, and AngularJS is only a front-end framework, we need some scaffold code to generate website content
@@ -48,8 +48,8 @@ tags: [tagA, tagB]
 With this header and file name convention `<date>-<title>`, it won't take to much to recreate an index file. But in order to avoid parsing such header by hand, I re-format the header into following: (and removed some unused values like `layout`)
 
 ```
-"title": "My First post"
-"tags": ["tagA", "tagB"]
+"title" : "My First post"
+"tags" : ["tagA", "tagB"]
 ---
 ```
 

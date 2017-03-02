@@ -1,7 +1,7 @@
-"title": "This is Your Life in Silicon Valley"
-"tags": ["life"]
-"rating": 4
-"layout": "fav"
+title = "This is Your Life in Silicon Valley"
+tags = ["life"]
+rating = 4
+layout = "fav"
 ---
 
 This is your life in Silicon Valley, isn't it?

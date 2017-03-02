@@ -38,5 +38,5 @@ exports.errorHandler = function(title) {
 };
 
 exports.onError = err => {
-    gutil.log(gutil.colors.red('[ERROR]'), err.toString());
+    gutil.log(gutil.colors.red('[ERROR]'), `${err.toString()}\n${err.stack}`);
 }

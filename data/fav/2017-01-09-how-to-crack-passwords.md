@@ -1,7 +1,7 @@
-"title": "How to Crack Passwords"
-"tags": ["crack", "password"]
-"rating": 4
-"layout": "fav"
+title = "How to Crack Passwords"
+tags = ["crack", "password"]
+rating = 4
+layout = "fav"
 ---
 
 This is a tutorial detailed describes how to crack passwords.

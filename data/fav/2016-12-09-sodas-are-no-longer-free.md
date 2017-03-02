@@ -1,7 +1,7 @@
-"title": "Sodas Are No Longer Free"
-"tags": ["culture", "management"]
-"rating": 4
-"layout": "fav"
+title = "Sodas Are No Longer Free"
+tags = ["culture", "management"]
+rating = 4
+layout = "fav"
 ---
 
 When is the time the management board refuse to pay for free sodas? Microsoft did this before, and

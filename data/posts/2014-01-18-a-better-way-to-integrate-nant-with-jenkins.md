@@ -1,6 +1,6 @@
-"title": "A better way to integrate NAnt with Jenkins"
-"tags": ["NAnt", "Jenkins", "CI"]
-"layout": "post"
+title = "A better way to integrate NAnt with Jenkins"
+tags = ["NAnt", "Jenkins", "CI"]
+layout = "post"
 ---
 
 ## Use NAnt by NAnt plugin of Jenkins

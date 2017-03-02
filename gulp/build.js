@@ -56,9 +56,10 @@ function buildIndex(type) {
         .filter(p => p.endsWith('.md'))
         .filter(p => path.basename(p) != 'index.md')
         .map(f => {
-            var data = fs.readFileSync(f).toString().split('\n');
-            data.unshift(`"file": "${f}"`);
-            const header = parse.parse(data).header;
+            const text = fs.readFileSync(f).toString();
+            const header = parse.header(text);
+            header.file = f;
+            header.date = parse.date(f);
             header.url = `/${type}/${path.basename(header.file, '.md')}.html`;
             return header;
         })
@@ -126,7 +127,7 @@ gulp.task('render', ['index'], cb => {
             } else {
                 rendered = mustache.render(template, {
                     title: header.title,
-                    date: parse.postdate(file),
+                    date: parse.date(file),
                     content: marked(parse.body(text)),
                 });
             }

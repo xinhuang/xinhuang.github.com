@@ -1,6 +1,6 @@
-"title": "Why IOString != String In Haskell"
-"tags": ["Haskell", "Design"]
-"layout": "post"
+title = "Why IOString != String In Haskell"
+tags = ["Haskell", "Design"]
+layout = "post"
 ---
 
 In GHCi, I want to test my `headRev` function, while loading Mercurial log from a file and pass the content to headRev function:

@@ -1,5 +1,5 @@
-"title": "to-do"
-"layout": "page"
+title = "to-do"
+layout = "page"
 ---
 
 ## for the blog

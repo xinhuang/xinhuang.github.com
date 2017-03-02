@@ -1,6 +1,6 @@
-"title": "How to Config GoAgent For SBT"
-"tags": ["HowTo", "GoAgent", "SBT"]
-"layout": "post"
+title = "How to Config GoAgent For SBT"
+tags = ["HowTo", "GoAgent", "SBT"]
+layout = "post"
 ---
 
 ## Proxy Setting For SBT

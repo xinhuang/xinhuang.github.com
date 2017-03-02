@@ -1,6 +1,6 @@
-"title": "Hello, world!"
-"tags": ["HowTo", "Jekyll"]
-"layout": "post"
+title = "Hello, world!"
+tags = ["HowTo", "Jekyll"]
+layout = "post"
 ---
 
 This is the first post. Struggling with it for hours, even cloned somebody's

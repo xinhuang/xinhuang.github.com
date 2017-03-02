@@ -1,5 +1,5 @@
-"title": "Xin Huang"
-"layout": "page"
+title = "Xin Huang"
+layout = "page"
 ---
 
 Email:            [xinhuang.abc@gmail.com]  

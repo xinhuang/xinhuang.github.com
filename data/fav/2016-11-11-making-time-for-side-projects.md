@@ -1,7 +1,7 @@
-"title": "Making Time For Side Projects"
-"tags": ["side-project", "life"]
-"rating": 4
-"layout": "fav"
+title = "Making Time For Side Projects"
+tags = ["side-project", "life"]
+rating = 4
+layout = "fav"
 ---
 
 Every programmer has its own side project, at least in dreams. The only problem prevent the world to

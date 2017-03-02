@@ -1,7 +1,7 @@
-"title": "Extending GoogleTest"
-"description": "If you want to make your own unit test DSL, how to make use of googletest to do the execution & reporting?"
-"tags": ["googletest", "HowTo"]
-"layout": "post"
+title = "Extending GoogleTest"
+description = "If you want to make your own unit test DSL, how to make use of googletest to do the execution & reporting?"
+tags = ["googletest", "HowTo"]
+layout = "post"
 ---
 
 Maybe you are tired of the syntax [googletest] has chosen, so you deside to invent you own unit test DSL. But re-implementing the whole execution & report part of a unit test framework would be too much, esp. you want to ship your "product" somewhere.

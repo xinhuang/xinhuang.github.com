@@ -1,7 +1,7 @@
-"title": "The Mother-Fucking Websites"
-"tags": ["design"]
-"rating": 5
-"layout": "fav"
+title = "The Mother-Fucking Websites"
+tags = ["design"]
+rating = 5
+layout = "fav"
 ---
 
 So, you are a web developer. You would like your website to be:

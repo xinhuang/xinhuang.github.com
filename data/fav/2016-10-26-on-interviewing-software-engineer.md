@@ -1,7 +1,7 @@
-"title": "On Interviewing Software Engineer"
-"tags": ["interview", "recruiting"]
-"rating": 4.5
-"layout": "fav"
+title = "On Interviewing Software Engineer"
+tags = ["interview", "recruiting"]
+rating = 4.5
+layout = "fav"
 ---
 
 How to find the better software engineer? Most companies today are just doing it the wrong way. If not "wronger".

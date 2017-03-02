@@ -1,7 +1,7 @@
-"title": "All Software is Legacy"
-"tags": ["engineering"]
-"rating": 3
-"layout": "fav"
+title = "All Software is Legacy"
+tags = ["engineering"]
+rating = 3
+layout = "fav"
 ---
 
 CGI.pm was the popular Perl module for building website in earlier years. The current maintainer tells stories about the difficulties, and how he defines the "legacy software".

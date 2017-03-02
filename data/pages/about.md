@@ -1,5 +1,5 @@
-"title": "About Me"
-"layout": "page"
+title = "About Me"
+layout = "page"
 ---
 
 Hi, there! My name is Xin Huang. I live in Vancouver. A software engineer for 6 years.

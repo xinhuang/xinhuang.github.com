@@ -1,6 +1,6 @@
-"title": "The Epic Fail of Enforcing Unit Tests"
-"tags": ["unit test"]
-"layout": "post"
+title = "The Epic Fail of Enforcing Unit Tests"
+tags = ["unit test"]
+layout = "post"
 ---
 
 _The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial [here](here). It starts by a simple thing, then it leads to complete a different story "**convincingly**" and "**reasonably**"._
