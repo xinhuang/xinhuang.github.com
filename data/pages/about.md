@@ -5,7 +5,7 @@ layout = "page"
 Hi, there! My name is Xin Huang. I live in Vancouver. A software engineer for 6 years.
 I speak in C++ a lot. I can also chat in x86 ASM, Python, Javascript, Lua, C# and other minorities.
 
-I used to work in the oil field software, somewhat related to HPC. Now I am shifting my focus to Cyber Security.
+I used to work on developing oil field software, somewhat related to HPC. Now I am shifting my focus to Cyber Security.
 
 I am making plans all the time, and carry them out randomly.
 
