@@ -6,6 +6,7 @@ layout = "page"
 
 1. extract css sheet and inject using `gulp-inject`
 2. preview drafts
+3. tag and category index
 
 ## as a general notebook framework
 
