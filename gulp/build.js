@@ -78,7 +78,7 @@ function buildIndex(type) {
 }
 
 gulp.task('index', cb => {
-    Observable.fromArray(['pages', 'posts', 'fav'])
+    Observable.fromArray(['pages', 'posts', 'fav', 'archive'])
         .map(buildIndex)
         .concatAll()
         .subscribe(
