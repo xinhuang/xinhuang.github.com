@@ -1,0 +1,16 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>A Gotcha From auto</title></head><body><article id=top class=markdown-body><div><div><h1>A Gotcha From auto</h1><div class=metadata>2014-02-16</div><hr>
+                <p>Recently, I found my random generator doesn&#39;t work. Which is:</p>
+<pre class="hljs"><code class="C++"><span class="hljs-keyword">auto</span> engine = mt19937{ random_device()() };
+<span class="hljs-keyword">auto</span> rand = [=](<span class="hljs-keyword">int</span> range) <span class="hljs-keyword">mutable</span> {
+    <span class="hljs-keyword">auto</span> idist = uniform_int_distribution&lt;<span class="hljs-keyword">int</span>&gt;(<span class="hljs-number">0</span>, range);
+    <span class="hljs-keyword">return</span> idist(engine);
+};
+f(rand);</code></pre><p>Inside function <code>f</code>, it will call <code>rand</code> many times and save output to one file. But, generated files are all identical.</p>
+<p>Observe closer, I found the declaration of <code>f</code> is:</p>
+<pre class="hljs"><code class="C++">void f(function&lt;int(int)&gt; f);</code></pre><p>Oh, <code>f</code> is passed by value. Change to pass by reference:</p>
+<pre class="hljs"><code class="C++">void f(const function&lt;int(int)&gt;&amp; f);</code></pre><p>Still doesn&#39;t work.</p>
+<p>After thought for a while, I found the <code>lambda object</code> is implicit converted to <code>std::function</code>. Aha! Another copy!</p>
+<p>Give a specific type to <code>rand</code>:</p>
+<pre class="hljs"><code class="C++">function&lt;<span class="hljs-keyword">int</span>(<span class="hljs-keyword">int</span>)&gt; rand = ...;</code></pre><p>Problem solved!</p>
+
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>
