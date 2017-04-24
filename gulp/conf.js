@@ -17,6 +17,7 @@ exports.paths = {
   data: 'data',
   dist: 'dist',
   tmp: '.tmp',
+  templates: 'templates',
 };
 
 for (const key of Object.keys(exports.paths)) {

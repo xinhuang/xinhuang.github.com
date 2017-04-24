@@ -108,7 +108,7 @@ gulp.task('render', ['index'], cb => {
             const header = parse.header(text);
 
             const layout = header.layout;
-            const templateFile = path.join(conf.paths.src, 'templates', `${layout}.template.html`);
+            const templateFile = path.join(conf.paths.templates, `${layout}.template.html`);
             const template = fs.readFileSync(templateFile).toString();
 
             var rendered;
