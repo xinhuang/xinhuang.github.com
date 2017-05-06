@@ -3,7 +3,6 @@ layout = "page"
 ---
 
 Email:            [xinhuang.abc@gmail.com]  
-Mobile:           (+86) 186-0040-6436  
 Homepage:         [http://xinhuang.github.io]  
 GitHub:           [https://github.com/xinhuang]  
 StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]  
