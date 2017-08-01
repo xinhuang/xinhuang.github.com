@@ -7,7 +7,7 @@ layout = "post"
 
 Python3 `asyncio` is a powerful asynchronous library. However, the
 [complexity](http://lucumr.pocoo.org/2016/10/30/i-dont-understand-asyncio/)
-results in a very steep learning curve. Comparing to C# `async`/`await`,
+results in a very steep learning curve. Compared to C# `async`/`await`,
 the interfaces of Python3 `asyncio` is verbose and difficult to use.
 And the document is somewhat difficult to understand. (Even Guido
 [admited](https://stackoverflow.com/questions/34339020/how-to-not-await-in-a-loop-with-asyncio#comment56425069_34340285)
