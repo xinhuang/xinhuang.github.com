@@ -1,0 +1,56 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>Common Mistakes Using Python3 asyncio</title></head><body><article id=top class=markdown-body><div><div><h1>Common Mistakes Using Python3 asyncio</h1><div class=metadata>2017-07-31</div><hr>
+                <h2 id="preface">Preface</h2>
+<p>Python3 <code>asyncio</code> is a powerful asynchronous library. However, the
+<a href="http://lucumr.pocoo.org/2016/10/30/i-dont-understand-asyncio/">complexity</a>
+results in a very steep learning curve. Comparing to C# <code>async</code>/<code>await</code>,
+the interfaces of Python3 <code>asyncio</code> is verbose and difficult to use.
+And the document is somewhat difficult to understand. (Even Guido
+<a href="https://stackoverflow.com/questions/34339020/how-to-not-await-in-a-loop-with-asyncio#comment56425069_34340285">admited</a>
+the document is not clear!) Here I summerize some of the common mistakes when
+using <code>asyncio</code>.</p>
+<h2 id="runtimewarning-coroutine-foo-was-never-awaited">RuntimeWarning: coroutine <code>foo</code> was never awaited</h2>
+<p>This runtime warning can happen in many scenarios, but the cause are same: A coroutine object is created by the invocation of an <code>async</code> function, but is never inserted into an <code>EventLoop</code>.</p>
+<p>Consider following <code>async</code> function <code>foo()</code>:</p>
+<pre class="hljs"><code class="python"><span class="hljs-keyword">async</span> <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span>:</span>
+    <span class="hljs-comment"># a long async operation</span>
+    <span class="hljs-comment"># no value is returned</span></code></pre><p>If you want to call <code>foo()</code> as an asynchronous task, and doesn&#39;t care about the result:</p>
+<pre class="hljs"><code class="python">prepare_for_foo()
+foo()                               <span class="hljs-comment"># RuntimeWarning: coroutine foo was never awaited</span>
+remaining_work_not_depends_on_foo()</code></pre><p>This is because invoking <code>foo()</code> doesn&#39;t actually runs the function <code>foo()</code>, but created a &quot;coroutine object&quot; instead. This &quot;coroutine object&quot; will be executed when current <code>EventLoop</code> gets a chance: <code>awaited</code>/<code>yield from</code> is called or all previous tasks are finished.</p>
+<p>To execute an asynchronous task without <code>await</code>, use <code>loop.create_task()</code> with <code>loop.run_until_complete()</code>:</p>
+<pre class="hljs"><code class="python">prepare_for_foo()
+task = loop.create_task(foo())
+remaining_work_not_depends_on_foo()
+loop.run_until_complete(task)</code></pre><p>If the coroutine object is created and inserted into an <code>EventLoop</code>, but was never finished, the next warning will appear.</p>
+<h2 id="task-was-destroyed-but-it-is-pending-">Task was destroyed but it is pending!</h2>
+<p>The cause of this problem is that the <code>EventLoop</code> is closed right after canceling pending tasks. Because the <a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel"><code>Task.cancel()</code></a> &quot;arranges for a <code>CancelledError</code> to be thrown into the wrapped coroutine on the next cycle through the event loop&quot;, and &quot;<em>the coroutine then has a chance to clean up or even deny the request using try/except/finally.</em>&quot;</p>
+<p>To correctly cancel all tasks and close <code>EventLoop</code>, the <code>EventLoop</code> should be given the last chance to run all the canceled, but unfinished tasks.</p>
+<p>For example, this is the code to cancel all the tasks:</p>
+<pre class="hljs"><code class="python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">cancel_tasks</span><span class="hljs-params">()</span>:</span>
+    tasks = Task.all_tasks()              <span class="hljs-comment"># get all task in current loop</span>
+    <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> tasks:
+        t.cancel()
+
+cancel_tasks()
+loop.stop()</code></pre><p>Below code correctly handle task canceling and clean up. It starts the <code>EventLoop</code> by calling <code>loop.run_forever()</code>, and cleans up tasks after receiving <code>loop.stop()</code>:</p>
+<pre class="hljs"><code class="python"><span class="hljs-keyword">try</span>:
+    loop.run_forever()                <span class="hljs-comment"># run_forever() returns after calling loop.stop()</span>
+    tasks = Task.all_tasks()
+    <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> [t <span class="hljs-keyword">for</span> t <span class="hljs-keyword">in</span> tasks <span class="hljs-keyword">if</span> <span class="hljs-keyword">not</span> (t.done() <span class="hljs-keyword">or</span> t.cancelled())]:
+        loop.run_until_complete(t)    <span class="hljs-comment"># give canceled tasks the last chance to run</span>
+<span class="hljs-keyword">finally</span>:
+    loop.close()</code></pre><h2 id="-task-future-is-awaited-in-a-different-eventloop-than-it-is-created"><code>Task</code>/<code>Future</code> is awaited in a different <code>EventLoop</code> than it is created</h2>
+<p>This error is especially surprising to people who are familiar with C# <code>async</code>/<code>await</code>. It is because most of <code>asyncio</code> is not thread-safe, nor is <code>asyncio.Future</code> or <code>asyncio.Task</code>. Also don&#39;t confuse <code>asyncio.Future</code> with <code>concurrent.futures.Future</code> because they are not compatible (at least until Python 3.6): the latter is thread-safe while the former is not.</p>
+<p>In order to await an <code>asyncio.Future</code> in a different thread, <code>asyncio.Future</code> can be wrapped in a <code>concurrent.Future</code>:</p>
+<pre class="hljs"><code class="python"><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">wrap_future</span><span class="hljs-params">(asyncio_future)</span>:</span>
+    <span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">done_callback</span><span class="hljs-params">(af, cf)</span>:</span>
+        <span class="hljs-keyword">try</span>:
+            cf.set_result(af.result())
+        <span class="hljs-keyword">except</span> Exception <span class="hljs-keyword">as</span> e:
+            cf.set_exception(e)
+
+    concur_future = concurrent.Future()
+    asyncio_future.add_done_callback(<span class="hljs-keyword">lambda</span> f: done_callback(f, cf=concur_future))
+    <span class="hljs-keyword">return</span> concur_future</code></pre><p><em><code>asyncio.Task</code> is a subclass of <code>asyncio.Future</code>, so above code will also work.</em></p>
+
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif;background-color:#f0efd1}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>
