@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>Why IOString !&#x3D; String In Haskell</title></head><body><article id=top class=markdown-body><div><div><h1>Why IOString !&#x3D; String In Haskell</h1><div class=metadata>2013-08-08</div><hr>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>Why IOString !&#x3D; String In Haskell</title></head><body><article id=top class=markdown-body><div><div><h1>Why IOString !&#x3D; String In Haskell</h1><div class=metadata>2013-08-08</div>
                 <p>In GHCi, I want to test my <code>headRev</code> function, while loading Mercurial log from a file and pass the content to headRev function:</p>
 <pre class="hljs"><code class="haskell"><span class="hljs-title">log</span> = readFile <span class="hljs-string">"hg.log"</span>
 <span class="hljs-title">headRev</span> log</code></pre><p>I get a error message complaining <code>IO String is not [Char]</code>:</p>

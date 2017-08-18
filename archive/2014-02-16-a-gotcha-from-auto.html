@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>A Gotcha From auto</title></head><body><article id=top class=markdown-body><div><div><h1>A Gotcha From auto</h1><div class=metadata>2014-02-16</div><hr>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,minimum-scale=1"><title>A Gotcha From auto</title></head><body><article id=top class=markdown-body><div><div><h1>A Gotcha From auto</h1><div class=metadata>2014-02-16</div>
                 <p>Recently, I found my random generator doesn&#39;t work. Which is:</p>
 <pre class="hljs"><code class="C++"><span class="hljs-keyword">auto</span> engine = mt19937{ random_device()() };
 <span class="hljs-keyword">auto</span> rand = [=](<span class="hljs-keyword">int</span> range) <span class="hljs-keyword">mutable</span> {
