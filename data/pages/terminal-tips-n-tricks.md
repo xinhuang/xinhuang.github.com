@@ -2,7 +2,7 @@ title = "Terminal Tips & Tricks"
 layout = "page"
 ---
 
-*   **The `<HOME>` and `<END>` key on a MacBook terminal:**
+*   **The `<HOME>` and `<END>` key in a macOS terminal:**
 
     `<Control>-a`: Go to line beginning
 
