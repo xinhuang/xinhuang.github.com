@@ -14,8 +14,8 @@ layout = "fav"
 >  
 >     — Kurt Vonnegut, modified by Darius Bacon
 
-`Y Combinator`, where the name of the famous VC "Y Combinator", is a concept
-from the lambda calculus. It is a very interesting concept proving that
+`Y Combinator`, where the name of the famous VC "Y Combinator" comes from, is a
+concept from the lambda calculus. It is a very interesting concept proving that
 recursion is not needed to build recursion.
 
 Like C. P. Snow  used knowledge of the Second Law of Thermodynamics as a kind
