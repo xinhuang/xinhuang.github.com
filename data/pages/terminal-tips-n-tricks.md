@@ -21,3 +21,9 @@ layout = "page"
 *   **Viewing log file:**
 
     `less +F path/to/file.log`: Tail the log file and keep updating. `<Ctrl>-c` to exit. `F` (capital F) to scroll to bottom and keep updating. _[Ref](https://linuxcommando.blogspot.ca/2007/11/log-watching-using-tail-or-less.html)_
+
+*   **Preserve the color when using `tee`**
+
+    `unbuffer <command> |& tee output.txt`
+
+    _[Ref](https://superuser.com/questions/352697/preserve-colors-while-piping-to-tee)_
