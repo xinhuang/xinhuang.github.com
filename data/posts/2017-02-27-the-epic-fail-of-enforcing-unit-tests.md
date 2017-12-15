@@ -3,7 +3,7 @@ tags = ["unit test"]
 layout = "post"
 ---
 
-_The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial [here](here). It starts by a simple thing, then it leads to complete a different story "**convincingly**" and "**reasonably**"._
+_The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial [here]. It starts by a simple thing, then it leads to complete a different story "**convincingly**" and "**reasonably**"._
 
 Here is what will happen when your developers are forced to reach 100% test coverage:
 
