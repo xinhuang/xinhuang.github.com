@@ -6,7 +6,7 @@ The code is simple, and highly customized _(if not highly customizable)_.
 
 Feel free to take a look.
 
-# Usage
+# usage
 
 So if you want to re-use it, the simplest command would be:
 
@@ -36,7 +36,7 @@ _When you have a mood for blogging_
 
 - The metadata is consisted of multiple lines in [TOML]. (And are processed line by line!)
 
-- Only title and layout are used currently. Post layout is determined by `layout`; and title is from `title`. Tags and categories? Not yet.
+- Only title and layout are used currently. Post layout is determined by `layout`; and title is from `title`. Tags and categories? Not yet :P
 
 ## templates
 
