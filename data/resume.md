@@ -1,6 +1,4 @@
-title = "Xin Huang"
-layout = "page"
----
+# Xin Huang
 
 Email:            [xinhuang.abc@gmail.com]  
 Homepage:         [http://xinhuang.github.io]  
@@ -17,7 +15,11 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 * Finished Scala & reactive programming on Coursera
 
 
-## ***Work Experience***
+## ***Experience***
+
+### **Hyogo University, CMU-MSIT Program, 2018 - Present**  
+
+I am studying Information Security.
 
 
 ### **BGC, Schlumberger, [slb.com](http://www.slb.com), Software Engineer, 2011 - 2017**
@@ -29,11 +31,11 @@ I made computation faster.
 
 * **Individually replaced computation engine by re-writing using Intel's Threading Building Blocks, reduced lines of code by 90%, achieving same performance and correctness**  
 * **Optimized geophysical algorithms by using SSE2/AVX, performance improved by 20%**  
+* Responsible for feature development, bug fixing and field support
 * Performance profiling using Intel vTune and investigated performance bottleneck  
 * Created fast instrumentation and tracing library to collect performance data during execution for C/C++  
 * Mentored interns from Tsinghua HPC lab on performance optimization
 * Refactored legacy code and added tests on code base of total lines of code > 20M
-* Responsible for feature development, bug fixing and field support
 
 
 **2013/1 - 2014/12, Maxwell Environment Team**  
@@ -83,9 +85,11 @@ I made CI system distributed and run faster.
 
 
 ## ***Education***
-*  2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
 
-_Last update at Feb. 27, 2017. Latest resume can be found
+* 2018 - M.S. in Information Security, CMU-MSIT Program, Kobe University
+* 2010 - B.S. in Computer Science, Beijing University of Posts & Telecommunications
+
+_Last update at May. 25, 2018. Latest resume can be found
 [here]\|[pdf]._
 
 
