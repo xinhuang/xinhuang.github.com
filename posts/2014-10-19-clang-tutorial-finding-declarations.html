@@ -29,7 +29,7 @@ Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:
 <li>Get the source code from svn or git repository:  </li>
 </ol>
 <pre class="hljs"><code class="bash">git <span class="hljs-built_in">clone</span> http://llvm.org/git/llvm.git src
-git <span class="hljs-built_in">clone</span> http://llvm.org/git/clang.git src/tools/clang</code></pre><ol>
+git <span class="hljs-built_in">clone</span> http://llvm.org/git/clang.git src/tools/clang</code></pre><ol start="2">
 <li>Configure and build using <em>make</em>:  </li>
 </ol>
 <pre class="hljs"><code class="bash">mkdir debug &amp;&amp; <span class="hljs-built_in">cd</span> debug
@@ -175,9 +175,9 @@ USEDLIBS = clangTooling.a clangFrontend.a clangSerialization.a clangDriver.a \
 
 
 include $(CLANG_LEVEL)/Makefile</code></pre><p>All the source code above should be put under
-_${llvm<em>src}/tools/clang/tools/clang-playground/find-decl/</em>.</p>
+_${llvm_src}/tools/clang/tools/clang-playground/find-decl/_.</p>
 <p>And put another makefile in
-_${llvm<em>src}/tools/clang/tools/clang-playground/</em>:</p>
+_${llvm_src}/tools/clang/tools/clang-playground/_:</p>
 <pre class="hljs"><code class="makefile">CLANG_LEVEL := ../..
 
 include $(CLANG_LEVEL)/../../Makefile.config
@@ -185,7 +185,7 @@ include $(CLANG_LEVEL)/../../Makefile.config
 PARALLEL_DIRS := find-decl
 DIRS :=
 
-include $(CLANG_LEVEL)/Makefile</code></pre><p>Edit <em>Makefile</em> in _${llvm<em>src}/tools/clang/tools/</em>, add <em>clang-playground</em> to
+include $(CLANG_LEVEL)/Makefile</code></pre><p>Edit <em>Makefile</em> in _${llvm_src}/tools/clang/tools/_, add <em>clang-playground</em> to
 _OPTIONAL_PARALLEL_DIRS_ so Clang makefile can find our project.</p>
 <p>Now you should be able to build our project along with Clang. The built out binary should
 be located in <em>debug/Debug+Asserts/bin/</em>.</p>
@@ -207,4 +207,4 @@ compare it with the <em>main file ID</em>. If they are equal, that means it&#39;
 our source file.</p>
 <p><em>All the source code can be found at <a href="https://github.com/xinhuang/clang-playground.git">clang-playground</a>.</em></p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,a,t,n,g,c,o){e.GoogleAnalyticsObject=g,e.ga=e.ga||function(){(e.ga.q=e.ga.q||[]).push(arguments)},e.ga.l=1*new Date,c=a.createElement(t),o=a.getElementsByTagName(t)[0],c.async=1,c.src="https://www.google-analytics.com/analytics.js",o.parentNode.insertBefore(c,o)}(window,document,"script",0,"ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>

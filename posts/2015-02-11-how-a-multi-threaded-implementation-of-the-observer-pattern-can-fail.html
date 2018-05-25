@@ -16,7 +16,7 @@
  first, and destroyed last.</p>
 <p>To avoid such a problem, either use a combination of <code>std::shared_ptr</code> and
  <code>std::weak_ptr</code>, or use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead of reinventing the wheel.</p>
-<h2 id="the-gof-observer-pattern-">The <a href="http://en.wikipedia.org/wiki/Observer_pattern">GoF Observer Pattern</a></h2>
+<h2 id="the-gof-observer-pattern">The <a href="http://en.wikipedia.org/wiki/Observer_pattern">GoF Observer Pattern</a></h2>
 <pre class="hljs"><code class="C++"><span class="hljs-keyword">class</span> IObservable {
 <span class="hljs-keyword">public</span>:
     <span class="hljs-keyword">virtual</span> ~IObservable() {}
@@ -124,7 +124,7 @@ lot of repeated code to remove observers to boot.</p>
                                    [&amp;](Observer* o) {
                                      observable.remove(o);
                                    });
-observable.add(observer);</code></pre><ol>
+observable.add(observer);</code></pre><ol start="3">
 <li><p>Use a combination of <code>std::shared_ptr</code> and <code>std::weak_ptr</code>. In this way the
 race condition can be avoided completely.</p>
 <p> For example:</p>
@@ -168,7 +168,7 @@ race condition can be avoided completely.</p>
                                         });
     observers.erase(last_valid, <span class="hljs-built_in">std</span>::end(observers));
   }
-};</code></pre><ol>
+};</code></pre><ol start="4">
 <li>Don&#39;t reinvent the wheel, use <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2.html">Boost.Signals2</a> instead.
 <a href="http://www.boost.org/doc/libs/1_57_0/doc/html/signals2/thread-safety.html#idp430084640">&quot;It can be used safely in a multi-threaded environment.&quot;</a></li>
 </ol>
@@ -182,4 +182,4 @@ race condition can be avoided completely.</p>
 <hr>
 <p> <em>Many thanks to David Wales who helped review this post.</em></p>
 
-                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,t,a,n,c,o,s){e.GoogleAnalyticsObject=c,e[c]=e[c]||function(){(e[c].q=e[c].q||[]).push(arguments)},e[c].l=1*new Date,o=t.createElement(a),s=t.getElementsByTagName(a)[0],o.async=1,o.src=n,s.parentNode.insertBefore(o,s)}(window,document,"script","https://www.google-analytics.com/analytics.js","ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>
+                </div></div><hr><a href=/ class=left>Home</a> <a href=# class=right>Top</a></article><style>body{margin:1em auto;max-width:40em;padding:0 .62em;font:1.2em/1.62em sans-serif}h1,h2,h3{line-height:1.2em}@media print{body{max-width:none}}a{text-decoration:none}article{margin:auto;font-size:14px;padding:3px 1em}.metadata{color:rgba(0,0,0,.54)}hr{display:block;height:1px;border:0;border-top:1px solid #ccc;margin:1em 0;padding:0}.left{float:left}.right{float:right}</style><link rel=stylesheet href=/github-markdown.css><link rel=stylesheet href=/zenburn.css><script>!function(e,a,t,n,g,c,o){e.GoogleAnalyticsObject=g,e.ga=e.ga||function(){(e.ga.q=e.ga.q||[]).push(arguments)},e.ga.l=1*new Date,c=a.createElement(t),o=a.getElementsByTagName(t)[0],c.async=1,c.src="https://www.google-analytics.com/analytics.js",o.parentNode.insertBefore(c,o)}(window,document,"script",0,"ga"),ga("create","UA-42274645-1","auto"),ga("send","pageview")</script></body></html>
