@@ -279,6 +279,18 @@ pre.src-c:before {
     content: "C";
 }
 
+span.underline {
+    text-decoration: underline;
+}
+
+span.org-center {
+    text-align: center;
+}
+
+span.org-right {
+    text-align: right;
+}
+
 span.org-string {
     color: #f94;
 }
