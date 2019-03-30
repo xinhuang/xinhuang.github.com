@@ -1,7 +1,8 @@
 /* index */
 
 .metadata {
-    color: rgba(0, 0, 0, .54)
+    color: rgba(0, 0, 0, .54);
+    font-family: sans-serif;
 }
 
 .index {
