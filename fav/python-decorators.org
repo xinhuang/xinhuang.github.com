@@ -1,0 +1,14 @@
+#+TITLE: Python Decorators
+
+#+DATE: 2017-07-09
+#+EXPORT_FILE_NAME: 2017-07-09-python-decorators.html
+#+FILETAGS: :python:tutorial:
+
+#+RATING: 3
+
+Decorator in Python is helpful to improve readability and simplicity. Here are
+2 links regarding decorators in Python: A tutorial
+[[https://www.thecodeship.com/patterns/guide-to-python-function-decorators/][Guide to Python Function Decorators]] and a probable question you might come
+across in using decorators
+[[https://stackoverflow.com/questions/15543484/pass-parameters-to-a-decorator-for-a-class-method-is-to-be-decorated][Sharing decorator state in class instance scope]].
+

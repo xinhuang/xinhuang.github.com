@@ -4,10 +4,15 @@
 	 (org-image-actual-width . nil)
 	 (eval . (add-to-list 'ido-ignore-files "\.html|pdf|mp3"))
          (eval . (setq coil-project-alist '(:src "~/workspace/xinhuang.github.com"
-					    :dst "~/workspace/xinhuang.github.com/dist"
-					    :theme "github"
-					    :exclude ("themes")
-					    :root "posts")))
+					         :dst "~/workspace/xinhuang.github.com/dist"
+                                                 :title "Life is short,"
+					         :theme "github"
+					         :exclude ("themes")
+					         :root "posts"
+                                                 :directory-included? nil
+                                                 :footer: ("delicio.us" "/fav"
+                                                           "GitHub" "https://github.com/xinhuang"
+                                                           "About" "/about"))))
 	 (org-publish-project-alist . (("blog"
        					:components ("blog-pages" "blog-assets"))
        				       ("blog-pages"
