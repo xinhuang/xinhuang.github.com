@@ -1,0 +1,14 @@
+#+TITLE: README
+
+Hey. This is the source code of my website.
+
+It is re-written in Emacs org mode. Pages are generated using org-export with some homebrewed elisp scripts.
+
+It is still under construction.
+
+-----
+
+*Why am I re-writing this? Is it fun?*
+
+Not too much. I am re-writing this because of updates of *nodejs* modules, suddenly my code doesn't work any more.
+Maybe this is another reason for [[https://www.destroyallsoftware.com/talks/the-birth-and-death-of-javascript][The Birth & *Death* of JavaScript]].
