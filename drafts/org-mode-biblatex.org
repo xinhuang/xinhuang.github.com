@@ -1,0 +1,45 @@
+#+TITLE: Using biblatex in Org Mode
+
+* TODO The Problem
+
+  Citation doesn't work when export to PDF, 
+  and errors is ambiguous.
+
+  https://orgmode.org/worg/exporters/anno-bib-template-worg.html
+  
+  https://tex.stackexchange.com/questions/102258/referencing-bib-files-with-spaces-in-the-filename
+
+  https://tex.stackexchange.com/questions/114864/how-to-get-bibtex-to-work-with-org-mode-latex-export
+
+  https://emacs.stackexchange.com/questions/3375/loading-bibtex-file-in-org-mode-file
+
+* TODO The Short Answer
+
+  1. Add =LATEX_HEADER=: =\usepackage[style=ieee,backend=bibtex]{biblatex}= to use =biblatex=
+  2. Add =LATEX_HEADER=: =\addbibresource{ref.bib}=
+  3. Add =\printbibliography= to where you would like references to be printed out
+  4. Set =org-latex-pdf-process= as
+
+     #+BEGIN_SRC elisp
+     (setq org-latex-pdf-process
+	   '(
+	     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+	     "bibtex %b"
+	     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+	     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"
+	     "pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"))
+
+     #+END_SRC
+
+  *For style*:
+  - =IEEE= style: Install =biblatex-ieee=
+
+    https://tex.stackexchange.com/questions/100113/how-to-use-biblatex-with-ieee-bibtex-style
+
+ 
+* Some Myth
+
+  Use =bibtex= result in error =bibtex.sty= not found
+  Probably because of mising some style.
+
+  =biber= didn't try.

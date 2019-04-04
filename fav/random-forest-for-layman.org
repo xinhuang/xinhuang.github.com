@@ -1,0 +1,4 @@
+#+TITLE: Layman's Introduction to Random Forest
+
+[[http://blog.echen.me/2011/03/14/laymans-introduction-to-random-forests/][Layman's Introduction to Random Forests]] explained random forests in a very concise and easy to understand way.
+If you would like to know what a random forest is in 5 minutes, this is the introduction you need.
