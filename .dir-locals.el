@@ -10,7 +10,7 @@
 					         :exclude ("themes")
 					         :root "posts"
                                                  :directory-included? nil
-                                                 :footer: ("delicio.us" "/fav"
+                                                 :footers: ("delicio.us" "/fav"
                                                            "GitHub" "https://github.com/xinhuang"
                                                            "About" "/about"))))
 	 (org-publish-project-alist . (("blog"
@@ -31,6 +31,7 @@
 					:base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf"
 					:publishing-directory "dist"
 					:recursive t
+                                        :exclude "dist"
 					:publishing-function org-publish-attachment))))))
 
 
