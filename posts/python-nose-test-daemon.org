@@ -1,0 +1,103 @@
+#+TITLE: Test Daemon For Python using Nose
+
+#+EXPORT_FILE_NAME: 2013-11-03-test-daemon-for-nose-in-python
+#+DATE: 2013-11-03
+
+#+FILETAGS: :Python:
+
+#+DESCRIPTION: A daemon to run your unit tests automatically after they are modified.
+
+Last week we had a great night with Tim Ottinger, playing with Python to analyze commit history.
+
+One thing impressed me is Tim's Python develop environment. 
+His tests are running automatically after a change. 
+I didn't caught up how he made it work, and cannot find a apropiate key word to google. So here is my own version.
+
+The idea is quite simple: Use nose API to re-run tests every time a source change is detected.
+
+#+BEGIN_SRC python
+while True:
+    while not sourceChanged(dirs):
+        time.sleep(1)
+    nose.run()
+#+END_SRC
+
+Only thing needs special attention is to isolate test modules by provide option `--with-isolation`, so nose will reload them before each `nose.run`.
+For file change detection, library =watchdog= is used. [fn:watchdog]
+
+Two improvements I can think of are:
+
+1. Not only monitor =*.py= files, but all files. Configuration files can also have an impact on test result.
+
+2. Ignore version control files, because these folders are always filled by tones of files.
+
+The complete source code is shown below:
+
+#+BEGIN_SRC python
+import sys
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import nose
+import os
+from itertools import takewhile
+
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
+
+
+class TestMonitor(FileSystemEventHandler):
+
+    def __init__(self):
+        FileSystemEventHandler.__init__(self)
+        self.modified = False
+
+    def on_any_event(self, event):
+        print(event.src_path)
+        self.modified = True
+
+    @property
+    def path(self):
+        where = list(takewhile(lambda a: not a.startswith("-"), sys.argv[1:]))
+        for i, v in enumerate(sys.argv):
+            if v == "-w" or v == "--where":
+                where.append(sys.argv[i+1])
+        where = filter(os.path.isdir, where)
+        if len(where) == 0:
+            return ["."]
+        return where
+
+    def testIt(self):
+        cls()
+        nose.run()
+        self.modified = False
+
+    def run(self):
+        sys.argv.append("--with-isolation")
+
+        observer = Observer()
+        for p in self.path:
+            observer.schedule(self, p, recursive = True)
+        observer.start()
+
+        self.testIt()
+
+        try:
+            while True:
+                time.sleep(1)
+                if self.modified:
+                    self.testIt()
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
+
+
+if __name__ == "__main__":
+    TestMonitor().run()
+#+END_SRC
+
+* Footnotes
+
+[fn:watchdog] https://github.com/gorakhargosh/watchdog
+
