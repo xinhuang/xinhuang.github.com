@@ -1,0 +1,55 @@
+#+TITLE: Why IOString != String In Haskell
+
+#+EXPORT_FILE_NAME: 2013-08-08-why-iostring-NEQ-string-in-haskell
+#+DATE: 2013-08-08
+
+#+FILETAGS: :Haskell:
+
+
+In GHCi, I want to test my =headRev= function, while loading Mercurial log from a file and pass the content to the =headRev= function:
+
+#+BEGIN_SRC haskell
+log = readFile "hg.log"
+headRev log
+#+END_SRC
+
+I get a error message complaining "IO String is not [Char]":
+
+#+BEGIN_QUOTE
+Couldn't match expected type =[Char]= with actual type =IOString= In
+the first argument of `headRev`, namely `log` In the expression:
+headRev log In an equation for =it=: =it = headRev log=
+#+END_QUOTE
+
+Why =IOString= is not compatible with =String=? Why is it designed like this?
+After googled the error, here is a insightful reason to this question.
+
+#+BEGIN_QUOTE
+There is a very good reason why there is no such function.
+
+Haskell has the notion of functional purity. This means that a
+function will always return the same result when called with the same
+parameters. The only place where IO is allowed is inside the IO Monad. [fn:stackoverflow-answer]
+#+END_QUOTE
+
+
+And BTW how to "walk" around it while you want to test in GHCi? I'm doing it this way:
+
+Define =interactWith= function in source code, compile, and load via =:l *hgrev=
+
+#+BEGIN_QUOTE
+interactWith function [inputFile] = do
+    input <- readFile inputFile
+    putStrLn (function input)
+#+END_QUOTE
+
+Then in GHCi:
+
+#+BEGIN_QUOTE
+let f log = headRev (lines log)
+interactWith f "hg.log"
+#+END_QUOTE
+
+* Footnotes
+
+[fn:stackoverflow-answer] http://stackoverflow.com/a/1676052/2190129
