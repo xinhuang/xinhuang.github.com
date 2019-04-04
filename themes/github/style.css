@@ -78,6 +78,10 @@ hr .index {
     display: inline;
 }
 
+#text-footnotes {
+    margin-bottom: 16px;
+}
+
 /* github */
 
 body hr::after, body::after {
