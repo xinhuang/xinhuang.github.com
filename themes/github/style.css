@@ -74,6 +74,10 @@ hr .index {
     float: right;
 }
 
+.footdef * {
+    display: inline;
+}
+
 /* github */
 
 body hr::after, body::after {
