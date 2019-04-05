@@ -1,0 +1,117 @@
+#+TITLE: Clang Tutorial: The AST Matcher
+
+#+DATE: 2015-02-08
+#+EXPORT_FILE_NAME: 2015-02-08-clang-tutorial-the-ast-matcher
+
+#+DESCRIPTION: Using AST matcher to find pass-by-value std::vector parameters
+#+FILETAGS: :C++:clang:
+
+In [[./2014-10-19-clang-tutorial-finding-declarations.org][previous post]] we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the
+declarations in a given source file. Now Let's play with Clang AST matchers and make another tool to
+detect when a =std::vector= is passed by value - which usually causes a performance hit.
+
+* Finding =std::vector= Which Are Passed by Value 
+
+  The example.cpp:
+
+  #+BEGIN_SRC c++
+  #include <vector>
+
+  using namespace std;
+
+  void foo(vector<int> is);
+  void bar(const vector<int> is);
+  void foobar(const vector<int>& cis);
+  void fooboo(vector<int>& cis);
+  #+END_SRC
+
+  Let's feed it to our /find-vec/ program:
+
+  #+BEGIN_SRC sh
+  $ ./find-vec example.cpp -- -std=c++11  
+  example.cpp:5:6  
+  example.cpp:6:6  
+  #+END_SRC
+
+  /Here we told Clang parser to use C++ 11 syntax by passing =-std=c++11= after =--=./
+
+* The Clang AST
+
+  If you still remember the =Decl= and =Stmt=, 
+  these are the AST nodes that we will come across when processing a source file.
+  With different =Decl=, =Stmt= and their derived classes like =NamedDecl= and =CallExpr=,
+  we can obtain lots of information like variable type, name, definition information, etc.
+
+  To examine all the function declarations with any parameter of type =std::vector=,
+  we will need to match specific AST node that is:
+
+  - Function declaration or definition
+  - Has at least one parameter of type =std::vector=
+
+  Clang provides us a domain specific language (DSL) to create predicates on Clang's AST.
+  It is written in and can be used from C++, allowing us to match AST nodes and
+  extract its attributes.
+
+* The AST Matcher
+
+  To use the AST matchers, we need to do is to call a bunch of matcher creation
+  function, chain them together to compose the matcher we need, and/or bind the target
+  node with a name so we can extract it later.
+
+  To match a function declaration:
+
+  #+BEGIN_SRC c++
+  DeclarationMatcher Matcher = functionDecl();
+  #+END_SRC
+
+  Then let's match its parameter:
+
+  #+BEGIN_SRC c++
+  DeclarationMatcher Matcher = functionDecl(hasAnyParameter(...));  
+  #+END_SRC
+
+  To matcher a parameter, we can use =hasParameter(N, ParamMatcher)=, which will match
+  the N'th of parameter with given parameter matcher. Here we will need to match any
+  parameter that of type =std::vector=, so we will use =hasAnyParameter=.
+
+  Next match the parameter type:
+
+  #+BEGIN_SRC c++
+  DeclarationMatcher Matcher = functionDecl(
+    hasAnyParameter(hasType(recordDecl(matchesName("std::vector"))));
+  #+END_SRC
+
+* The MatchCallback
+
+  When the AST matcher find the right node, the corresponding
+  =clang::ast_matchers::MatchFinder::MatchCallback= will be invoked with matched result.
+  By providing a =MatchCallback=, 
+  we can print the function declarations/definitions that accept any parameter of type =std::vector= that is passed by value.
+
+  #+BEGIN_SRC c++
+  class VecCallback : public clang::ast_matchers::MatchFinder::MatchCallback {
+  public:
+    virtual void
+    run(const clang::ast_matchers::MatchFinder::MatchResult &Result) final {
+      llvm::outs() << ".";
+      if (const auto *F =
+              Result.Nodes.getDeclAs<clang::FunctionDecl>(FunctionID)) {
+        const auto& SM = *Result.SourceManager;
+        const auto& Loc = F->getLocation();
+        llvm::outs() << SM.getFilename(Loc) << ":"
+                     << SM.getSpellingLineNumber(Loc) << ":"
+                     << SM.getSpellingColumnNumber(Loc) << "\n";
+      }
+    }
+  };
+  #+END_SRC
+
+* References
+
+  Clang also provides a simple document of AST matchers: [[http://clang.llvm.org/docs/LibASTMatchers.html][Matching the Clang AST]].
+  For a complete reference of AST matchers, you can find it in [[http://clang.llvm.org/docs/LibASTMatchersReference.html][AST Matcher Reference]].
+
+  /All the source code in this post can be found at [[https://github.com/xinhuang/clang-playground.git][clang-playground]]./
+
+
+
