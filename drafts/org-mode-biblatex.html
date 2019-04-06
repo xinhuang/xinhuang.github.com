@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Using biblatex in Org Mode</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Using biblatex in Org Mode</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgfe40e53">1. <span class="todo TODO">TODO</span> The Problem</a></li>
+<li><a href="#org5ddde31">2. <span class="todo TODO">TODO</span> The Short Answer</a></li>
+<li><a href="#orgacef405">3. Some Myth</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgfe40e53" class="outline-2">
+<h2 id="orgfe40e53"><span class="section-number-2">1</span> <span class="todo TODO">TODO</span> The Problem</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Citation doesn't work when export to PDF, 
+and errors is ambiguous.
+</p>
+
+<p>
+<a href="https://orgmode.org/worg/exporters/anno-bib-template-worg.html">https://orgmode.org/worg/exporters/anno-bib-template-worg.html</a>
+</p>
+
+<p>
+<a href="https://tex.stackexchange.com/questions/102258/referencing-bib-files-with-spaces-in-the-filename">https://tex.stackexchange.com/questions/102258/referencing-bib-files-with-spaces-in-the-filename</a>
+</p>
+
+<p>
+<a href="https://tex.stackexchange.com/questions/114864/how-to-get-bibtex-to-work-with-org-mode-latex-export">https://tex.stackexchange.com/questions/114864/how-to-get-bibtex-to-work-with-org-mode-latex-export</a>
+</p>
+
+<p>
+<a href="https://emacs.stackexchange.com/questions/3375/loading-bibtex-file-in-org-mode-file">https://emacs.stackexchange.com/questions/3375/loading-bibtex-file-in-org-mode-file</a>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5ddde31" class="outline-2">
+<h2 id="org5ddde31"><span class="section-number-2">2</span> <span class="todo TODO">TODO</span> The Short Answer</h2>
+<div class="outline-text-2" id="text-2">
+<ol class="org-ol">
+<li>Add <code>LATEX_HEADER</code>: <code>\usepackage[style=ieee,backend=bibtex]{biblatex}</code> to use <code>biblatex</code></li>
+<li>Add <code>LATEX_HEADER</code>: <code>\addbibresource{ref.bib}</code></li>
+<li>Add <code>\printbibliography</code> to where you would like references to be printed out</li>
+<li><p>
+Set <code>org-latex-pdf-process</code> as
+</p>
+
+<div class="org-src-container">
+<pre class="src src-elisp">(<span class="org-keyword">setq</span> org-latex-pdf-process
+      '(
+        <span class="org-string">"pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"</span>
+        <span class="org-string">"bibtex %b"</span>
+        <span class="org-string">"pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"</span>
+        <span class="org-string">"pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"</span>
+        <span class="org-string">"pdflatex -shell-escape -interaction nonstopmode -output-directory %o %f"</span>))
+
+</pre>
+</div></li>
+</ol>
+
+<p>
+<b>For style</b>:
+</p>
+<ul class="org-ul">
+<li><p>
+<code>IEEE</code> style: Install <code>biblatex-ieee</code>
+</p>
+
+<p>
+<a href="https://tex.stackexchange.com/questions/100113/how-to-use-biblatex-with-ieee-bibtex-style">https://tex.stackexchange.com/questions/100113/how-to-use-biblatex-with-ieee-bibtex-style</a>
+</p></li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgacef405" class="outline-2">
+<h2 id="orgacef405"><span class="section-number-2">3</span> Some Myth</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Use <code>bibtex</code> result in error <code>bibtex.sty</code> not found
+Probably because of mising some style.
+</p>
+
+<p>
+<code>biber</code> didn't try.
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

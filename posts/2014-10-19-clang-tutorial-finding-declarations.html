@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clang Tutorial: Finding Declarations</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<meta name="description" content="Traverse AST using RecursiveASTVisitor"
+ />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Clang Tutorial: Finding Declarations</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org2946e57">1. The "Hello World" Program</a></li>
+<li><a href="#orge497035">2. Building clang</a></li>
+<li><a href="#org7ea36f8">3. LibTooling</a></li>
+<li><a href="#org8ed630a">4. The Entry of Everything</a></li>
+<li><a href="#org0533a40">5. The Compiler Frontend</a></li>
+<li><a href="#orgdd37749">6. AST: Abstract Syntax Tree</a></li>
+<li><a href="#org824df2d">7. AST Consumer</a></li>
+<li><a href="#orgf3b9ccf">8. AST Visitor</a></li>
+<li><a href="#orgbda1814">9. Put It All Together</a></li>
+<li><a href="#org9b66231">10. The Glitch</a></li>
+</ul>
+</div>
+</div>
+<p>
+Clang is a very good C/C++ compiler, and it provides great extensibility by its various API to
+take advantage of it's syntax parsing, AST construction, semantics analysis, optimization,
+assembly generation and JIT compilation. Here let's have some fun playing with Clang and
+build a Clang tool to list all the declarations in a given file.
+</p>
+
+<div id="outline-container-org2946e57" class="outline-2">
+<h2 id="org2946e57"><span class="section-number-2">1</span> The "Hello World" Program</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Let's try to use Clang to write a "Hello World" program: Find all the declarations in a given
+source file.
+</p>
+
+<p>
+Given source file below:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-keyword">class</span> <span class="org-type">MyClass</span> {
+  <span class="org-type">int</span> <span class="org-variable-name">foo</span>;
+<span class="org-keyword">public</span>:
+  <span class="org-type">void</span> <span class="org-function-name">bar</span>() {}
+};
+
+<span class="org-type">MyClass</span> <span class="org-function-name">foobar</span>() {
+  <span class="org-type">MyClass</span> <span class="org-variable-name">a</span>;
+  <span class="org-keyword">return</span> a;
+}
+</pre>
+</div>
+
+<p>
+Run our program to find all declarations:
+</p>
+
+<pre class="example">
+$ ./find-decl test.cpp --
+Found MyClass at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:1:1  
+Found MyClass::foo at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:2:3  
+Found MyClass::bar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:4:3  
+Found foobar at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:7:1  
+Found a at /home/.../workspace/llvm/debug/Debug+Asserts/bin/find-test.cpp:8:3  
+</pre>
+
+<p>
+<i>Note: Any argument after <code>--</code> will be passed to Clang. You can use that to specify arguments like include path <code>-I/path/to/my/include</code> or macro definition <code>-DMY_MACRO</code>.</i>
+</p>
+
+<p>
+Next let's write the program.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge497035" class="outline-2">
+<h2 id="orge497035"><span class="section-number-2">2</span> Building clang</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+First build clang:
+</p>
+
+<ol class="org-ol">
+<li>Get the source code from svn or git repository:</li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-sh">git clone http://llvm.org/git/llvm.git src
+git clone http://llvm.org/git/clang.git src/tools/clang
+</pre>
+</div>
+
+<ol class="org-ol">
+<li>Configure and build using <code>make</code>:</li>
+</ol>
+
+<div class="org-src-container">
+<pre class="src src-sh">mkdir debug &amp;&amp; <span class="org-builtin">cd</span> debug
+../configure           <span class="org-comment-delimiter"># </span><span class="org-comment">add --enable-optimized --disable-assertions for release build</span>
+make                   <span class="org-comment-delimiter"># </span><span class="org-comment">this would take quite some time</span>
+</pre>
+</div>
+
+<p>
+You can also use <code>make install</code> to install your built version to the system.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7ea36f8" class="outline-2">
+<h2 id="org7ea36f8"><span class="section-number-2">3</span> LibTooling</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+LibTooling is the C++ interface Clang provided. It is very useful when you want to have full control
+over AST (e.g. static analysis), or to implement a refactoring tool. There are other interfaces like
+LibClang and Clang Plugins as well. For detailed information you can refer to <a href="http://clang.llvm.org/docs/Tooling.html">Clang Tooling document</a>.
+</p>
+
+<p>
+For our "Hello World" program - finding all declarations, using LibTooling is the easiest way.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8ed630a" class="outline-2">
+<h2 id="org8ed630a"><span class="section-number-2">4</span> The Entry of Everything</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+Let's start with the main function first:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-preprocessor">#include</span> <span class="org-string">"DeclFindingAction.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Tooling/CommonOptionsParser.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Tooling/Tooling.h"</span>
+
+<span class="org-keyword">static</span> <span class="org-constant">llvm</span>::<span class="org-constant">cl</span>::<span class="org-type">extrahelp</span>
+    <span class="org-function-name">CommonHelp</span>(<span class="org-constant">clang</span>::<span class="org-constant">tooling</span>::<span class="org-constant">CommonOptionsParser</span>::HelpMessage);
+<span class="org-constant">llvm</span>::<span class="org-constant">cl</span>::<span class="org-type">OptionCategory</span> <span class="org-variable-name">FindDeclCategory</span>(<span class="org-string">"find-decl options"</span>);
+
+<span class="org-keyword">static</span> <span class="org-type">char</span> <span class="org-variable-name">FindDeclUsage</span>[] = <span class="org-string">"find-decl &lt;source file&gt;"</span>;
+
+<span class="org-type">int</span> <span class="org-function-name">main</span>(<span class="org-type">int</span> <span class="org-variable-name">argc</span>, <span class="org-keyword">const</span> <span class="org-type">char</span> **<span class="org-variable-name">argv</span>) {
+    <span class="org-constant">clang</span>::<span class="org-constant">tooling</span>::<span class="org-type">CommonOptionsParser</span> <span class="org-variable-name">option</span>(argc, argv, FindDeclCategory,
+                                               FindDeclUsage);
+    <span class="org-keyword">auto</span> <span class="org-variable-name">files</span> = option.getSourcePathList();
+    <span class="org-constant">clang</span>::<span class="org-constant">tooling</span>::<span class="org-type">ClangTool</span> <span class="org-variable-name">tool</span>(option.getCompilations(), files);
+
+    <span class="org-keyword">return</span> tool.run(<span class="org-constant">clang</span>::<span class="org-constant">tooling</span>::newFrontendActionFactory&lt;DeclFindingAction&gt;().get());
+}
+</pre>
+</div>
+
+<p>
+This code is quite self-explained. We create an <code>OptionCategory</code>, <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup> 
+use <code>CommonOptionsParser</code> to parse command line arguments for us, <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>
+then feed source files to <code>ClangTool</code>, <sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>
+and run it with our own <code>DeclFindingAction</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0533a40" class="outline-2">
+<h2 id="org0533a40"><span class="section-number-2">5</span> The Compiler Frontend</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Like most compilers, LLVM is a three-phase compiler. Clang is its C, C++,
+Objective C and Objective C++ frontend. <sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup>
+</p>
+
+
+<div class="figure">
+<p><img src="./clang-finding-declarations/llvm-three-phase-structure.gif" alt="llvm-three-phase-structure.gif" />
+</p>
+</div>
+
+<p>
+The frontend will parse the source code, check for syntax error and build the
+abstract syntax tree (AST). Let's create our own <code>FrontendAction</code>: <sup><a id="fnr.5" class="footref" href="#fn.5">5</a></sup>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-preprocessor">#pragma</span> once
+
+<span class="org-preprocessor">#include</span> <span class="org-string">"DeclFinder.h"</span>
+
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Frontend/FrontendAction.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Frontend/CompilerInstance.h"</span>
+
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;memory&gt;</span>
+
+<span class="org-keyword">class</span> <span class="org-type">DeclFindingAction</span> : <span class="org-keyword">public</span> <span class="org-constant">clang</span>::<span class="org-type">ASTFrontendAction</span> {
+<span class="org-keyword">public</span>:
+  <span class="org-constant">std</span>::<span class="org-type">unique_ptr</span>&lt;<span class="org-constant">clang</span>::ASTConsumer&gt;
+  <span class="org-function-name">CreateASTConsumer</span>(<span class="org-constant">clang</span>::<span class="org-type">CompilerInstance</span> &amp;<span class="org-variable-name">CI</span>, <span class="org-constant">clang</span>::StringRef) <span class="org-keyword">final</span> {
+    <span class="org-keyword">return</span> <span class="org-constant">std</span>::unique_ptr&lt;<span class="org-constant">clang</span>::ASTConsumer&gt;(
+        <span class="org-keyword">new</span> <span class="org-type">DeclFinder</span>(CI.getSourceManager()));
+  }
+};
+</pre>
+</div>
+
+<p>
+Our frontend action will only consume AST and find all declarations, it
+is inherited from <code>ASTFrontendAction</code>, <sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup>
+and create our own AST consumer via <code>FrontendAction::CreateASTConsumer</code>. <sup><a id="fnr.7" class="footref" href="#fn.7">7</a></sup>
+AST will be consumed by our <code>ASTConsumer</code> - <code>DeclFinder</code>. <sup><a id="fnr.8" class="footref" href="#fn.8">8</a></sup>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdd37749" class="outline-2">
+<h2 id="orgdd37749"><span class="section-number-2">6</span> AST: Abstract Syntax Tree</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+In Clang, there are two basic types of AST classes: <code>Decl</code><sup><a id="fnr.9" class="footref" href="#fn.9">9</a></sup> and <code>Stmt</code><sup><a id="fnr.10" class="footref" href="#fn.10">10</a></sup>, which
+have many subclasses that covers all the AST nodes we will meet in a source
+file. For example:
+</p>
+
+<ul class="org-ul">
+<li>FunctionDecl</li>
+<li>TypeDecl</li>
+<li>CallExpr</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org824df2d" class="outline-2">
+<h2 id="org824df2d"><span class="section-number-2">7</span> AST Consumer</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+The <code>ASTConsumer</code> will read AST. It provides many interfaces to be overridden
+when certain type of AST node has been parsed, or after all the translation unit
+has been parsed.
+</p>
+
+<p>
+We will override <code>ASTConsumer::HandleTranslationUnit</code> to read the AST after we have
+all the information needed of the file. <sup><a id="fnr.11" class="footref" href="#fn.11">11</a></sup>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-preprocessor">#pragma</span> once
+
+<span class="org-preprocessor">#include</span> <span class="org-string">"DeclVisitor.h"</span>
+
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/AST/ASTConsumer.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/AST/ASTContext.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Basic/SourceManager.h"</span>
+
+<span class="org-keyword">class</span> <span class="org-type">DeclFinder</span> : <span class="org-keyword">public</span> <span class="org-constant">clang</span>::<span class="org-type">ASTConsumer</span> {
+  <span class="org-type">DeclVisitor</span> <span class="org-variable-name">Visitor</span>;
+<span class="org-keyword">public</span>:
+  <span class="org-function-name">DeclFinder</span>(<span class="org-constant">clang</span>::<span class="org-type">SourceManager</span> &amp;<span class="org-variable-name">SM</span>) : Visitor(SM) {}
+
+  <span class="org-type">void</span> <span class="org-function-name">HandleTranslationUnit</span>(<span class="org-constant">clang</span>::<span class="org-type">ASTContext</span> &amp;<span class="org-variable-name">Context</span>) <span class="org-keyword">final</span> {
+    Visitor.TraverseDecl(Context.getTranslationUnitDecl());
+  }
+};
+</pre>
+</div>
+
+<p>
+We can process each declaration (<code>Decl</code>) in the our <code>ASTConsumer</code>, but that will
+require us to identify the actual type of each <code>Decl</code> instance: is it a
+function declaration, a type declaration or a variable declaration?
+</p>
+
+<p>
+Clang provides us the <code>RecursiveASTVisitor</code> to identify the different type of
+declarations and statements. <sup><a id="fnr.12" class="footref" href="#fn.12">12</a></sup>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf3b9ccf" class="outline-2">
+<h2 id="orgf3b9ccf"><span class="section-number-2">8</span> AST Visitor</h2>
+<div class="outline-text-2" id="text-8">
+<p>
+This is where the work is done: we overwrite the
+<code>RecursiveASTVisitor::VisitNamedDecl</code> method to find all the named
+declaration, print its qualified name and definition location.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-preprocessor">#pragma</span> once
+
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/AST/RecursiveASTVisitor.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"clang/Basic/SourceManager.h"</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">"llvm/Support/raw_ostream.h"</span>
+
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;string&gt;</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;sstream&gt;</span>
+
+<span class="org-keyword">class</span> <span class="org-type">DeclVisitor</span> : <span class="org-keyword">public</span> <span class="org-constant">clang</span>::<span class="org-type">RecursiveASTVisitor</span>&lt;<span class="org-type">DeclVisitor</span>&gt; {
+  <span class="org-constant">clang</span>::<span class="org-type">SourceManager</span> &amp;<span class="org-variable-name">SourceManager</span>;
+
+<span class="org-keyword">public</span>:
+  <span class="org-function-name">DeclVisitor</span>(<span class="org-constant">clang</span>::<span class="org-type">SourceManager</span> &amp;<span class="org-variable-name">SourceManager</span>)
+      : SourceManager(SourceManager) {}
+
+  <span class="org-type">bool</span> <span class="org-function-name">VisitNamedDecl</span>(<span class="org-constant">clang</span>::<span class="org-type">NamedDecl</span> *<span class="org-variable-name">NamedDecl</span>) {
+    <span class="org-constant">llvm</span>::outs() &lt;&lt; <span class="org-string">"Found "</span> &lt;&lt; NamedDecl-&gt;getQualifiedNameAsString() &lt;&lt; <span class="org-string">" at "</span>
+                 &lt;&lt; getDeclLocation(NamedDecl-&gt;getLocStart()) &lt;&lt; <span class="org-string">"\n"</span>;
+    <span class="org-keyword">return</span> <span class="org-constant">true</span>;
+  }
+
+<span class="org-keyword">private</span>:
+  <span class="org-constant">std</span>::<span class="org-type">string</span> <span class="org-function-name">getDeclLocation</span>(<span class="org-constant">clang</span>::<span class="org-type">SourceLocation</span> <span class="org-variable-name">Loc</span>) <span class="org-keyword">const</span> {
+    <span class="org-constant">std</span>::<span class="org-type">ostringstream</span> <span class="org-variable-name">OSS</span>;
+    OSS &lt;&lt; SourceManager.getFilename(Loc).str() &lt;&lt; <span class="org-string">":"</span>
+        &lt;&lt; SourceManager.getSpellingLineNumber(Loc) &lt;&lt; <span class="org-string">":"</span>
+        &lt;&lt; SourceManager.getSpellingColumnNumber(Loc);
+    <span class="org-keyword">return</span> OSS.str();
+  }
+};
+</pre>
+</div>
+
+<p>
+Above source code introduced the <code>SourceManager</code> class. <sup><a id="fnr.13" class="footref" href="#fn.13">13</a></sup>
+As its name suggested, it manages all the source files.
+We first get the location of a declaration, then translate it into human readable content.
+</p>
+
+<p>
+The <code>llvm::outs()</code> is similiar to the <code>std::cout</code>, but it's suggested to use
+<code>llvm::outs()</code> instead of <code>std::cout</code> according to the LLVM Coding Standard. <sup><a id="fnr.14" class="footref" href="#fn.14">14</a></sup>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbda1814" class="outline-2">
+<h2 id="orgbda1814"><span class="section-number-2">9</span> Put It All Together</h2>
+<div class="outline-text-2" id="text-9">
+<p>
+Here is our makefile:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-makefile"><span class="org-variable-name">CLANG_LEVEL</span> := ../../..
+<span class="org-variable-name">TOOLNAME</span> = find-decl
+<span class="org-keyword">include</span> $(<span class="org-variable-name">CLANG_LEVEL</span>)/../../Makefile.config
+<span class="org-variable-name">LINK_COMPONENTS</span> := $(<span class="org-variable-name">TARGETS_TO_BUILD</span>) asmparser bitreader support mc option
+<span class="org-variable-name">USEDLIBS</span> = clangTooling.a clangFrontend.a clangSerialization.a clangDriver.a \
+           clangRewriteFrontend.a clangRewrite.a \
+           clangParse.a clangSema.a clangAnalysis.a \
+           clangAST.a clangASTMatchers.a clangEdit.a clangLex.a clangBasic.a
+
+
+<span class="org-keyword">include</span> $(<span class="org-variable-name">CLANG_LEVEL</span>)/Makefile
+</pre>
+</div>
+
+<p>
+All the source code above should be put under
+<code>${llvm_src}/tools/clang/tools/clang-playground/find-decl/</code>.
+</p>
+
+<p>
+And put another makefile in
+<code>${llvm_src}/tools/clang/tools/clang-playground/</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-makefile"><span class="org-variable-name">CLANG_LEVEL</span> := ../..
+
+<span class="org-keyword">include</span> $(<span class="org-variable-name">CLANG_LEVEL</span>)/../../Makefile.config
+
+<span class="org-variable-name">PARALLEL_DIRS</span> := find-decl
+<span class="org-variable-name">DIRS</span> :=
+
+<span class="org-keyword">include</span> $(<span class="org-variable-name">CLANG_LEVEL</span>)/Makefile
+</pre>
+</div>
+
+<p>
+Edit <code>Makefile</code> in <code>${llvm_src}/tools/clang/tools/</code>, add <code>clang-playground</code> to
+<code>OPTIONAL\PARALLEL\DIRS</code> so Clang makefile can find our project.
+</p>
+
+<p>
+Now you should be able to build our project along with Clang. The built out binary should
+be located in <code>debug/Debug+Asserts/bin/</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9b66231" class="outline-2">
+<h2 id="org9b66231"><span class="section-number-2">10</span> The Glitch</h2>
+<div class="outline-text-2" id="text-10">
+<p>
+Wait! When there is a <code>#include &lt;vector&gt;</code> in the source file, our <code>find-decl</code> will
+print out all the declarations in that included file, because these included files
+are parsed and consumed as a whole with our source file. To fix this, we need to
+check if the declarations are defined in our source file:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C++"><span class="org-type">void</span> <span class="org-function-name">HandleTranslationUnit</span>(<span class="org-constant">clang</span>::<span class="org-type">ASTContext</span> &amp;<span class="org-variable-name">Context</span>) <span class="org-keyword">final</span> {
+  <span class="org-keyword">auto</span> <span class="org-variable-name">Decls</span> = Context.getTranslationUnitDecl()-&gt;decls();
+  <span class="org-keyword">for</span> (<span class="org-keyword">auto</span> &amp;<span class="org-variable-name">Decl</span> : Decls) {
+    <span class="org-keyword">const</span> <span class="org-keyword">auto</span>&amp; <span class="org-variable-name">FileID</span> = SourceManager.getFileID(Decl-&gt;getLocation());
+    <span class="org-keyword">if</span> (FileID != SourceManager.getMainFileID())
+      <span class="org-keyword">continue</span>;
+    Visitor.TraverseDecl(Decl);
+  }
+}
+</pre>
+</div>
+
+<p>
+This is the improved logic. We find out the file ID of each declaration belongs to,
+compare it with the main file ID. If they are equal, that means it's defined in
+our source file.
+</p>
+
+<p>
+<i>All the source code can be found at <a href="https://github.com/xinhuang/clang-playground.git">here</a>.</i>
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+<code>OptionCategory,</code> <a href="http://llvm.org/docs/doxygen/html/classllvm_1_1cl_1_1OptionCategory.html">http://llvm.org/docs/doxygen/html/classllvm_1_1cl_1_1OptionCategory.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+<code>CommonOptionsParser</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1CommonOptionsParser.html">http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1CommonOptionsParser.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3">3</a></sup> <div class="footpara"><p class="footpara">
+: <code>ClangTool</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1ClangTool.html">http://clang.llvm.org/doxygen/classclang_1_1tooling_1_1ClangTool.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.4" class="footnum" href="#fnr.4">4</a></sup> <div class="footpara"><p class="footpara">
+The Design of LLVM, <a href="http://www.drdobbs.com/architecture-and-design/the-design-of-llvm/240001128?pgno=1">http://www.drdobbs.com/architecture-and-design/the-design-of-llvm/240001128?pgno=1</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.5" class="footnum" href="#fnr.5">5</a></sup> <div class="footpara"><p class="footpara">
+<code>FrontendAction</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html">http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.6" class="footnum" href="#fnr.6">6</a></sup> <div class="footpara"><p class="footpara">
+<code>ASTFrontendAction</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTFrontendAction.html">http://clang.llvm.org/doxygen/classclang_1_1ASTFrontendAction.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.7" class="footnum" href="#fnr.7">7</a></sup> <div class="footpara"><p class="footpara">
+<code>FrontendAction::CreateASTConsumer</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html#a9277d23d8eec19dad5a9aeef721cd6a3">http://clang.llvm.org/doxygen/classclang_1_1FrontendAction.html#a9277d23d8eec19dad5a9aeef721cd6a3</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.8" class="footnum" href="#fnr.8">8</a></sup> <div class="footpara"><p class="footpara">
+<code>ASTConsumer</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html">http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.9" class="footnum" href="#fnr.9">9</a></sup> <div class="footpara"><p class="footpara">
+<code>Decl</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1Decl.html">http://clang.llvm.org/doxygen/classclang_1_1Decl.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.10" class="footnum" href="#fnr.10">10</a></sup> <div class="footpara"><p class="footpara">
+<code>Stmt</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1Stmt.html">http://clang.llvm.org/doxygen/classclang_1_1Stmt.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.11" class="footnum" href="#fnr.11">11</a></sup> <div class="footpara"><p class="footpara">
+<code>ASTConsumer::HandleTranslationUnit</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html#a2bea2db1d0e8af16c60ee7847f0d46ff">http://clang.llvm.org/doxygen/classclang_1_1ASTConsumer.html#a2bea2db1d0e8af16c60ee7847f0d46ff</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.12" class="footnum" href="#fnr.12">12</a></sup> <div class="footpara"><p class="footpara">
+<code>RecursiveASTVisitor</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html">http://clang.llvm.org/doxygen/classclang_1_1RecursiveASTVisitor.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.13" class="footnum" href="#fnr.13">13</a></sup> <div class="footpara"><p class="footpara">
+<code>SourceManager</code>, <a href="http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html">http://clang.llvm.org/doxygen/classclang_1_1SourceManager.html</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.14" class="footnum" href="#fnr.14">14</a></sup> <div class="footpara"><p class="footpara">
+LLVM Coding Standard, <a href="http://llvm.org/docs/CodingStandards.html">http://llvm.org/docs/CodingStandards.html</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

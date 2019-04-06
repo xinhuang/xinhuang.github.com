@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clang Tutorial: The AST Matcher</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<meta name="description" content="Using AST matcher to find pass-by-value std::vector parameters"
+ />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Clang Tutorial: The AST Matcher</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgec99665">1. Finding <code>std::vector</code> Which Are Passed by Value</a></li>
+<li><a href="#orgb64287a">2. The Clang AST</a></li>
+<li><a href="#orgd9008a8">3. The AST Matcher</a></li>
+<li><a href="#org9772937">4. The MatchCallback</a></li>
+<li><a href="#orgcf7aa26">5. References</a></li>
+</ul>
+</div>
+</div>
+<p>
+In <a href="./2014-10-19-clang-tutorial-finding-declarations.html">previous post</a> we have learned about Clang abstract syntax tree (AST) and made a simple Clang tool that will print all the
+declarations in a given source file. Now Let's play with Clang AST matchers and make another tool to
+detect when a <code>std::vector</code> is passed by value - which usually causes a performance hit.
+</p>
+
+<div id="outline-container-orgec99665" class="outline-2">
+<h2 id="orgec99665"><span class="section-number-2">1</span> Finding <code>std::vector</code> Which Are Passed by Value</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+The example.cpp:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-preprocessor">#include</span> <span class="org-string">&lt;vector&gt;</span>
+
+<span class="org-keyword">using</span> <span class="org-keyword">namespace</span> <span class="org-constant">std</span>;
+
+<span class="org-type">void</span> <span class="org-function-name">foo</span>(<span class="org-type">vector</span>&lt;<span class="org-type">int</span>&gt; <span class="org-variable-name">is</span>);
+<span class="org-type">void</span> <span class="org-function-name">bar</span>(<span class="org-keyword">const</span> <span class="org-type">vector</span>&lt;<span class="org-type">int</span>&gt; <span class="org-variable-name">is</span>);
+<span class="org-type">void</span> <span class="org-function-name">foobar</span>(<span class="org-keyword">const</span> <span class="org-type">vector</span>&lt;<span class="org-type">int</span>&gt;&amp; <span class="org-variable-name">cis</span>);
+<span class="org-type">void</span> <span class="org-function-name">fooboo</span>(<span class="org-type">vector</span>&lt;<span class="org-type">int</span>&gt;&amp; <span class="org-variable-name">cis</span>);
+</pre>
+</div>
+
+<p>
+Let's feed it to our <i>find-vec</i> program:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-sh">$ ./find-vec example.cpp -- -std=c++11  
+example.cpp:5:6  
+example.cpp:6:6  
+</pre>
+</div>
+
+<p>
+<i>Here we told Clang parser to use C++ 11 syntax by passing <code>-std=c++11</code> after <code>--</code>.</i>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb64287a" class="outline-2">
+<h2 id="orgb64287a"><span class="section-number-2">2</span> The Clang AST</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+If you still remember the <code>Decl</code> and <code>Stmt</code>, 
+these are the AST nodes that we will come across when processing a source file.
+With different <code>Decl</code>, <code>Stmt</code> and their derived classes like <code>NamedDecl</code> and <code>CallExpr</code>,
+we can obtain lots of information like variable type, name, definition information, etc.
+</p>
+
+<p>
+To examine all the function declarations with any parameter of type <code>std::vector</code>,
+we will need to match specific AST node that is:
+</p>
+
+<ul class="org-ul">
+<li>Function declaration or definition</li>
+<li>Has at least one parameter of type <code>std::vector</code></li>
+</ul>
+
+<p>
+Clang provides us a domain specific language (DSL) to create predicates on Clang's AST.
+It is written in and can be used from C++, allowing us to match AST nodes and
+extract its attributes.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd9008a8" class="outline-2">
+<h2 id="orgd9008a8"><span class="section-number-2">3</span> The AST Matcher</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+To use the AST matchers, we need to do is to call a bunch of matcher creation
+function, chain them together to compose the matcher we need, and/or bind the target
+node with a name so we can extract it later.
+</p>
+
+<p>
+To match a function declaration:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-type">DeclarationMatcher</span> <span class="org-variable-name">Matcher</span> = functionDecl();
+</pre>
+</div>
+
+<p>
+Then let's match its parameter:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-type">DeclarationMatcher</span> <span class="org-variable-name">Matcher</span> = functionDecl(<span class="org-type">hasAnyParameter</span>(...));  
+</pre>
+</div>
+
+<p>
+To matcher a parameter, we can use <code>hasParameter(N, ParamMatcher)</code>, which will match
+the N'th of parameter with given parameter matcher. Here we will need to match any
+parameter that of type <code>std::vector</code>, so we will use <code>hasAnyParameter</code>.
+</p>
+
+<p>
+Next match the parameter type:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-type">DeclarationMatcher</span> <span class="org-variable-name">Matcher</span> = functionDecl(
+  hasAnyParameter(hasType(recordDecl(matchesName(<span class="org-string">"std::vector"</span>))));
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9772937" class="outline-2">
+<h2 id="org9772937"><span class="section-number-2">4</span> The MatchCallback</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+When the AST matcher find the right node, the corresponding
+<code>clang::ast_matchers::MatchFinder::MatchCallback</code> will be invoked with matched result.
+By providing a <code>MatchCallback</code>, 
+we can print the function declarations/definitions that accept any parameter of type <code>std::vector</code> that is passed by value.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">class</span> <span class="org-type">VecCallback</span> : <span class="org-keyword">public</span> <span class="org-constant">clang</span>::<span class="org-constant">ast_matchers</span>::<span class="org-constant">MatchFinder</span>::<span class="org-type">MatchCallback</span> {
+<span class="org-keyword">public</span>:
+  <span class="org-keyword">virtual</span> <span class="org-type">void</span>
+  <span class="org-function-name">run</span>(<span class="org-keyword">const</span> <span class="org-constant">clang</span>::<span class="org-constant">ast_matchers</span>::<span class="org-constant">MatchFinder</span>::<span class="org-type">MatchResult</span> &amp;<span class="org-variable-name">Result</span>) <span class="org-keyword">final</span> {
+    <span class="org-constant">llvm</span>::outs() &lt;&lt; <span class="org-string">"."</span>;
+    <span class="org-keyword">if</span> (<span class="org-keyword">const</span> <span class="org-keyword">auto</span> *<span class="org-variable-name">F</span> =
+            Result.Nodes.getDeclAs&lt;<span class="org-constant">clang</span>::FunctionDecl&gt;(FunctionID)) {
+      <span class="org-keyword">const</span> <span class="org-keyword">auto</span>&amp; <span class="org-variable-name">SM</span> = *Result.SourceManager;
+      <span class="org-keyword">const</span> <span class="org-keyword">auto</span>&amp; <span class="org-variable-name">Loc</span> = F-&gt;getLocation();
+      <span class="org-constant">llvm</span>::outs() &lt;&lt; SM.getFilename(Loc) &lt;&lt; <span class="org-string">":"</span>
+                   &lt;&lt; SM.getSpellingLineNumber(Loc) &lt;&lt; <span class="org-string">":"</span>
+                   &lt;&lt; SM.getSpellingColumnNumber(Loc) &lt;&lt; <span class="org-string">"\n"</span>;
+    }
+  }
+};
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgcf7aa26" class="outline-2">
+<h2 id="orgcf7aa26"><span class="section-number-2">5</span> References</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Clang also provides a simple document of AST matchers: <a href="http://clang.llvm.org/docs/LibASTMatchers.html">Matching the Clang AST</a>.
+For a complete reference of AST matchers, you can find it in <a href="http://clang.llvm.org/docs/LibASTMatchersReference.html">AST Matcher Reference</a>.
+</p>
+
+<p>
+<i>All the source code in this post can be found at <a href="https://github.com/xinhuang/clang-playground.git">clang-playground</a>.</i>
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

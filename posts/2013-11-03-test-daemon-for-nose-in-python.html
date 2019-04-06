@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Test Daemon For Python using Nose</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<meta name="description" content="A daemon to run your unit tests automatically after they are modified."
+ />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Test Daemon For Python using Nose</h1>
+<p>
+Last week we had a great night with Tim Ottinger, playing with Python to analyze commit history.
+</p>
+
+<p>
+One thing impressed me is Tim's Python develop environment. 
+His tests are running automatically after a change. 
+I didn't caught up how he made it work, and cannot find a apropiate key word to google. So here is my own version.
+</p>
+
+<p>
+The idea is quite simple: Use nose API to re-run tests every time a source change is detected.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">while</span> <span class="org-constant">True</span>:
+    <span class="org-keyword">while</span> <span class="org-keyword">not</span> sourceChanged(dirs):
+        time.sleep(1)
+    nose.run()
+</pre>
+</div>
+
+<p>
+Only thing needs special attention is to isolate test modules by provide option `&#x2013;with-isolation`, so nose will reload them before each `nose.run`.
+For file change detection, library <code>watchdog</code> is used. <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>
+</p>
+
+<p>
+Two improvements I can think of are:
+</p>
+
+<ol class="org-ol">
+<li>Not only monitor <code>*.py</code> files, but all files. Configuration files can also have an impact on test result.</li>
+
+<li>Ignore version control files, because these folders are always filled by tones of files.</li>
+</ol>
+
+<p>
+The complete source code is shown below:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> sys
+<span class="org-keyword">import</span> time
+<span class="org-keyword">from</span> watchdog.observers <span class="org-keyword">import</span> Observer
+<span class="org-keyword">from</span> watchdog.events <span class="org-keyword">import</span> FileSystemEventHandler
+<span class="org-keyword">import</span> nose
+<span class="org-keyword">import</span> os
+<span class="org-keyword">from</span> itertools <span class="org-keyword">import</span> takewhile
+
+
+<span class="org-keyword">def</span> <span class="org-function-name">cls</span>():
+    os.system(<span class="org-string">'cls'</span> <span class="org-keyword">if</span> os.name==<span class="org-string">'nt'</span> <span class="org-keyword">else</span> <span class="org-string">'clear'</span>)
+
+
+<span class="org-keyword">class</span> <span class="org-type">TestMonitor</span>(FileSystemEventHandler):
+
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>):
+        FileSystemEventHandler.__init__(<span class="org-keyword">self</span>)
+        <span class="org-keyword">self</span>.modified = <span class="org-constant">False</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">on_any_event</span>(<span class="org-keyword">self</span>, event):
+        <span class="org-keyword">print</span>(event.src_path)
+        <span class="org-keyword">self</span>.modified = <span class="org-constant">True</span>
+
+    <span class="org-type">@property</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">path</span>(<span class="org-keyword">self</span>):
+        <span class="org-variable-name">where</span> = <span class="org-builtin">list</span>(takewhile(<span class="org-keyword">lambda</span> a: <span class="org-keyword">not</span> a.startswith(<span class="org-string">"-"</span>), sys.argv[1:]))
+        <span class="org-keyword">for</span> i, v <span class="org-keyword">in</span> <span class="org-builtin">enumerate</span>(sys.argv):
+            <span class="org-keyword">if</span> v == <span class="org-string">"-w"</span> <span class="org-keyword">or</span> v == <span class="org-string">"--where"</span>:
+                where.append(sys.argv[i+1])
+        <span class="org-variable-name">where</span> = <span class="org-builtin">filter</span>(os.path.isdir, where)
+        <span class="org-keyword">if</span> <span class="org-builtin">len</span>(where) == 0:
+            <span class="org-keyword">return</span> [<span class="org-string">"."</span>]
+        <span class="org-keyword">return</span> where
+
+    <span class="org-keyword">def</span> <span class="org-function-name">testIt</span>(<span class="org-keyword">self</span>):
+        cls()
+        nose.run()
+        <span class="org-keyword">self</span>.modified = <span class="org-constant">False</span>
+
+    <span class="org-keyword">def</span> <span class="org-function-name">run</span>(<span class="org-keyword">self</span>):
+        sys.argv.append(<span class="org-string">"--with-isolation"</span>)
+
+        <span class="org-variable-name">observer</span> = Observer()
+        <span class="org-keyword">for</span> p <span class="org-keyword">in</span> <span class="org-keyword">self</span>.path:
+            observer.schedule(<span class="org-keyword">self</span>, p, recursive = <span class="org-constant">True</span>)
+        observer.start()
+
+        <span class="org-keyword">self</span>.testIt()
+
+        <span class="org-keyword">try</span>:
+            <span class="org-keyword">while</span> <span class="org-constant">True</span>:
+                time.sleep(1)
+                <span class="org-keyword">if</span> <span class="org-keyword">self</span>.modified:
+                    <span class="org-keyword">self</span>.testIt()
+        <span class="org-keyword">except</span> <span class="org-type">KeyboardInterrupt</span>:
+            observer.stop()
+        observer.join()
+
+
+<span class="org-keyword">if</span> <span class="org-builtin">__name__</span> == <span class="org-string">"__main__"</span>:
+    TestMonitor().run()
+</pre>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+<a href="https://github.com/gorakhargosh/watchdog">https://github.com/gorakhargosh/watchdog</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

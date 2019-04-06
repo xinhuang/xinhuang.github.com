@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Visual Leak Detector Stack Overflow And Thread Local Storage</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Visual Leak Detector Stack Overflow And Thread Local Storage</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org64c36b9">1. Abstract</a></li>
+<li><a href="#org41700db">2. Analysis</a></li>
+<li><a href="#org6fce961">3. Reproduce</a></li>
+<li><a href="#orgc443e4b">4. Conclusion</a></li>
+<li><a href="#orga0cbacd">5. References</a></li>
+<li><a href="#org692a718">6. Acknowledgement</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org64c36b9" class="outline-2">
+<h2 id="org64c36b9"><span class="section-number-2">1</span> Abstract</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+On Windows, by default Thread Local Storage (TLS) has 0x40 slots. Later it is expanded
+by 0x400 more slots. These expansion slots are created on demand when TLS APIs
+`TlsAlloc/TlsFree/TlsGetValue/TlsSetValue` are invoked in current thread. And the expansion is achieved by
+calling Windows API `RtlAllocateHeap`. When TLS APIs are invoked the first time with
+slot number &gt;= 0x40 in a thread which hasn't expand before, TLS expansion will be triggered.
+</p>
+
+<p>
+Visual Leak Detector (VLD) is a memory allocation tracing library, assisting troubleshooting
+memory leak issues by hooking memory allocation APIs, including `RtlAllocateHeap`.
+</p>
+
+<p>
+When a memory allocation happens, VLD will store the information in its TLS slot to
+avoid contention and reduce performance impact. When VLD is assigned with a TLS slot &gt;= 0x40
+and a memory allocation happens in a thread that hasn't expand TLS, the access to TLS slot
+from VLD will trigger another TLS expansion.
+</p>
+
+<p>
+However, the expansion will call `RtlAllocateHeap` to allocate memory and the record of
+this memory allocation will be saved into TLS slot by VLD, which will again trigger another
+TLS expansion&#x2026; In this way, The program will enter infinite recursion.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org41700db" class="outline-2">
+<h2 id="org41700db"><span class="section-number-2">2</span> Analysis</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+Today I meet a crash because of infinite recursion with call stacks switching between KernelBase.dll and VLD.dll.
+It appears to be somehow VLD enters an infinite recursion when calling `VisualLeakDetector::getTls()`.
+What's more interesting is despite the fact that this crash is repeatable, VLD has been enabled in our product for long.
+</p>
+
+<p>
+Why it happens now?
+</p>
+
+<p>
+The call stack looks like below:
+</p>
+
+<pre class="example">
+...
+6dc9 0759f314 09ddbfcc 00000042 0a16b870 09defbd0 KERNELBASE!TlsSetValue+0x4f
+6dca 0759f360 09ddc1a3 09defbd0 00490000 0759f38c vld!VisualLeakDetector::getTls+0xfc [c:\build\vld\v24c\src\vld.cpp @ 1075]
+6dcb 0759f370 09dda74b 0baa5930 00000008 0759f69c vld!VisualLeakDetector::enabled+0x23 [c:\build\vld\v24c\src\vld.cpp @ 982]
+6dcc 0759f38c 75c445cf 00490000 00000008 00001000 vld!VisualLeakDetector::_HeapAlloc+0x2b [c:\build\vld\v24c\src\vld_hooks.cpp @ 1617]
+6dcd 0759f3a8 09ddbfcc 00000042 0a16b870 09defbd0 KERNELBASE!TlsSetValue+0x4f
+6dce 0759f3f4 09ddc1a3 09defbd0 05480fe8 0759f420 vld!VisualLeakDetector::getTls+0xfc [c:\build\vld\v24c\src\vld.cpp @ 1075]
+6dcf 0759f404 09dda74b 05480fd0 0000004c 0759f45c vld!VisualLeakDetector::enabled+0x23 [c:\build\vld\v24c\src\vld.cpp @ 982]
+6dd0 0759f420 7614ea43 00490000 00000000 00000018 vld!VisualLeakDetector::_HeapAlloc+0x2b [c:\build\vld\v24c\src\vld_hooks.cpp @ 1617]
+6dd1 0759f434 7614ea5f 762466bc 00000018 0759f450 ole32!CRetailMalloc_Alloc+0x16 [d:\w7rtm\com\ole32\com\class\memapi.cxx @ 641]
+...
+6dec 0759fde0 77419882 0546b610 718c8e2a 00000000 kernel32!BaseThreadInitThunk+0xe
+6ded 0759fe20 77419855 7612d854 0546b610 00000000 ntdll!__RtlUserThreadStart+0x70
+6dee 0759fe38 00000000 7612d854 0546b610 00000000 ntdll!_RtlUserThreadStart+0x1b
+</pre>
+
+
+<p>
+When a thread starts and tries to allocate memory, VLD will trace all memory
+allocations. VLD records allocation information in a TLS slot to avoid
+contention and reduce performance impact. When VLD tries to
+initialize the TLS slot, Windows API `TlsSetValue` allocates memory,
+and VLD traces the allocation by saving it into TLS. This is
+what we can guess from the crash dump.
+</p>
+
+<p>
+But why `TlsSetValue` will allocate memory? Let's take a look at the disassembled code:  
+(uninteresting details are omited, indentations are added for better formating and understanding)
+</p>
+
+<div class="org-src-container">
+<pre class="src src-asm"><span class="org-function-name">KERNELBASE</span>!TlsSetValue:
+<span class="org-comment-delimiter">// </span><span class="org-comment">BOOL WINAPI TlsSetValue(_In_ DWORD dwTlsIndex, _In_opt_ LPVOID lpTlsValue)</span>
+...
+<span class="org-function-name">75c44585</span> <span class="org-keyword">56</span>              push    esi
+<span class="org-function-name">75c44586</span> <span class="org-keyword">648b3518000000</span>  mov     esi,dword ptr fs:[18h]
+<span class="org-comment-delimiter">// </span><span class="org-comment">ESI points to Thread Environment Block (TEB)</span>
+<span class="org-function-name">75c4458d</span> <span class="org-keyword">57</span>              push    edi
+<span class="org-function-name">75c4458e</span> <span class="org-keyword">8b7d08</span>          mov     edi,dword ptr [ebp+8]
+<span class="org-function-name">75c44591</span> <span class="org-keyword">83ff40</span>          cmp     edi,40h
+<span class="org-function-name">75c44594</span> <span class="org-keyword">7260</span>            jb      KERNELBASE!TlsSetValue+0x76 (75c445f6)  Branch
+
+<span class="org-comment-delimiter">// </span><span class="org-comment">if (dwTlsIndex &gt;= 0x40) {</span>
+
+  <span class="org-keyword">KERNELBASE</span>!TlsSetValue+0x16:
+  <span class="org-keyword">75c44596</span> 83ef40          sub     edi,40h
+  <span class="org-keyword">75c44599</span> 81ff00040000    cmp     edi,400h
+  <span class="org-keyword">75c4459f</span> 734e            jae     KERNELBASE!TlsSetValue+0x6f (75c445ef)  Branch
+
+  <span class="org-comment-delimiter">// </span><span class="org-comment">if (dwTlsIndex &lt; 0x440) {</span>
+
+    <span class="org-keyword">KERNELBASE</span>!TlsSetValue+0x21:
+    <span class="org-keyword">75c445a1</span> 8b86940f0000    mov     eax,dword ptr [esi+0F94h]
+    <span class="org-keyword">75c445a7</span> 85c0            test    eax,eax
+    <span class="org-keyword">75c445a9</span> 753c            jne     KERNELBASE!TlsSetValue+0x67 (75c445e7)  Branch
+
+    <span class="org-comment-delimiter">// </span><span class="org-comment">if (pTeb-&gt;TlsExpansionSlots == NULL)</span>
+
+      <span class="org-keyword">KERNELBASE</span>!TlsSetValue+0x2b:
+      <span class="org-keyword">75c445ab</span> e88126ffff      call    KERNELBASE!KernelBaseGetGlobalData (75c36c31)
+      <span class="org-keyword">75c445b0</span> 8b402c          mov     eax,dword ptr [eax+2Ch]
+      <span class="org-keyword">75c445b3</span> 648b0d18000000  mov     ecx,dword ptr fs:[18h]
+      <span class="org-keyword">75c445ba</span> 6800100000      push    1000h
+      <span class="org-keyword">75c445bf</span> 83c808          or      eax,8
+      <span class="org-keyword">75c445c2</span> 50              push    eax
+      <span class="org-keyword">75c445c3</span> 8b4130          mov     eax,dword ptr [ecx+30h]
+      <span class="org-keyword">75c445c6</span> ff7018          push    dword ptr [eax+18h]
+      <span class="org-keyword">75c445c9</span> ff151810c375    call    dword ptr [KERNELBASE!_imp__RtlAllocateHeap (75c31018)]
+      <span class="org-keyword">75c445cf</span> 85c0            test    eax,eax
+      <span class="org-keyword">75c445d1</span> 750e            jne     KERNELBASE!TlsSetValue+0x61 (75c445e1)  Branch
+      ...
+      <span class="org-keyword">KERNELBASE</span>!TlsSetValue+0x61:
+      <span class="org-keyword">75c445e1</span> 8986940f0000    mov     dword ptr [esi+0F94h],eax
+
+      <span class="org-comment-delimiter">// </span><span class="org-comment">pTeb-&gt;TlsExpansionSlots = RtlAllocateHeap(...)</span>
+
+    <span class="org-keyword">KERNELBASE</span>!TlsSetValue+0x67:
+    <span class="org-keyword">75c445e7</span> 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
+    <span class="org-keyword">75c445ea</span> 890cb8          mov     dword ptr [eax+edi*4],ecx
+    <span class="org-keyword">75c445ed</span> eb11            jmp     KERNELBASE!TlsSetValue+0x80 (75c44600)  Branch
+
+    <span class="org-comment-delimiter">// </span><span class="org-comment">Set value to TLS slot</span>
+  }  else { <span class="org-comment-delimiter">// </span><span class="org-comment">ERROR if (dwTlsIndex &gt;= 0x440) }</span>
+} <span class="org-comment-delimiter">// </span><span class="org-comment">if (dwTlsIndex &gt;= 0x40)</span>
+</pre>
+</div>
+
+<p>
+From the disassembled code we can find that the expansion occurs when the passed-in
+slot &gt;= 0x40. This confirmed our guess.
+But since VLD will enter infinite recursion when it sees a TLS slot &gt;= 0x40,
+why the stack overflow is never observed before?
+</p>
+
+<p>
+This question has puzzled me for quite some time: the expansion is already done
+in `TlsAlloc` for all threads, why memory allocation is still needed?
+Until I notice that the expansion is only applied to a Thread Environment Block, (TEB, where `fs:[18h]` points to)
+which means the expansion only affect the current thread.
+All other threads remain intact.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6fce961" class="outline-2">
+<h2 id="org6fce961"><span class="section-number-2">3</span> Reproduce</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+After above analysis, we can try to reproduce the infinite recursion so that we can prove the
+conclusion is correct.
+</p>
+
+<p>
+To increase TLS slot number, simply calling `TlsAlloc` in a loop will do the trick.
+</p>
+
+<p>
+Another step required to reproduce is to make sure VLD gets assigned with a TLS slot &gt;= 64.
+To do this, first increase TLS slot number, then load and enable VLD dynamically using `LoadLibrary` &amp; `GetProcAddress`.
+After VLD is enabled, allocate memory in a new thread.
+</p>
+
+<p>
+Here is the minimum reproduce code sample:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-C"><span class="org-preprocessor">#include</span> <span class="org-string">&lt;windows.h&gt;</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;thread&gt;</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;chrono&gt;</span>
+<span class="org-preprocessor">#include</span> <span class="org-string">&lt;memory&gt;</span>
+
+<span class="org-type">int</span> <span class="org-function-name">main</span>(<span class="org-type">int</span> <span class="org-variable-name">argc</span>, <span class="org-type">wchar_t</span> *<span class="org-variable-name">argv</span>[]) {
+  <span class="org-keyword">for</span> (<span class="org-type">int</span> <span class="org-variable-name">i</span> = 0; i &lt; 0x40; ++i)
+    TlsAlloc();
+
+  <span class="org-type">HMODULE</span> <span class="org-variable-name">h_vld</span> = LoadLibraryA(<span class="org-string">"vld.dll"</span>);
+  <span class="org-keyword">typedef</span> <span class="org-type">void</span>(*<span class="org-type">vld_enable_t</span>)(<span class="org-type">void</span>);
+  <span class="org-keyword">auto</span> <span class="org-type">vld_enable</span> = (vld_enable_t)::GetProcAddress(h_vld, <span class="org-string">"VLDGlobalEnable"</span>);
+  vld_enable();
+  std::thread([]() {std::make_shared&lt;<span class="org-type">int</span>&gt;(); }).join();
+  <span class="org-keyword">return</span> 0;
+}
+</pre>
+</div>
+
+<p>
+Use above code we can make a program crash of stack overflow, with call stack almost the same as what I get
+from our product crash dump. (Except for the first several lines which intializes CLR)
+Our theory about VLD and TLS expansion is correct.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc443e4b" class="outline-2">
+<h2 id="orgc443e4b"><span class="section-number-2">4</span> Conclusion</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+How to explain why the crash is never met before?
+</p>
+
+<p>
+VLD is linked to several DLLs of our product, and is statically initialized in these DLLs.
+The DLLs are loaded dynamically at runtime when they are used, or never if they are not touched at runtime.
+Maybe some recent change removed VLD from one of the DLLs which is always loaded before TLS allocation count
+reaches 0x40, so sometimes when VLD is loaded, there are chances that more than 0x40 TLS slots allocated already.
+That's why VLD gets assigned with TLS slot &gt;= 0x40.
+</p>
+
+<p>
+Also we used lots of COM (both STA/MTA) in our product, threads and memory allocation are not rare.
+</p>
+
+<p>
+When these 2 conditions are met, infinite recursion happens.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga0cbacd" class="outline-2">
+<h2 id="orga0cbacd"><span class="section-number-2">5</span> References</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+Thanks to Ken Johnson, his post of Thread Local Storage, part 2: Explicit TLS <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup> shed light
+when I am wondering why this issue still happens when TLS expansion is checked inside each API.
+</p>
+
+<p>
+I submit an bug for VLD of this issue. <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>
+</p>
+</div>
+</div>
+
+<div id="outline-container-org692a718" class="outline-2">
+<h2 id="org692a718"><span class="section-number-2">6</span> Acknowledgement</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+Thanks to my smart &amp; beautiful scientist girlfriend Z for her patience and time to review
+this post and give insightful comments.
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+Thread Local Storage, part 2: Explicit TLS by Ken Johnson, <a href="http://www.nynaeve.net/?p=181">http://www.nynaeve.net/?p=181</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+Submitted issue, <a href="https://vld.codeplex.com/workitem/10590">https://vld.codeplex.com/workitem/10590</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

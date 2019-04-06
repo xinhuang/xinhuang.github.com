@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Epic Fail of Enforcing Unit Tests</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">The Epic Fail of Enforcing Unit Tests</h1>
+<p>
+<i>The DIRECT TV "Get Rid Of Cable" commercial is a very interesting commercial. If you haven't watch it yet, you can watch the full commercial <a href="https://www.youtube.com/watch?v=NZ80SVOHKoo">here</a>. It starts by a simple thing, then it leads to complete a different story "<b>convincingly</b>" and "<b>reasonably</b>".</i>
+</p>
+
+<p>
+Here is what will happen when your developers are forced to reach 100% test coverage:
+</p>
+
+<ul class="org-ul">
+<li>When developers are forced to write unit tests, they write shit tests which test nothing.</li>
+
+<li>When people write shit tests, their tests depend on the implementation.</li>
+
+<li>When the tests depend on the implementation, production code is difficult to change.</li>
+
+<li>When production code is difficult to change and you change it, you break tests.</li>
+
+<li>When you break tests, you fix tests.</li>
+
+<li>When you find the tests are shit tests, you want to delete them.</li>
+
+<li>If you delete tests, test coverage drops.</li>
+
+<li>If test coverage drops, everyone is blaming you.</li>
+
+<li>If you cannot delete broken shit tests and have to fix them, you get pissed off.</li>
+
+<li>Don't get pissed off, teach people why and how to write tests from the beginning.</li>
+
+<li>And most importantly, don't force people to write unit tests.</li>
+</ul>
+
+<p>
+You would say: <b>That is not true. By forcing people writing tests to reach test coverage of N%, (N is usually around 80 hopefully) they will carefully design their code so that it is unit-testable/testable.</b>
+</p>
+
+<p>
+Once I had the same belief, until I came across a code snippet looked like below:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-csharp">[TestMethod]
+<span class="org-keyword">public</span> <span class="org-type">void</span> DrawGauge_Test()
+{
+        <span class="org-keyword">using</span> (ShimsContext.<span class="org-function-name">Create</span>())
+        {
+        <span class="org-keyword">var</span> <span class="org-variable-name">privateTestObj</span> = SetupTestObject();
+        <span class="org-keyword">var</span> <span class="org-variable-name">e</span> = <span class="org-keyword">new</span> <span class="org-type">PaintEventArgs</span>(g, clipRect);
+
+        privateTestObj.<span class="org-function-name">SetField</span>(<span class="org-string">"m_pDomainIconIsSmall"</span>, BmpIconSmall)
+        DrawGauge();
+    }
+    <span class="org-comment-delimiter">// </span><span class="org-comment">If no exception, everything is OK</span>
+}
+</pre>
+</div>
+
+<p>
+Let me explain:
+</p>
+
+<ol class="org-ol">
+<li><code>privateTestObj</code> is the SUT (System Under Test).</li>
+<li><code>privateTestObj</code> is inherited from a type provided by the SDK. It overrides several methods, and these methods are used only by the <code>DrawGauge()</code>.</li>
+<li>By calling <code>DrawGauge()</code> in the test, the override methods are considered "<b>covered</b>".</li>
+</ol>
+
+<p>
+This test brings no value, but only maintenance burden. For a better design, the code should first setting up appropriate condition,  calling the override methods, and asserting correct values are returned (or side effect happened). Calling the `DrawGauge()` method and assert there is no exception is like cheating. The reason I was tripped over by the test is that I renamed the variable name accessed using reflection, but not because it actually found anything wrong.
+</p>
+
+<p>
+Before your developers are ready, please don't force them to write tests aiming for N% test coverage. Unless they are willing to write tests - usually that is the time stakeholders start to ask questions like "Do we really have to write tests now? Can we do it later? Maybe tomorrow?" (Teach your stakeholders, too!)
+</p>
+
+<p>
+For the God's sake, don't force people to write unit tests.
+</p>
+</div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

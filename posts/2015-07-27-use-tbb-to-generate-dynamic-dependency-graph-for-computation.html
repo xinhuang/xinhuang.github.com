@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Use TBB to Generate Dynamic Dependency Graph For Computation</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Use TBB to Generate Dynamic Dependency Graph For Computation</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org638de21">1. Overview</a></li>
+<li><a href="#orge1aa2ec">2. Dynamic Graph</a></li>
+<li><a href="#org0809803">3. Message Aggregation</a></li>
+<li><a href="#org05c5efc">4. Pipeline</a></li>
+<li><a href="#org613a94a">5. Merge Node</a></li>
+<li><a href="#orgc31c01f">6. Erase/Restore Type Information</a></li>
+<li><a href="#orgbc72ad4">7. Known Limitations</a></li>
+<li><a href="#orgc9f227b">8. Further Improvements</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org638de21" class="outline-2">
+<h2 id="org638de21"><span class="section-number-2">1</span> Overview</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+TBB's flow graph provides a way to do flow-based programming. For problems
+which can be described as a dependency graph, a flow graph provides a clear interface to
+describe the problem, with good performance and scalability across multiple CPU
+cores.
+</p>
+
+<p>
+Typical TBB flow graph code looks like below:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">using</span> <span class="org-keyword">namespace</span> <span class="org-constant">tbb</span>::<span class="org-constant">flow</span>;
+
+<span class="org-type">int</span> <span class="org-function-name">main</span>() {
+   <span class="org-type">graph</span> <span class="org-variable-name">g</span>;
+   <span class="org-type">function_node</span>&lt;<span class="org-type">int</span>,<span class="org-type">int</span>&gt;
+       <span class="org-variable-name">f1</span>( g, unlimited, [](<span class="org-keyword">const</span> <span class="org-type">int</span> &amp;<span class="org-variable-name">i</span>) { <span class="org-keyword">return</span> 2*i; } );
+   <span class="org-type">function_node</span>&lt;<span class="org-type">float</span>,<span class="org-type">float</span>&gt;
+       <span class="org-variable-name">f2</span>( g, unlimited, [](<span class="org-keyword">const</span> <span class="org-type">float</span> &amp;<span class="org-variable-name">f</span>) { <span class="org-keyword">return</span> f/2; } );
+
+   <span class="org-type">join_node</span>&lt; <span class="org-constant">flow</span>::<span class="org-type">tuple</span>&lt;<span class="org-type">int</span>,<span class="org-type">float</span>&gt; &gt; <span class="org-variable-name">j</span>(g);
+
+   <span class="org-type">function_node</span>&lt; <span class="org-constant">flow</span>::<span class="org-type">tuple</span>&lt;<span class="org-type">int</span>,<span class="org-type">float</span>&gt; &gt;
+       <span class="org-variable-name">f3</span>( g, unlimited,
+           []( <span class="org-keyword">const</span> <span class="org-constant">flow</span>::<span class="org-type">tuple</span>&lt;<span class="org-type">int</span>,<span class="org-type">float</span>&gt; &amp;<span class="org-variable-name">t</span> ) {
+               printf( <span class="org-string">"Result is %f\n"</span>,
+                       <span class="org-constant">std</span>::get&lt;0&gt;(<span class="org-variable-name">t</span>) + <span class="org-constant">std</span>::get&lt;1&gt;(t));
+           } );
+
+   make_edge( f1, input_port&lt;0&gt;( j ) );
+   make_edge( f2, input_port&lt;1&gt;( j ) ;
+   make_edge( j, f3 );
+
+   f1.try_put( 3 );
+   f2.try_put( 3 );
+   g.wait_for_all( );
+   <span class="org-keyword">return</span> 0;
+}
+</pre>
+</div>
+
+<p>
+<i>Example taken from <code>tbb::flow::join_node documentation</code>.</i> <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge1aa2ec" class="outline-2">
+<h2 id="orge1aa2ec"><span class="section-number-2">2</span> Dynamic Graph</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+The example above is quite simple, using a predefined computation flow graph.
+However in reality, the original graph usually is dynamically created somewhere,
+especially when trying to adapt TBB to a legacy system, and we will need
+to create the flow graph at runtime:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">using</span> <span class="org-type">fnode</span> = <span class="org-constant">tbb</span>::<span class="org-constant">flow</span>::<span class="org-type">function_node</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;;
+
+<span class="org-type">void</span> <span class="org-function-name">computeFlowGraph</span>(<span class="org-keyword">const</span> <span class="org-constant">std</span>::<span class="org-type">vector</span>&lt;<span class="org-type">Node</span>*&gt;&amp; <span class="org-variable-name">nodes</span>, <span class="org-keyword">const</span> <span class="org-type">msg_t</span>&amp; <span class="org-variable-name">computationParam</span>) {
+  <span class="org-constant">std</span>::<span class="org-type">vector</span>&lt;<span class="org-type">fnode</span>*&gt; <span class="org-variable-name">fnodes</span>;
+  <span class="org-constant">std</span>::<span class="org-type">unordered_map</span>&lt;<span class="org-type">Node</span>*, <span class="org-type">fnode</span>*&gt; <span class="org-variable-name">nfmap</span>;
+
+  <span class="org-constant">tbb</span>::<span class="org-constant">flow</span>::<span class="org-type">graph</span> <span class="org-variable-name">g</span>;
+
+  <span class="org-keyword">for</span> (<span class="org-keyword">auto</span> <span class="org-variable-name">n</span> : nodes) {
+    <span class="org-comment-delimiter">// </span><span class="org-comment">not capturing *n directly to avoid copying</span>
+    <span class="org-keyword">auto</span> <span class="org-variable-name">f</span> = <span class="org-keyword">new</span> <span class="org-type">fnode</span>(g, n-&gt;getConcurrentCount(),
+                       [=](<span class="org-keyword">const</span> <span class="org-type">msg_t</span>&amp; <span class="org-variable-name">p</span>) { <span class="org-keyword">return</span> (*n)(p); } ));
+    fnodes.push_back(f);
+    nfmap[n] = f;
+  }
+
+  <span class="org-keyword">for</span> (<span class="org-keyword">auto</span> <span class="org-variable-name">n</span> : nodes) {
+    <span class="org-keyword">for</span> (<span class="org-keyword">auto</span> <span class="org-variable-name">p</span> : n-&gt;getParents()) {
+      <span class="org-constant">tbb</span>::<span class="org-constant">flow</span>::make_edge(*nfmap[p], *nfmap[n]);
+    }
+  }
+
+  <span class="org-comment-delimiter">// </span><span class="org-comment">get all the initial function nodes and start computation</span>
+  <span class="org-constant">std</span>::<span class="org-type">vector</span>&lt;<span class="org-type">fnode</span>&gt; <span class="org-variable-name">initials</span> = getInitialNodes(nfmap);
+  <span class="org-keyword">for</span> (<span class="org-keyword">auto</span> <span class="org-variable-name">fn</span>: initials) {
+    fn-&gt;try_put(computationParam);
+  }
+
+  g.wait_for_all();
+
+  deletePointerVector(fnodes);
+}
+</pre>
+</div>
+
+<p>
+Because the topology is not known until we create the graph, the TBB flow graph
+nodes can only be placed on the heap so they will remain valid till the end of
+the computation.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0809803" class="outline-2">
+<h2 id="org0809803"><span class="section-number-2">3</span> Message Aggregation</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Everything in TBB is fine and dandy, except the <code>function_node</code> might not be the one you expect: 
+You are expecting a node to spawn only one task after receiving one message from everyone of its parents, 
+not spawn one task per message received from any parent.
+The node needs to wait for all its parents to finish processing their message first.
+</p>
+
+<p>
+There is a <code>join_node</code> looks to be an interesting candidate to solve this,
+but on inspection it's still not the expected one: the message type is of a
+fixed empty class <code>continue_msg</code>, and there is no way to pass any extra
+information through the <code>join_node</code>.
+</p>
+
+<p>
+We see that actually no node type can pass extra information while waiting for
+all its parents at the same time. How to resolve this problem?
+</p>
+</div>
+</div>
+
+<div id="outline-container-org05c5efc" class="outline-2">
+<h2 id="org05c5efc"><span class="section-number-2">4</span> Pipeline</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+TBB provides another pattern called pipeline. <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>
+It simulates an assembly line
+which contains several processing stages. Only after a stage finishes its work,
+can the next stage start. Each stage can process independent input concurrently.
+</p>
+
+<p>
+One constraint of <code>tbb::parallel_pipeline</code> is that TBB doesn't support non-linear pipelines. <sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>
+This may seem to reduce the parallelism, 
+however it only affects the latency since all of the stages can always be processed in parallel.
+</p>
+
+<p>
+To express a complex pipeline as a linear one, sort the stages.
+</p>
+
+<p>
+However there is still a limitation of pipeline: Before a message can be passed
+to a child node, we need to aggregate all messages from its parents. 
+Pipeline cannot deal with this situation.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org613a94a" class="outline-2">
+<h2 id="org613a94a"><span class="section-number-2">5</span> Merge Node</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+To solve the "1 task per N messages" problem, all parents' messages should to be
+merged into one, then passed onto the child <code>function_node</code>.
+The general idea is like this:
+</p>
+
+<p>
+<code>join_node&lt;tuple&lt;msg_t...&gt;&gt;</code>   \rightArrow   <code>function_node&lt;msg_t, msg_t&gt;</code>
+</p>
+
+<p>
+From the interface we can tell <code>join_node</code> is lightweight that only gathers the
+input from its parents into a <code>tuple</code> then passes the tuple to its children.
+If we chain the <code>join_node</code> with a <code>function_node</code>, there should be little cost.
+</p>
+
+<p>
+But here comes another problem: How to store these nodes of different types.
+The entire graph is created dynamically, and all nodes need to be kept alive
+before computation finishes. Take below topology for example:
+</p>
+
+
+<div class="figure">
+<p><img src="./tbb-merge-node/dependency-graph-example.png" alt="dependency-graph-example.png" />
+</p>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">auto</span> *<span class="org-variable-name">afnode</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">bfnode</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">cjnode</span> = <span class="org-keyword">new</span> join_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">cfnode</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+make_edge(*cjnode, cfnode);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">djnode</span> = <span class="org-keyword">new</span> <span class="org-keyword">new</span> join_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">dfnode</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+make_edge(*djnode, dfnode);
+</pre>
+</div>
+
+<p>
+As we can see from above code, <code>join_node</code> which join different number of nodes
+are of different types. We cannot put them into a <code>std::vector&lt;join_node&lt;...&gt;*&gt;</code>
+to keep them alive until the end of computation.
+</p>
+
+<p>
+Imagine the graph can be rather complicated where a node can have at most 10
+parents! Either there will be many node vectors corresponding to each node
+type, or we have to find another way to erase the type of each node and
+restore the type information later for making edges and destruction.
+</p>
+
+<p>
+Suppose there is a <code>merge_node</code> which will wrap a <code>join_node</code> and connect it to  a <code>function_node</code>. 
+These nodes above will be: (Nodes E &amp; F omitted)
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">auto</span> *<span class="org-variable-name">A</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">B</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...);
+<span class="org-keyword">auto</span> *<span class="org-variable-name">C</span> = <span class="org-keyword">new</span> <span class="org-type">merge_node</span>(<span class="org-keyword">new</span> join_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;(...),
+                         <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...));
+<span class="org-keyword">auto</span> *<span class="org-variable-name">D</span> = <span class="org-keyword">new</span> <span class="org-type">merge_node</span>(<span class="org-keyword">new</span> join_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;(...),
+                         <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(...));
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgc31c01f" class="outline-2">
+<h2 id="orgc31c01f"><span class="section-number-2">6</span> Erase/Restore Type Information</h2>
+<div class="outline-text-2" id="text-6">
+<p>
+In above example, the type of a node is related to how many parents it has.
+If you remember the old C trick: every pointer can be converted to a <code>void*</code>,
+and convert back to a proper type. Using this trick, we can keep the pointer
+to the <code>join_node</code> as a <code>void*</code>. Only convert it to the correct type when needed
+(i.e. making edge and inside destructor) by doing a runtime dispatch based on
+how many parents a node has.
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c++"><span class="org-keyword">template</span> &lt;<span class="org-keyword">typename</span> <span class="org-type">msg_t</span>, <span class="org-keyword">typename</span> <span class="org-type">merge_t</span>&gt;
+<span class="org-keyword">class</span> <span class="org-type">merge_node</span> {
+  <span class="org-keyword">const</span> <span class="org-type">int</span> <span class="org-variable-name">n_parent</span> = 0;
+  <span class="org-type">void</span>* <span class="org-variable-name">jnode</span> = <span class="org-constant">nullptr</span>;
+  <span class="org-type">void</span>* <span class="org-variable-name">fnode</span> = <span class="org-constant">nullptr</span>;
+  <span class="org-type">merge_t</span> <span class="org-variable-name">merge</span>;
+
+<span class="org-keyword">public</span>:
+  <span class="org-keyword">template</span> &lt;<span class="org-keyword">typename</span> <span class="org-type">Body</span>&gt;
+  <span class="org-function-name">merge_node</span>(<span class="org-constant">tbb</span>::<span class="org-constant">flow</span>::<span class="org-type">gaph</span>&amp; <span class="org-variable-name">g</span>, <span class="org-keyword">const</span> <span class="org-type">Body</span>&amp; <span class="org-variable-name">body</span>, <span class="org-type">int</span> <span class="org-variable-name">n_parent</span>);
+
+  ~<span class="org-function-name">merge_node</span>();
+};
+
+<span class="org-keyword">template</span> &lt;<span class="org-keyword">typename</span> <span class="org-type">msg_t</span>, <span class="org-keyword">typename</span> <span class="org-type">merge_t</span>&gt;
+<span class="org-keyword">template</span> &lt;<span class="org-keyword">typename</span> <span class="org-type">Body</span>&gt;
+<span class="org-constant">merge_node</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">merge_t</span>&gt;::<span class="org-function-name">merge_node</span>(<span class="org-constant">tbb</span>::<span class="org-constant">flow</span>::<span class="org-type">graph</span>&amp; <span class="org-variable-name">g</span>, <span class="org-type">size_t</span> <span class="org-variable-name">concurrency</span>,
+                                       <span class="org-keyword">const</span> <span class="org-type">Body</span>&amp; <span class="org-variable-name">body</span>, <span class="org-type">int</span> <span class="org-variable-name">n_parent</span>)
+  : n_parent(n_parent) {
+  <span class="org-keyword">if</span> (n_parent &lt;= 1) {
+    fnode = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;(g, body);
+  } <span class="org-keyword">else</span> {
+    <span class="org-keyword">switch</span> (n_parent) {
+    <span class="org-keyword">case</span> 2: {
+      <span class="org-keyword">auto</span>* <span class="org-variable-name">jn</span> = <span class="org-keyword">new</span> join_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;(g);
+      <span class="org-keyword">auto</span>* <span class="org-variable-name">fn</span> = <span class="org-keyword">new</span> function_node&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;, <span class="org-type">msg_t</span>&gt;(g, concurrency,
+                    [=](<span class="org-keyword">const</span> <span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&amp; <span class="org-variable-name">msgs</span>) {
+                      <span class="org-keyword">return</span> body(merge(msgs));
+                    });
+      make_edge(*jn, *fnode);
+      jnode = jn;
+      fnode = fn;
+      <span class="org-keyword">break</span>;
+      }
+    <span class="org-comment-delimiter">// </span><span class="org-comment">case 3 and the rest is similar to case 2</span>
+    }
+  }
+}
+
+<span class="org-keyword">template</span> &lt;<span class="org-keyword">typename</span> <span class="org-type">msg_t</span>, <span class="org-keyword">typename</span> <span class="org-type">merge_t</span>&gt;
+<span class="org-constant">merge_node</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">merge_t</span>&gt;::~<span class="org-function-name">merge_node</span>() {
+  assert(jnode);
+  <span class="org-keyword">switch</span> (n_parent) {
+  <span class="org-keyword">case</span> 0:
+  <span class="org-keyword">case</span> 1:
+    assert(<span class="org-type">fnode</span> &amp;&amp; <span class="org-negation-char">!</span>jnode);
+    <span class="org-keyword">delete</span> <span class="org-keyword">reinterpret_cast</span>&lt;<span class="org-type">function_node</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;*&gt;(fnode);
+    <span class="org-keyword">return</span>;
+
+  <span class="org-keyword">case</span> 2:
+    assert(fnode &amp;&amp; jnode);
+    <span class="org-keyword">delete</span> <span class="org-keyword">reinterpret_cast</span>&lt;<span class="org-type">function_node</span>&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;, <span class="org-type">msg_t</span>&gt;*&gt;(fnode);
+    <span class="org-keyword">delete</span> <span class="org-keyword">reinterpret_cast</span>&lt;<span class="org-type">join_node</span>&lt;<span class="org-type">tuple</span>&lt;<span class="org-type">msg_t</span>, <span class="org-type">msg_t</span>&gt;&gt;*&gt;(jnode);
+    <span class="org-keyword">return</span>;
+  <span class="org-comment-delimiter">// </span><span class="org-comment">case 3 and the rest is similar to case 2</span>
+  }
+}
+</pre>
+</div>
+
+<p>
+Of course you can use macros to remove the many duplications here.
+For the complete implementation, please refer to <a href="https://gist.github.com/xinhuang/16e03ec6d560df5ca03c">merge<sub>node</sub> sources</a>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgbc72ad4" class="outline-2">
+<h2 id="orgbc72ad4"><span class="section-number-2">7</span> Known Limitations</h2>
+<div class="outline-text-2" id="text-7">
+<p>
+Because TBB doesn't support <code>join_node</code> with more than 10 parents, <code>merge_node</code>
+doesn't either. But you can always have a workaround by creating an intermediate
+node that merge 0~9 nodes and merge its output with the rest 10~N nodes.
+</p>
+
+<p>
+However, usually this number of parents would indicates a bottle neck in the graph,
+and probably a poor graph design.
+</p>
+
+<p>
+<i>This code has been found with several bugs due to carelessness. So be careful and use it as a POC only.</i>
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc9f227b" class="outline-2">
+<h2 id="orgc9f227b"><span class="section-number-2">8</span> Further Improvements</h2>
+<div class="outline-text-2" id="text-8">
+<p>
+Sometimes your function node will not always pass a message to the child nodes.
+Then you probably want to use the <code>tbb::flow::multifunction_node</code> so whether pass
+a message to child nodes can be controlled. The implementation is pretty much the
+same with a few tweaks. <sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup>
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+<code>tbb::flow::join_node</code>, <a href="https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm">https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/join_node_cls.htm</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+TBB Pipeline, <a href="https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm">https://www.threadingbuildingblocks.org/docs/help/reference/algorithms/pipeline_cls.htm</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3">3</a></sup> <div class="footpara"><p class="footpara">
+Non-Linear Pipelines, <a href="https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm">https://www.threadingbuildingblocks.org/docs/help/tbb_userguide/Non-Linear_Pipelines.htm</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.4" class="footnum" href="#fnr.4">4</a></sup> <div class="footpara"><p class="footpara">
+<code>tbb::flow::multifunction_node</code>, <a href="https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/multifunc_node_cls.htm">https://www.threadingbuildingblocks.org/docs/help/reference/flow_graph/multifunc_node_cls.htm</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>

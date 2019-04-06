@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-04-06 Sat 01:02 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Common Mistakes Using Python3 asyncio</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2018 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Common Mistakes Using Python3 asyncio</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org675c14c">1. Introduction</a></li>
+<li><a href="#org630d301">2. RuntimeWarning: coroutine <code>foo</code> was never awaited</a></li>
+<li><a href="#orgc09f339">3. Task was destroyed but it is pending!</a></li>
+<li><a href="#orgd31c6ce">4. <code>Task/Future</code> is awaited in a different <code>EventLoop</code> than it is created</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org675c14c" class="outline-2">
+<h2 id="org675c14c"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Python3 <code>asyncio</code> is a powerful asynchronous library. 
+However, the complexity results in a very steep learning curve. <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>
+Compared to C# <code>async/await</code>,
+the interfaces of Python3 <code>asyncio</code> is verbose and difficult to use.
+And the document is somewhat difficult to understand. 
+(Even Guido admited the document is not clear! <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>) 
+Here I summerize some of the common mistakes when
+using <code>asyncio</code>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org630d301" class="outline-2">
+<h2 id="org630d301"><span class="section-number-2">2</span> RuntimeWarning: coroutine <code>foo</code> was never awaited</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+This runtime warning can happen in many scenarios, but the cause are same: 
+A coroutine object is created by the invocation of an <code>async</code> function, but is never inserted into an <code>EventLoop</code>.
+</p>
+
+<p>
+Consider following <code>async</code> function <code>foo()</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">async def</span> <span class="org-function-name">foo</span>():
+    <span class="org-comment-delimiter"># </span><span class="org-comment">a long async operation</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">no value is returned</span>
+</pre>
+</div>
+
+<p>
+If you want to call <code>foo()</code> as an asynchronous task, and doesn't care about the result:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">prepare_for_foo()
+foo()                                           
+<span class="org-comment-delimiter"># </span><span class="org-comment">RuntimeWarning: coroutine foo was never awaited</span>
+remaining_work_not_depends_on_foo()
+</pre>
+</div>
+
+<p>
+This is because invoking <code>foo()</code> doesn't actually runs the function <code>foo()</code>, but created a "coroutine object" instead. 
+This "coroutine object" will be executed when current <code>EventLoop</code> gets a chance: <code>awaited/yield from</code> is called or all previous tasks are finished.
+</p>
+
+<p>
+To execute an asynchronous task without <code>await</code>, use <code>loop.create_task()</code> with <code>loop.run_until_complete()</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python">prepare_for_foo()
+<span class="org-variable-name">task</span> = loop.create_task(foo())
+remaining_work_not_depends_on_foo()
+loop.run_until_complete(task)
+</pre>
+</div>
+
+<p>
+If the coroutine object is created and inserted into an `EventLoop`, but was never finished, the next warning will appear.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc09f339" class="outline-2">
+<h2 id="orgc09f339"><span class="section-number-2">3</span> Task was destroyed but it is pending!</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+The cause of this problem is that the <code>EventLoop</code> closed right after canceling pending tasks. 
+Because the <code>Task.cancel()</code> "arranges for a <code>CancelledError</code> to be thrown into the wrapped coroutine on the next cycle through the event loop", 
+and "the coroutine then has a chance to clean up or even deny the request using try/except/finally." <sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>
+</p>
+
+<p>
+To correctly cancel all tasks and close <code>EventLoop</code>, the <code>EventLoop</code> should be given the last chance to run all the canceled, but unfinished tasks.
+</p>
+
+<p>
+For example, this is the code to cancel all the tasks:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">cancel_tasks</span>():
+    <span class="org-comment-delimiter"># </span><span class="org-comment">get all task in current loop</span>
+    <span class="org-variable-name">tasks</span> = Task.all_tasks()           
+    <span class="org-keyword">for</span> t <span class="org-keyword">in</span> tasks:
+        t.cancel()
+
+cancel_tasks()
+loop.stop()
+</pre>
+</div>
+
+<p>
+Below code correctly handle task canceling and clean up. It starts the <code>EventLoop</code> by calling <code>loop.run_forever()</code>, and cleans up tasks after receiving <code>loop.stop()</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">try</span>:
+    <span class="org-comment-delimiter"># </span><span class="org-comment">run_forever() returns after calling loop.stop()</span>
+    loop.run_forever()
+    <span class="org-variable-name">tasks</span> = Task.all_tasks()
+    <span class="org-keyword">for</span> t <span class="org-keyword">in</span> [t <span class="org-keyword">for</span> t <span class="org-keyword">in</span> tasks <span class="org-keyword">if</span> <span class="org-keyword">not</span> (t.done() <span class="org-keyword">or</span> t.cancelled())]:
+        <span class="org-comment-delimiter"># </span><span class="org-comment">give canceled tasks the last chance to run</span>
+        loop.run_until_complete(t)
+<span class="org-keyword">finally</span>:
+    loop.close()
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd31c6ce" class="outline-2">
+<h2 id="orgd31c6ce"><span class="section-number-2">4</span> <code>Task/Future</code> is awaited in a different <code>EventLoop</code> than it is created</h2>
+<div class="outline-text-2" id="text-4">
+<p>
+This error is especially surprising to people who are familiar with C# <code>async/await</code>. It is because most of <code>asyncio</code> is not thread-safe, nor is <code>asyncio.Future</code> or <code>asyncio.Task</code>.
+Also don't confuse <code>asyncio.Future</code> with <code>concurrent.futures.Future</code> because they are not compatible (at least until Python 3.6): 
+the latter is thread-safe while the former is not.
+</p>
+
+<p>
+In order to await an <code>asyncio.Future</code> in a different thread, <code>asyncio.Future</code> can be wrapped in a <code>concurrent.Future</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">wrap_future</span>(asyncio_future):
+    <span class="org-keyword">def</span> <span class="org-function-name">done_callback</span>(af, cf):
+        <span class="org-keyword">try</span>:
+            cf.set_result(af.result())
+        <span class="org-keyword">except</span> <span class="org-type">Exception</span> <span class="org-keyword">as</span> e:
+            acf.set_exception(e)
+
+    <span class="org-variable-name">concur_future</span> = concurrent.Future()
+    asyncio_future.add_done_callback(
+        <span class="org-keyword">lambda</span> f: done_callback(f, cf=concur_future))
+    <span class="org-keyword">return</span> concur_future
+</pre>
+</div>
+
+<p>
+<code>asyncio.Task</code> is a subclass of <code>asyncio.Future</code>, so above code will also work.
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+<a href="http://lucumr.pocoo.org/2016/10/30/i-dont-understand-asyncio/">http://lucumr.pocoo.org/2016/10/30/i-dont-understand-asyncio/</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+<a href="https://stackoverflow.com/questions/34339020/how-to-not-await-in-a-loop-with-asyncio#comment56425069_34340285">https://stackoverflow.com/questions/34339020/how-to-not-await-in-a-loop-with-asyncio#comment56425069_34340285</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3">3</a></sup> <div class="footpara"><p class="footpara">
+<a href="https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel">https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.cancel</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>
