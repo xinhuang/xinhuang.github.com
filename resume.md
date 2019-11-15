@@ -9,29 +9,29 @@ StackOverflow:    [http://stackoverflow.com/users/2190129/xin-huang]
 ## **Technical Overview**
 
 * Worked with C++ in software development for more than 7 years on various sizes of projects
-* Programming languages: C# (able to read MSIL); Python (major scripting lang); x86 ASM, C#, Java (sometimes); Racket, Lua, Ruby (long time ago)
 * Reverse engineering: IDA, Ollydbg, gdb, windbg
 * Filesystem forensics: Scalpel, TSK
-* Network forensics: Kolide Fleet, OSQuery
+* Network forensics: Kolide Fleet, OSQuery, Security Onion, Zeek
 * Network & web security: Wireshark, Metasploit, OWASP ZAP, Burp
 * Familiar with Windows & Linux development
+* Programming languages: C# (able to read MSIL); Python (major scripting lang); x86/64 ASM, Java, Racket, Lua, Scala, Ruby (sometimes)
 
 ## **Experience**
 
-### **Carnegie Mellon University, CMU-MSIT Program, 2018 - Present**
+### **Carnegie Mellon University, MSIT-IS Program, 2018 - Present**
 
 I am studying Information Security, focusing on network security & forensics.
 
 **HTTP Traffic Censorship Measurement** , Research Project
 
-* Identifies HTTP censorship at HTTP & TCP level
-* Uses Python to test censorship over collected keywords
-* Monitors and identifies churns of censored keywords
+* Identify HTTP censorship at HTTP & TCP level
+* Use Python to test censorship over collected keywords
+* Monitor and identify churns of censored keywords 
 
 **Python For Filesystem Forensics** , Host-based Forensics Course Project (_[link on GitLab]_)
 
-* Uses Jupyter Notebook for filesystem forensics, providing improved CLI interfaces than existing tools
-* Features result reproduction, scripting analysis and automated report generation
+* Use Jupyter Notebook for filesystem forensics, improves usability and lowers learning curves
+* Feature results reproduction, scripting analysis and automated report generation
 * Implement MBR, NTFS and FAT parser in Python
 * Extensible to support other filesystems
 

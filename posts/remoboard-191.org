@@ -1,0 +1,250 @@
+#+TITLE: Security Analysis: Remoboard Android App 1.9.1
+
+#+EXPORT_FILE_NAME: remoboard-1-9-1
+
+
+* Introduction
+
+  Remoboard [fn:remoboard] is a remote keyboard application. 
+  It allows user to type in a webpage or via a Bluetooth connected device,
+  and the typed text will appear on the Android text input field,
+  if Remoboard is activated as the current input method.
+
+  Remoboard does this by hosting a web server on the mobile phone,
+  and uses a web socket from the web page to communicate with the Android application.
+  See Figure [[fig:remoboard-web]] and [[fig:remoboard-app]].
+
+  It supports three input modes:
+  1. Standard input mode: Text is sent after receiving the Enter key
+  2. Multiline: Text is sent after clicking the submit button
+  3. Program: Characters are sent in real time.
+
+  #+CAPTION: Remoboard Webpage for Input
+  #+ATTR_HTML: :width 300
+  #+NAME: fig:remoboard-web
+  [[./remoboard-191/remoboard-web.png]]
+
+  #+CAPTION: Remobard Android Application
+  #+NAME: fig:remoboard-app
+  #+ATTR_HTML: :width 300
+  [[./remoboard-191/remoboard-app.png]]
+
+* Analysis
+
+  This analyzed version is 1.9.1, downloaded from CoolAPK. [fn:remoboard-coolapk]
+  The permissions requested by the application are the following.
+  None of the permission doesn't serve the application's purpose.
+  - =WAKE_LOCK=
+  - =INTERNET=
+  - =BLUETOOTH=
+  - =BLUETOOTH_ADMIN=
+  - =CHANGE_WIFI_STATE=
+  - =ACCESS_NETWORK_STATE=
+  - =ACCESS_WIFI_STATE=
+
+  When Remoboard is activated as the current input method,
+  it will start a web server at "=http://<local IP>:7777=", 
+  which serves 4 files:
+  - vuemin.js (Vue.js v2.6.10)
+  - favicon.ico
+  - index.html (The webpage for input)
+  - appversion.txt
+
+  See Listing [[src:remoboard-start-server]] for the actual implementation.
+
+  #+CAPTION: Code Snippt to Start Web Server
+  #+NAME: src:remoboard-start-server
+  #+BEGIN_SRC java
+  private void checkSyncSiteFiles() {
+      StringBuilder var2 = new StringBuilder();
+      var2.append(this.mContext.getFilesDir().getAbsolutePath());
+      var2.append("/site");
+      String var9 = var2.toString();
+      File var3 = new File(var9);
+      if (!var3.exists()) {
+          var3.mkdir();
+      }
+
+      String var10 = Util.getAppVersion(this.mContext);
+      StringBuilder var4 = new StringBuilder();
+      var4.append(var9);
+      var4.append("/appversion.txt");
+      String var11 = var4.toString();
+      String var5 = Util.readFileContent(var11);
+      if (var5.isEmpty() || !var10.equals(var5)) {
+          HashMap var12 = new HashMap();
+          var12.put("index.html", 2131427329);
+          var12.put("favicon.ico", 2131427328);
+          var12.put("vuemin.js", 2131427330);
+          ...
+      }
+      ...
+  }
+
+  public void start(final ChannelService.Callback callback) {
+      ...
+      String ipAddr = Util.getIpAddress(this.mContext);
+      if (ipAddr == null) {
+          callback.onStartFailed(this.getstr(2131492949));
+      } else {
+          StringBuilder urlBuilder = new StringBuilder();
+          urlBuilder.append("http://");
+          urlBuilder.append(ipAddr);
+          urlBuilder.append(":7777");
+          callback.onStartSucceed(urlBuilder.toString());
+          // code removed
+          this.checkSyncSiteFiles();
+          StringBuilder localAddr = new StringBuilder();
+          localAddr.append(this.mContext.getFilesDir().getAbsolutePath());
+          localAddr.append("/site");
+          NetworkServerManager.httpServerStart(localAddr.toString(), "7777");
+      }
+      ...
+  }
+  #+END_SRC
+
+  When user types some text and sent to the Android application,
+  the message is sent as a web socket text message. 
+  See Figure [[fig:remoboard-traffic]] for an intercepted message using Wireshark. [fn:wireshark]
+
+  #+CAPTION: Message Intercepted by Wireshark.
+  #+NAME: fig:remoboard-traffic
+  [[./remoboard-191/remoboard-traffic.png]]
+
+  Checking the source code on the website, the sending logic is shown in Listing [[src:remoboard-send]].
+  As the code shows, the format of the text message is "<type><separater><content>",
+  where =type= is one of the following: 
+  "input", "input-delete", "move-left", "move-right", "move-up" and "move-down".
+
+  #+CAPTION: Javascript on Input Webpage
+  #+NAME: src:remoboard-send
+  #+BEGIN_SRC javascript
+  var kSeparater = '##rkb-1l0v3y0u3000##';
+  function sendMessage(type,content) {
+      var msg = type + kSeparater + content;
+      return socketSend(msg)
+  }
+
+  function processKeyEventWhenEmptyInput(event) {
+      // Enter
+      if (event.keyCode == 13) {
+          // new line
+          console.log('send new line');
+          sendMessage('input','\n');
+      } else if (event.keyCode == 8) {
+          console.log('send delete');
+          sendMessage('input-delete','');
+      } else if (event.keyCode == 37) {
+          console.log('send left');
+          sendMessage('move-left','');
+      } else if (event.keyCode == 39) {
+          console.log('send right');
+          sendMessage('move-right','');
+      } else if (event.keyCode == 38) {
+          console.log('send up');
+          sendMessage('move-up','');
+      } else if (event.keyCode == 40) {
+          console.log('send down');
+          sendMessage('move-down','');
+      }
+  }
+  #+END_SRC
+
+  After the message is received in the Android application, 
+  there is nothing magical but just to put the text into where the caret currently is.
+  See Listing [[src:remoboard-commit-text]].
+
+  #+CAPTION: Remoboard commits text after receiving the message
+  #+NAME: src:remoboard-commit-text
+  #+BEGIN_SRC java
+  public View onCreateInputView() {
+      LinearLayout var1 = (LinearLayout)this.getLayoutInflater()\
+          .inflate(2131296287, (ViewGroup)null);
+      this.mTextViewMessage = (TextView)var1.findViewById(2131165330);
+      ((Button)var1.findViewById(2131165223)).setOnClickListener(
+          new OnClickListener() {
+              public void onClick(View var1) {
+                  KeyboardIME.this.getCurrentInputConnection()\
+                      .commitText("\n", 1);
+              }
+          });
+      // code removed
+  }
+  #+END_SRC
+
+* Vulnerabilities
+
+  Because all the messages are sent over HTTP in plain text, there will be no secret.
+  Since this application is used as an input method,
+  and is especially to designed for situations for inputing a large amount of text,
+  it is important to ensure the input is not easily peeked by any third parties.
+  Therefore, this application should not be used in any network that allows untrusted devices to join.
+
+  There is no authentication. 
+  Anyone who knows the service address can open the webpage,
+  and the application will accept any input without any authentication.
+
+  What's more, the harded coded listening address can easily be scanned and connected by any third party.
+  Because the traffic isn't encrypted, 
+  using a fixed listening port can further increase the risk of being attacked.
+  The service can easily be discovered by looking for =/appversion.txt= at port 7777.
+   
+  Last but not least, the web server is never stopped 
+  even when the input method is deactivated or the screen is locked,
+  which means anyone can scan for the existence of Remoboard, 
+  and listen for the particular traffic once discovered the target.
+  However, when Remoboard isn't activated, although the web server is accessible,
+  sending any message will result in a run-time error and kill the Remoboard process,
+  which kills the web server.
+  This seems to be the most reliable way to kill Remoboard process since on Android,
+  since the input method process cannot be killed easily.
+
+  Even though an attacker can send arbitrary message to the Remoboard application,
+  but the =commitText= method shown in List [[src:remoboard-commit-text]] can only send text to a text edit control,
+  but not able to send arbitrary hotkeys to control the Android or applications.
+
+* Recommendation to Developers
+
+  1. Replace HTTP with HTTPS.
+     Since the server is hosted on the user's device,
+     the certificate for HTTPS should be generated, rather than using a pre-generated private key.
+     Thus, every comminication will not be sharing the same HTTPS certificate,
+     to prevent evasdropping.
+  2. Add authentication before accepting any input.
+     Before accepting any input, a nounce should be generated and ask the user to input on the web page.
+     The nounce should be long enough to prevent brute-force attack,
+     and delays should be added for verifications to prevent DoS attack.
+  3. Connection indicators should be placed on both the webpage and application.
+     The indicator should tell the user how many active connections there are,
+     so the user could easily tell whether there are unauthorized access.
+
+* Tools Used for Analysis
+
+  There are many ways to unpack the APK file and decompile the Java byte code:
+  One way is to use =dex2jar= [fn:dex2jar] to extract the =dex= file and convert to a compiled Java package file,
+  and then use a decompiler like =jd-gui= [fn:jd-gui] to decompile the =jar= file.
+  There are also website for automate the process like [fn:apk-decompiler].
+  Either of these method can serve the purpose.
+
+  MITMProxy [fn:mitmproxy] is a HTTP proxy server that can be used to examine network traffic
+  and launch man-in-the-middle (MITM) attacks.
+
+
+
+* Footnotes
+
+[fn:dex2jar] dex2jar, https://github.com/pxb1988/dex2jar
+
+[fn:mitmproxy] MITM Proxy, https://mitmproxy.org/
+
+[fn:apk-decompiler] Android APK Decompiler, http://www.javadecompilers.com/apk
+
+[fn:jd-gui] JD-GUI, https://java-decompiler.github.io/
+
+[fn:wireshark] Wireshark, https://www.wireshark.org/
+
+[fn:remoboard-coolapk] Remoboard @CookApk, https://www.coolapk.com/apk/241412
+
+[fn:remoboard] Remoboard, https://remoboard.app/
+
+
