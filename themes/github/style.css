@@ -82,6 +82,15 @@ hr .index {
     margin-bottom: 16px;
 }
 
+.figure {
+    text-align: center;
+}
+
+.org-src-name {
+    text-align: center;
+    display: inherit;
+}
+
 /* github */
 
 body hr::after, body::after {

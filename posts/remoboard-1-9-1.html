@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2019-11-15 Fri 17:38 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Security Analysis: Remoboard Android App 1.9.1</title>
+<meta name="generator" content="Org mode" />
+<meta name="author" content="Xin Huang" />
+<link rel="stylesheet" href="/themes/github/style.css">
+<script type="text/javascript">
+/*
+@licstart  The following is the entire license notice for the
+JavaScript code in this tag.
+
+Copyright (C) 2012-2019 Free Software Foundation, Inc.
+
+The JavaScript code in this tag is free software: you can
+redistribute it and/or modify it under the terms of the GNU
+General Public License (GNU GPL) as published by the Free Software
+Foundation, either version 3 of the License, or (at your option)
+any later version.  The code is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+
+As additional permission under GNU GPL version 3 section 7, you
+may distribute non-source (e.g., minimized or compacted) forms of
+that code without the copy of the GNU GPL normally required by
+section 4, provided you include this license notice and a URL
+through which recipients can access the Corresponding Source.
+
+
+@licend  The above is the entire license notice
+for the JavaScript code in this tag.
+*/
+<!--/*--><![CDATA[/*><!--*/
+ function CodeHighlightOn(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(null != target) {
+     elem.cacheClassElem = elem.className;
+     elem.cacheClassTarget = target.className;
+     target.className = "code-highlighted";
+     elem.className   = "code-highlighted";
+   }
+ }
+ function CodeHighlightOff(elem, id)
+ {
+   var target = document.getElementById(id);
+   if(elem.cacheClassElem)
+     elem.className = elem.cacheClassElem;
+   if(elem.cacheClassTarget)
+     target.className = elem.cacheClassTarget;
+ }
+/*]]>*///-->
+</script>
+</head>
+<body>
+<div id="content">
+<h1 class="title">Security Analysis: Remoboard Android App 1.9.1</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgcaa5bb6">1. Introduction</a></li>
+<li><a href="#orgdac253e">2. Analysis</a></li>
+<li><a href="#org58f2f06">3. Vulnerabilities</a></li>
+<li><a href="#org0fa7263">4. Recommendation to Developers</a></li>
+<li><a href="#org9ece906">5. Tools Used for Analysis</a></li>
+</ul>
+</div>
+</div>
+
+
+<div id="outline-container-orgcaa5bb6" class="outline-2">
+<h2 id="orgcaa5bb6"><span class="section-number-2">1</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+<p>
+Remoboard <sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup> is a remote keyboard application. 
+It allows user to type in a webpage or via a Bluetooth connected device,
+and the typed text will appear on the Android text input field,
+if Remoboard is activated as the current input method.
+</p>
+
+<p>
+Remoboard does this by hosting a web server on the mobile phone,
+and uses a web socket from the web page to communicate with the Android application.
+See Figure <a href="#orgc9a9627">1</a> and <a href="#org9a7010a">2</a>.
+</p>
+
+<p>
+It supports three input modes:
+</p>
+<ol class="org-ol">
+<li>Standard input mode: Text is sent after receiving the Enter key</li>
+<li>Multiline: Text is sent after clicking the submit button</li>
+<li>Program: Characters are sent in real time.</li>
+</ol>
+
+
+<div id="orgc9a9627" class="figure">
+<p><img src="./remoboard-191/remoboard-web.png" alt="remoboard-web.png" width="300" />
+</p>
+<p><span class="figure-number">Figure 1: </span>Remoboard Webpage for Input</p>
+</div>
+
+
+<div id="org9a7010a" class="figure">
+<p><img src="./remoboard-191/remoboard-app.png" alt="remoboard-app.png" width="300" />
+</p>
+<p><span class="figure-number">Figure 2: </span>Remobard Android Application</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgdac253e" class="outline-2">
+<h2 id="orgdac253e"><span class="section-number-2">2</span> Analysis</h2>
+<div class="outline-text-2" id="text-2">
+<p>
+This analyzed version is 1.9.1, downloaded from CoolAPK. <sup><a id="fnr.2" class="footref" href="#fn.2">2</a></sup>
+The permissions requested by the application are the following.
+None of the permission doesn't serve the application's purpose.
+</p>
+<ul class="org-ul">
+<li><code>WAKE_LOCK</code></li>
+<li><code>INTERNET</code></li>
+<li><code>BLUETOOTH</code></li>
+<li><code>BLUETOOTH_ADMIN</code></li>
+<li><code>CHANGE_WIFI_STATE</code></li>
+<li><code>ACCESS_NETWORK_STATE</code></li>
+<li><code>ACCESS_WIFI_STATE</code></li>
+</ul>
+
+<p>
+When Remoboard is activated as the current input method,
+it will start a web server at "<code>http://&lt;local IP&gt;:7777</code>", 
+which serves 4 files:
+</p>
+<ul class="org-ul">
+<li>vuemin.js (Vue.js v2.6.10)</li>
+<li>favicon.ico</li>
+<li>index.html (The webpage for input)</li>
+<li>appversion.txt</li>
+</ul>
+
+<p>
+See Listing <a href="#orgc4cba64">1</a> for the actual implementation.
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>Code Snippt to Start Web Server</label><pre class="src src-java" id="orgc4cba64"><span class="org-keyword">private</span> <span class="org-type">void</span> <span class="org-function-name">checkSyncSiteFiles</span>() {
+    <span class="org-type">StringBuilder</span> <span class="org-variable-name">var2</span> = <span class="org-keyword">new</span> <span class="org-type">StringBuilder</span>();
+    var2.append(<span class="org-keyword">this</span>.mContext.getFilesDir().getAbsolutePath());
+    var2.append(<span class="org-string">"/site"</span>);
+    <span class="org-type">String</span> <span class="org-variable-name">var9</span> = var2.toString();
+    <span class="org-type">File</span> <span class="org-variable-name">var3</span> = <span class="org-keyword">new</span> <span class="org-type">File</span>(var9);
+    <span class="org-keyword">if</span> (<span class="org-negation-char">!</span>var3.exists()) {
+        var3.mkdir();
+    }
+
+    <span class="org-type">String</span> <span class="org-variable-name">var10</span> = Util.getAppVersion(<span class="org-keyword">this</span>.mContext);
+    <span class="org-type">StringBuilder</span> <span class="org-variable-name">var4</span> = <span class="org-keyword">new</span> <span class="org-type">StringBuilder</span>();
+    var4.append(var9);
+    var4.append(<span class="org-string">"/appversion.txt"</span>);
+    <span class="org-type">String</span> <span class="org-variable-name">var11</span> = var4.toString();
+    <span class="org-type">String</span> <span class="org-variable-name">var5</span> = Util.readFileContent(var11);
+    <span class="org-keyword">if</span> (var5.isEmpty() || <span class="org-negation-char">!</span>var10.equals(var5)) {
+        <span class="org-type">HashMap</span> <span class="org-variable-name">var12</span> = <span class="org-keyword">new</span> <span class="org-type">HashMap</span>();
+        var12.put(<span class="org-string">"index.html"</span>, 2131427329);
+        var12.put(<span class="org-string">"favicon.ico"</span>, 2131427328);
+        var12.put(<span class="org-string">"vuemin.js"</span>, 2131427330);
+        ...
+    }
+    ...
+}
+
+<span class="org-keyword">public</span> <span class="org-type">void</span> <span class="org-function-name">start</span>(<span class="org-keyword">final</span> <span class="org-constant">ChannelService</span>.<span class="org-type">Callback</span> <span class="org-variable-name">callback</span>) {
+    ...
+    String ipAddr = Util.getIpAddress(<span class="org-keyword">this</span>.mContext);
+    <span class="org-keyword">if</span> (ipAddr == <span class="org-constant">null</span>) {
+        callback.onStartFailed(<span class="org-keyword">this</span>.getstr(2131492949));
+    } <span class="org-keyword">else</span> {
+        <span class="org-type">StringBuilder</span> <span class="org-variable-name">urlBuilder</span> = <span class="org-keyword">new</span> <span class="org-type">StringBuilder</span>();
+        urlBuilder.append(<span class="org-string">"http://"</span>);
+        urlBuilder.append(ipAddr);
+        urlBuilder.append(<span class="org-string">":7777"</span>);
+        callback.onStartSucceed(urlBuilder.toString());
+        <span class="org-comment-delimiter">// </span><span class="org-comment">code removed</span>
+        <span class="org-keyword">this</span>.checkSyncSiteFiles();
+        <span class="org-type">StringBuilder</span> <span class="org-variable-name">localAddr</span> = <span class="org-keyword">new</span> <span class="org-type">StringBuilder</span>();
+        localAddr.append(<span class="org-keyword">this</span>.mContext.getFilesDir().getAbsolutePath());
+        localAddr.append(<span class="org-string">"/site"</span>);
+        NetworkServerManager.httpServerStart(localAddr.toString(), <span class="org-string">"7777"</span>);
+    }
+    ...
+}
+</pre>
+</div>
+
+<p>
+When user types some text and sent to the Android application,
+the message is sent as a web socket text message. 
+See Figure <a href="#org86006b6">3</a> for an intercepted message using Wireshark. <sup><a id="fnr.3" class="footref" href="#fn.3">3</a></sup>
+</p>
+
+
+<div id="org86006b6" class="figure">
+<p><img src="./remoboard-191/remoboard-traffic.png" alt="remoboard-traffic.png" />
+</p>
+<p><span class="figure-number">Figure 3: </span>Message Intercepted by Wireshark.</p>
+</div>
+
+<p>
+Checking the source code on the website, the sending logic is shown in Listing <a href="#org02da01d">2</a>.
+As the code shows, the format of the text message is "&lt;type&gt;&lt;separater&gt;&lt;content&gt;",
+where <code>type</code> is one of the following: 
+"input", "input-delete", "move-left", "move-right", "move-up" and "move-down".
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>Javascript on Input Webpage</label><pre class="src src-javascript" id="org02da01d"><span class="org-keyword">var</span> <span class="org-variable-name">kSeparater</span> = <span class="org-string">'##rkb-1l0v3y0u3000##'</span>;
+<span class="org-keyword">function</span> <span class="org-function-name">sendMessage</span>(<span class="org-variable-name">type</span>,<span class="org-variable-name">content</span>) {
+    <span class="org-keyword">var</span> <span class="org-variable-name">msg</span> = type + kSeparater + content;
+    <span class="org-keyword">return</span> socketSend(msg)
+}
+
+<span class="org-keyword">function</span> <span class="org-function-name">processKeyEventWhenEmptyInput</span>(<span class="org-variable-name">event</span>) {
+    <span class="org-comment-delimiter">// </span><span class="org-comment">Enter</span>
+    <span class="org-keyword">if</span> (event.keyCode == 13) {
+        <span class="org-comment-delimiter">// </span><span class="org-comment">new line</span>
+        console.log(<span class="org-string">'send new line'</span>);
+        sendMessage(<span class="org-string">'input'</span>,<span class="org-string">'\n'</span>);
+    } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (event.keyCode == 8) {
+        console.log(<span class="org-string">'send delete'</span>);
+        sendMessage(<span class="org-string">'input-delete'</span>,<span class="org-string">''</span>);
+    } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (event.keyCode == 37) {
+        console.log(<span class="org-string">'send left'</span>);
+        sendMessage(<span class="org-string">'move-left'</span>,<span class="org-string">''</span>);
+    } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (event.keyCode == 39) {
+        console.log(<span class="org-string">'send right'</span>);
+        sendMessage(<span class="org-string">'move-right'</span>,<span class="org-string">''</span>);
+    } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (event.keyCode == 38) {
+        console.log(<span class="org-string">'send up'</span>);
+        sendMessage(<span class="org-string">'move-up'</span>,<span class="org-string">''</span>);
+    } <span class="org-keyword">else</span> <span class="org-keyword">if</span> (event.keyCode == 40) {
+        console.log(<span class="org-string">'send down'</span>);
+        sendMessage(<span class="org-string">'move-down'</span>,<span class="org-string">''</span>);
+    }
+}
+</pre>
+</div>
+
+<p>
+After the message is received in the Android application, 
+there is nothing magical but just to put the text into where the caret currently is.
+See Listing <a href="#orgc361b9c">3</a>.
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>Remoboard commits text after receiving the message</label><pre class="src src-java" id="orgc361b9c"><span class="org-keyword">public</span> <span class="org-type">View</span> <span class="org-function-name">onCreateInputView</span>() {
+    <span class="org-type">LinearLayout</span> <span class="org-variable-name">var1</span> = (<span class="org-type">LinearLayout</span>)<span class="org-keyword">this</span>.getLayoutInflater()\
+        .inflate(2131296287, (ViewGroup)<span class="org-constant">null</span>);
+    <span class="org-keyword">this</span>.mTextViewMessage = (<span class="org-type">TextView</span>)var1.findViewById(2131165330);
+    ((<span class="org-type">Button</span>)var1.findViewById(2131165223)).setOnClickListener(
+        <span class="org-keyword">new</span> <span class="org-type">OnClickListener</span>() {
+            <span class="org-keyword">public</span> <span class="org-type">void</span> <span class="org-function-name">onClick</span>(<span class="org-type">View</span> <span class="org-variable-name">var1</span>) {
+                KeyboardIME.<span class="org-keyword">this</span>.getCurrentInputConnection()\
+                    .commitText(<span class="org-string">"\n"</span>, 1);
+            }
+        });
+    <span class="org-comment-delimiter">// </span><span class="org-comment">code removed</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org58f2f06" class="outline-2">
+<h2 id="org58f2f06"><span class="section-number-2">3</span> Vulnerabilities</h2>
+<div class="outline-text-2" id="text-3">
+<p>
+Because all the messages are sent over HTTP in plain text, there will be no secret.
+Since this application is used as an input method,
+and is especially to designed for situations for inputing a large amount of text,
+it is important to ensure the input is not easily peeked by any third parties.
+Therefore, this application should not be used in any network that allows untrusted devices to join.
+</p>
+
+<p>
+There is no authentication. 
+Anyone who knows the service address can open the webpage,
+and the application will accept any input without any authentication.
+</p>
+
+<p>
+What's more, the harded coded listening address can easily be scanned and connected by any third party.
+Because the traffic isn't encrypted, 
+using a fixed listening port can further increase the risk of being attacked.
+The service can easily be discovered by looking for <code>/appversion.txt</code> at port 7777.
+</p>
+
+<p>
+Last but not least, the web server is never stopped 
+even when the input method is deactivated or the screen is locked,
+which means anyone can scan for the existence of Remoboard, 
+and listen for the particular traffic once discovered the target.
+However, when Remoboard isn't activated, although the web server is accessible,
+sending any message will result in a run-time error and kill the Remoboard process,
+which kills the web server.
+This seems to be the most reliable way to kill Remoboard process since on Android,
+since the input method process cannot be killed easily.
+</p>
+
+<p>
+Even though an attacker can send arbitrary message to the Remoboard application,
+but the <code>commitText</code> method shown in List <a href="#orgc361b9c">3</a> can only send text to a text edit control,
+but not able to send arbitrary hotkeys to control the Android or applications.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0fa7263" class="outline-2">
+<h2 id="org0fa7263"><span class="section-number-2">4</span> Recommendation to Developers</h2>
+<div class="outline-text-2" id="text-4">
+<ol class="org-ol">
+<li>Replace HTTP with HTTPS.
+Since the server is hosted on the user's device,
+the certificate for HTTPS should be generated, rather than using a pre-generated private key.
+Thus, every comminication will not be sharing the same HTTPS certificate,
+to prevent evasdropping.</li>
+<li>Add authentication before accepting any input.
+Before accepting any input, a nounce should be generated and ask the user to input on the web page.
+The nounce should be long enough to prevent brute-force attack,
+and delays should be added for verifications to prevent DoS attack.</li>
+<li>Connection indicators should be placed on both the webpage and application.
+The indicator should tell the user how many active connections there are,
+so the user could easily tell whether there are unauthorized access.</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org9ece906" class="outline-2">
+<h2 id="org9ece906"><span class="section-number-2">5</span> Tools Used for Analysis</h2>
+<div class="outline-text-2" id="text-5">
+<p>
+There are many ways to unpack the APK file and decompile the Java byte code:
+One way is to use <code>dex2jar</code> <sup><a id="fnr.4" class="footref" href="#fn.4">4</a></sup> to extract the <code>dex</code> file and convert to a compiled Java package file,
+and then use a decompiler like <code>jd-gui</code> <sup><a id="fnr.5" class="footref" href="#fn.5">5</a></sup> to decompile the <code>jar</code> file.
+There are also website for automate the process like <sup><a id="fnr.6" class="footref" href="#fn.6">6</a></sup>.
+Either of these method can serve the purpose.
+</p>
+
+<p>
+MITMProxy <sup><a id="fnr.7" class="footref" href="#fn.7">7</a></sup> is a HTTP proxy server that can be used to examine network traffic
+and launch man-in-the-middle (MITM) attacks.
+</p>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+Remoboard, <a href="https://remoboard.app/">https://remoboard.app/</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.2" class="footnum" href="#fnr.2">2</a></sup> <div class="footpara"><p class="footpara">
+Remoboard @CookApk, <a href="https://www.coolapk.com/apk/241412">https://www.coolapk.com/apk/241412</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.3" class="footnum" href="#fnr.3">3</a></sup> <div class="footpara"><p class="footpara">
+Wireshark, <a href="https://www.wireshark.org/">https://www.wireshark.org/</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.4" class="footnum" href="#fnr.4">4</a></sup> <div class="footpara"><p class="footpara">
+dex2jar, <a href="https://github.com/pxb1988/dex2jar">https://github.com/pxb1988/dex2jar</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.5" class="footnum" href="#fnr.5">5</a></sup> <div class="footpara"><p class="footpara">
+JD-GUI, <a href="https://java-decompiler.github.io/">https://java-decompiler.github.io/</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.6" class="footnum" href="#fnr.6">6</a></sup> <div class="footpara"><p class="footpara">
+Android APK Decompiler, <a href="http://www.javadecompilers.com/apk">http://www.javadecompilers.com/apk</a>
+</p></div></div>
+
+<div class="footdef"><sup><a id="fn.7" class="footnum" href="#fnr.7">7</a></sup> <div class="footpara"><p class="footpara">
+MITM Proxy, <a href="https://mitmproxy.org/">https://mitmproxy.org/</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<a href="/" class="left">Home</a><a href="#" class="right">Top</a>
+</div>
+</body>
+</html>
